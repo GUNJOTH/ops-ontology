@@ -32,6 +32,11 @@ const mockDashboard: DashboardSummary = {
     { label: '分类', value: 30 },
     { label: '规格 / 特征', value: 18 },
   ],
+  reviewSample: {
+    sampleId: 'sample-mock', sampleName: 'high-quality-300-v1', batchId: 'hd-semantic-20260812', sourceSnapshotId: 'mock',
+    targetCount: 300, selectedCount: 300, status: 'open', strategy: 'round_robin_by_SITEID_and_CLASSIFICATION_DESCRIPTION',
+    ruleVersion: '0.2.0', validatorVersion: 'validator-0.1.0', pendingCount: 300, approvedCount: 0, modifiedCount: 0, rejectedCount: 0, deferredCount: 0, strata: [],
+  },
 }
 
 const mockRows: CandidateDetail[] = [
@@ -89,6 +94,7 @@ export async function getCandidates(query: CandidateQuery): Promise<CandidatePag
   if (query.siteId) params.set('site_id', query.siteId)
   if (query.classification) params.set('classification', query.classification)
   if (query.quickFilter && query.quickFilter !== 'all') params.set('quick_filter', query.quickFilter)
+  if (query.sampleOnly) params.set('sample_only', 'true')
   if (!MOCK_ENABLED) return request<CandidatePage>(`/candidates?${params.toString()}`)
   {
     const normalized = (query.search ?? '').trim().toLowerCase()
@@ -111,6 +117,11 @@ export async function getCandidates(query: CandidateQuery): Promise<CandidatePag
 export async function getCandidate(candidateId: string): Promise<CandidateDetail> {
   if (MOCK_ENABLED) return mockRows.find((row) => row.candidateId === candidateId) ?? mockRows[0]
   return request<CandidateDetail>(`/candidates/${encodeURIComponent(candidateId)}`)
+}
+
+export async function getReviewSample(): Promise<import('./types').ReviewSampleSummary> {
+  if (MOCK_ENABLED) return mockDashboard.reviewSample
+  return request<import('./types').ReviewSampleSummary>('/review-sample')
 }
 
 export async function submitReview(payload: ReviewPayload): Promise<void> {

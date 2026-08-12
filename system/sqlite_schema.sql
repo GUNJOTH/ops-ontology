@@ -228,6 +228,31 @@ CREATE TABLE IF NOT EXISTS audit_event (
   event_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS review_sample (
+  sample_id TEXT PRIMARY KEY,
+  batch_id TEXT NOT NULL REFERENCES batch_run(batch_id),
+  source_snapshot_id TEXT NOT NULL REFERENCES source_snapshot(source_snapshot_id),
+  sample_name TEXT NOT NULL,
+  target_count INTEGER NOT NULL,
+  selected_count INTEGER NOT NULL DEFAULT 0,
+  strategy TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('open','completed','cancelled')),
+  rule_version TEXT NOT NULL,
+  validator_version TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  UNIQUE (batch_id, sample_name)
+);
+
+CREATE TABLE IF NOT EXISTS review_sample_item (
+  sample_id TEXT NOT NULL REFERENCES review_sample(sample_id),
+  candidate_id TEXT NOT NULL REFERENCES semantic_candidate(candidate_id),
+  ordinal INTEGER NOT NULL,
+  stratum TEXT NOT NULL,
+  selected_at TEXT NOT NULL,
+  PRIMARY KEY (sample_id, candidate_id),
+  UNIQUE (sample_id, ordinal)
+);
+
 CREATE INDEX IF NOT EXISTS ix_device_site_asset ON device_identity(site_id, asset_number);
 CREATE INDEX IF NOT EXISTS ix_device_location ON device_identity(site_id, location_code);
 CREATE INDEX IF NOT EXISTS ix_candidate_batch_status ON semantic_candidate(batch_id, validator_status, review_state);
@@ -235,6 +260,8 @@ CREATE INDEX IF NOT EXISTS ix_candidate_device ON semantic_candidate(device_id);
 CREATE INDEX IF NOT EXISTS ix_rule_status_scope ON terminology_rule(status, site_scope, classification_scope);
 CREATE INDEX IF NOT EXISTS ix_validation_candidate_outcome ON validation_result(candidate_id, outcome, severity);
 CREATE INDEX IF NOT EXISTS ix_audit_entity ON audit_event(entity_type, entity_id, event_at);
+CREATE INDEX IF NOT EXISTS ix_review_sample_batch ON review_sample(batch_id, status);
+CREATE INDEX IF NOT EXISTS ix_review_sample_item_candidate ON review_sample_item(candidate_id);
 
 CREATE VIEW IF NOT EXISTS v_review_queue AS
 SELECT

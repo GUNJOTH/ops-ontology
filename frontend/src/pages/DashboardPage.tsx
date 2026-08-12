@@ -28,7 +28,7 @@ export function DashboardPage() {
     <Card className="next-action-card" bordered={false}>
       <Flex justify="space-between" align="center" gap={16} wrap>
         <div><Typography.Title level={4}>下一步：审核分层样本</Typography.Title><Typography.Text type="secondary">{data.samplesReady} 条样本已准备，先确认“原描述 → 统一描述”的标准格式。</Typography.Text></div>
-        <Space><Button type="primary" size="large" onClick={() => navigate('/candidates?quick_filter=pending')}>继续审核 {data.samplesReady} 条 <ArrowRightOutlined /></Button><Button onClick={() => navigate('/candidates')}>查看候选</Button></Space>
+        <Space><Button type="primary" size="large" onClick={() => navigate('/candidates?quick_filter=pending&sample_only=true')}>继续审核 {data.samplesReady} 条 <ArrowRightOutlined /></Button><Button onClick={() => navigate('/candidates')}>查看候选</Button></Space>
       </Flex>
     </Card>
 

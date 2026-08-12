@@ -46,7 +46,42 @@ def sqlite_connection() -> sqlite3.Connection:
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA busy_timeout=30000")
     connection.execute("PRAGMA foreign_keys=ON")
+    ensure_review_sample_schema(connection)
     return connection
+
+
+def ensure_review_sample_schema(connection: sqlite3.Connection) -> None:
+    """Apply the small local workflow migration without touching source data."""
+    connection.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS review_sample (
+          sample_id TEXT PRIMARY KEY,
+          batch_id TEXT NOT NULL REFERENCES batch_run(batch_id),
+          source_snapshot_id TEXT NOT NULL REFERENCES source_snapshot(source_snapshot_id),
+          sample_name TEXT NOT NULL,
+          target_count INTEGER NOT NULL,
+          selected_count INTEGER NOT NULL DEFAULT 0,
+          strategy TEXT NOT NULL,
+          status TEXT NOT NULL CHECK (status IN ('open','completed','cancelled')),
+          rule_version TEXT NOT NULL,
+          validator_version TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE (batch_id, sample_name)
+        );
+        CREATE TABLE IF NOT EXISTS review_sample_item (
+          sample_id TEXT NOT NULL REFERENCES review_sample(sample_id),
+          candidate_id TEXT NOT NULL REFERENCES semantic_candidate(candidate_id),
+          ordinal INTEGER NOT NULL,
+          stratum TEXT NOT NULL,
+          selected_at TEXT NOT NULL,
+          PRIMARY KEY (sample_id, candidate_id),
+          UNIQUE (sample_id, ordinal)
+        );
+        CREATE INDEX IF NOT EXISTS ix_review_sample_batch ON review_sample(batch_id, status);
+        CREATE INDEX IF NOT EXISTS ix_review_sample_item_candidate ON review_sample_item(candidate_id);
+        """
+    )
+    connection.commit()
 
 
 def duckdb_connection() -> Any:
@@ -70,6 +105,123 @@ def parse_json_array(value: str | None) -> list[str]:
     except json.JSONDecodeError:
         return []
     return [str(item) for item in parsed] if isinstance(parsed, list) else []
+
+
+SAMPLE_NAME = "high-quality-300-v1"
+SAMPLE_TARGET = 300
+
+
+def ensure_review_sample(connection: sqlite3.Connection, batch: sqlite3.Row) -> sqlite3.Row:
+    """Create one deterministic, stratified sample for the latest batch."""
+    existing = connection.execute(
+        "SELECT * FROM review_sample WHERE batch_id=? AND sample_name=?",
+        (batch["batch_id"], SAMPLE_NAME),
+    ).fetchone()
+    if existing is not None:
+        return existing
+
+    rows = connection.execute(
+        """
+        SELECT c.candidate_id, d.site_id,
+          COALESCE(NULLIF(trim(d.classification_description), ''), '未分类') AS classification,
+          d.asset_number
+        FROM semantic_candidate c
+        JOIN device_identity d ON d.device_id=c.device_id
+        WHERE c.batch_id=? AND c.validator_status='candidate' AND c.review_state='pending'
+        ORDER BY d.site_id, classification, d.asset_number, c.candidate_id
+        """,
+        (batch["batch_id"],),
+    ).fetchall()
+    strata: dict[str, list[sqlite3.Row]] = {}
+    for row in rows:
+        key = f"{row['site_id']} / {row['classification']}"
+        strata.setdefault(key, []).append(row)
+
+    selected: list[tuple[sqlite3.Row, str]] = []
+    ordered_strata = sorted(strata)
+    while len(selected) < SAMPLE_TARGET:
+        progressed = False
+        for stratum in ordered_strata:
+            bucket = strata[stratum]
+            if bucket:
+                selected.append((bucket.pop(0), stratum))
+                progressed = True
+                if len(selected) == SAMPLE_TARGET:
+                    break
+        if not progressed:
+            break
+
+    now = utc_now()
+    sample_id = f"sample-{batch['batch_id']}-{SAMPLE_NAME}"
+    strategy = "round_robin_by_SITEID_and_CLASSIFICATION_DESCRIPTION"
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute(
+            """
+            INSERT INTO review_sample
+              (sample_id,batch_id,source_snapshot_id,sample_name,target_count,selected_count,strategy,status,rule_version,validator_version,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (sample_id, batch["batch_id"], batch["source_snapshot_id"], SAMPLE_NAME, SAMPLE_TARGET, len(selected), strategy, "open", batch["rule_version"], batch["validator_version"], now),
+        )
+        connection.executemany(
+            "INSERT INTO review_sample_item(sample_id,candidate_id,ordinal,stratum,selected_at) VALUES (?,?,?,?,?)",
+            [(sample_id, row["candidate_id"], ordinal, stratum, now) for ordinal, (row, stratum) in enumerate(selected, start=1)],
+        )
+        connection.execute(
+            "INSERT INTO audit_event(entity_type,entity_id,event_type,actor,payload_json,event_at) VALUES (?,?,?,?,?,?)",
+            ("review_sample", sample_id, "review_sample_created", "semantic-api", json.dumps({"target_count": SAMPLE_TARGET, "selected_count": len(selected), "strategy": strategy}, ensure_ascii=False), now),
+        )
+        connection.commit()
+    except sqlite3.IntegrityError:
+        if connection.in_transaction:
+            connection.rollback()
+        existing = connection.execute(
+            "SELECT * FROM review_sample WHERE batch_id=? AND sample_name=?",
+            (batch["batch_id"], SAMPLE_NAME),
+        ).fetchone()
+        if existing is None:
+            raise
+        return existing
+    return connection.execute("SELECT * FROM review_sample WHERE sample_id=?", (sample_id,)).fetchone()
+
+
+def review_sample_summary(connection: sqlite3.Connection, sample: sqlite3.Row) -> dict[str, Any]:
+    counts = connection.execute(
+        """
+        SELECT c.review_state, count(*) AS count
+        FROM review_sample_item i
+        JOIN semantic_candidate c ON c.candidate_id=i.candidate_id
+        WHERE i.sample_id=?
+        GROUP BY c.review_state
+        """,
+        (sample["sample_id"],),
+    ).fetchall()
+    summary = {"pending": 0, "approved": 0, "modified": 0, "rejected": 0, "deferred": 0}
+    for row in counts:
+        summary[row["review_state"]] = int(row["count"])
+    strata = connection.execute(
+        "SELECT stratum, count(*) AS count FROM review_sample_item WHERE sample_id=? GROUP BY stratum ORDER BY stratum",
+        (sample["sample_id"],),
+    ).fetchall()
+    return {
+        "sampleId": sample["sample_id"],
+        "sampleName": sample["sample_name"],
+        "batchId": sample["batch_id"],
+        "sourceSnapshotId": sample["source_snapshot_id"],
+        "targetCount": int(sample["target_count"]),
+        "selectedCount": int(sample["selected_count"]),
+        "status": "completed" if summary["pending"] == 0 and sample["selected_count"] else sample["status"],
+        "strategy": sample["strategy"],
+        "ruleVersion": sample["rule_version"],
+        "validatorVersion": sample["validator_version"],
+        "pendingCount": summary["pending"],
+        "approvedCount": summary["approved"],
+        "modifiedCount": summary["modified"],
+        "rejectedCount": summary["rejected"],
+        "deferredCount": summary["deferred"],
+        "strata": [{"stratum": row["stratum"], "count": int(row["count"])} for row in strata],
+    }
 
 
 def row_to_candidate(row: sqlite3.Row) -> dict[str, Any]:
@@ -124,6 +276,8 @@ def dashboard() -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
         batch = latest_batch(sqlite)
+        sample = ensure_review_sample(sqlite, batch)
+        sample_info = review_sample_summary(sqlite, sample)
         source_snapshot_id = batch["source_snapshot_id"]
         batch_id = batch["batch_id"]
         counts = sqlite.execute(
@@ -139,10 +293,6 @@ def dashboard() -> dict[str, Any]:
             """,
             (batch_id,),
         ).fetchone()
-        sample_count = sqlite.execute(
-            "SELECT count(*) FROM semantic_candidate WHERE batch_id=? AND review_state='pending' AND validator_status='candidate'",
-            (batch_id,),
-        ).fetchone()[0]
     finally:
         sqlite.close()
 
@@ -178,7 +328,8 @@ def dashboard() -> dict[str, Any]:
         "publishedCount": int(batch["published_count"] or 0),
         "blockedCount": int(counts["blocked_count"] or 0),
         "readOnlySource": True,
-        "samplesReady": min(300, int(sample_count)),
+        "samplesReady": int(sample_info["pendingCount"]),
+        "reviewSample": sample_info,
         "sites": [{"siteId": row[0], "count": int(row[1]), "share": float(row[2])} for row in sites],
         "contextCoverage": [
             {"label": "KKS / 位置", "value": percentage("location_code_rows")},
@@ -189,6 +340,17 @@ def dashboard() -> dict[str, Any]:
     }
 
 
+@app.get("/api/review-sample")
+def review_sample() -> dict[str, Any]:
+    sqlite = sqlite_connection()
+    try:
+        batch = latest_batch(sqlite)
+        sample = ensure_review_sample(sqlite, batch)
+        return review_sample_summary(sqlite, sample)
+    finally:
+        sqlite.close()
+
+
 @app.get("/api/candidates")
 def candidates(
     page: int = Query(default=1, ge=1),
@@ -197,12 +359,17 @@ def candidates(
     site_id: str | None = None,
     classification: str | None = None,
     quick_filter: Literal["all", "pending", "context", "low"] = "all",
+    sample_only: bool = False,
 ) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
         batch = latest_batch(sqlite)
         where = ["c.batch_id = ?"]
         parameters: list[Any] = [batch["batch_id"]]
+        if sample_only:
+            sample = ensure_review_sample(sqlite, batch)
+            where.append("EXISTS (SELECT 1 FROM review_sample_item si WHERE si.sample_id=? AND si.candidate_id=c.candidate_id)")
+            parameters.append(sample["sample_id"])
         if search and search.strip():
             value = f"%{search.strip()}%"
             where.append("(d.asset_number LIKE ? OR d.original_description LIKE ? OR c.candidate_description LIKE ? OR d.location_code LIKE ? OR d.location_description LIKE ?)")
@@ -366,6 +533,18 @@ def create_review(request: ReviewRequest) -> dict[str, Any]:
         sqlite.execute(
             "INSERT INTO audit_event(entity_type,entity_id,event_type,actor,payload_json,event_at) VALUES (?,?,?,?,?,?)",
             ("review", review_id, "review_submitted", "local-user", json.dumps({"candidate_id": request.candidate_id, "decision": request.decision, "idempotency_key": request.idempotency_key}, ensure_ascii=False), now),
+        )
+        sqlite.execute(
+            """
+            UPDATE review_sample
+            SET status=CASE WHEN NOT EXISTS (
+              SELECT 1 FROM review_sample_item i
+              JOIN semantic_candidate c ON c.candidate_id=i.candidate_id
+              WHERE i.sample_id=review_sample.sample_id AND c.review_state='pending'
+            ) THEN 'completed' ELSE status END
+            WHERE sample_id IN (SELECT sample_id FROM review_sample_item WHERE candidate_id=?)
+            """,
+            (request.candidate_id,),
         )
         sqlite.commit()
         return {"reviewId": review_id, "candidateId": request.candidate_id, "decision": request.decision, "reviewState": review_state, "approvalReceipt": approval_receipt, "reviewedAt": now}

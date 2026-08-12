@@ -15,6 +15,26 @@ export interface DashboardSummary {
   samplesReady: number
   sites: Array<{ siteId: string; count: number; share: number }>
   contextCoverage: Array<{ label: string; value: number }>
+  reviewSample: ReviewSampleSummary
+}
+
+export interface ReviewSampleSummary {
+  sampleId: string
+  sampleName: string
+  batchId: string
+  sourceSnapshotId: string
+  targetCount: number
+  selectedCount: number
+  status: 'open' | 'completed' | 'cancelled'
+  strategy: string
+  ruleVersion: string
+  validatorVersion: string
+  pendingCount: number
+  approvedCount: number
+  modifiedCount: number
+  rejectedCount: number
+  deferredCount: number
+  strata: Array<{ stratum: string; count: number }>
 }
 
 export interface CandidateRow {
@@ -55,6 +75,7 @@ export interface CandidateQuery {
   siteId?: string
   classification?: string
   quickFilter?: 'all' | 'pending' | 'context' | 'low'
+  sampleOnly?: boolean
 }
 
 export interface CandidatePage {
