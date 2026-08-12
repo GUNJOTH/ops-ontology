@@ -1,0 +1,31 @@
+{
+  "dictionary_run_id": "hd-kks-meaning-dictionary-20260812T003414Z",
+  "source_schema": "HD_SAAS",
+  "source_table": "LOCATIONS",
+  "scope": "frozen HD quality batch only",
+  "source_quality_file": "D:\\项目\\同海\\semantic-engineering\\pilots\\HD_SAAS\\quality\\hd_quality_candidates.csv",
+  "source_quality_file_sha256": "6745441df87b116ee16e17c2062dcb3e598395d9645a9ef629dffc4a6e481334",
+  "source_quality_manifest_sha256": "6745441df87b116ee16e17c2062dcb3e598395d9645a9ef629dffc4a6e481334",
+  "quality_rows_profiled": 385582,
+  "quality_sites": [
+    "DLCZ000",
+    "HRCS000",
+    "HRNR000",
+    "JSTZ000",
+    "NJHX000",
+    "RDBQ000",
+    "XZHP000",
+    "XZHR200",
+    "YXHR000",
+    "ZJFD000"
+  ],
+  "kks_codes_with_high_quality_links": 383562,
+  "direct_location_meaning_rows": 383560,
+  "unresolved_no_description_rows": 2,
+  "conflicting_description_variant_rows": 0,
+  "formal_kks_decoding": false,
+  "source_write": false,
+  "formal_publication": false,
+  "status": "candidate_dictionary_only",
+  "rule_version": "hd-kks-meaning-dictionary-0.1.0"
+}

@@ -1,0 +1,289 @@
+version: "1.0.5"
+rule_set: "tonghai-grp-semantic-unification"
+status: "draft"
+purpose: "统一 HD_SAAS 与 XNY_SAAS 的 MaxiEAM GRP 元数据，并为设备身份与设备描述 Harness 提供可追溯字段依据。"
+
+scope:
+  source_schemas:
+    - "HD_SAAS"
+    - "XNY_SAAS"
+  source_host: "env:HD_DM_DSN"
+  source_boundary: "read_only"
+  target_boundary: "semantic-engineering directory and approved Harness result layer only"
+  excluded:
+    - "source table updates"
+    - "silent cross-schema merges"
+    - "backup tables as current truth"
+    - "ontology, graph, TTL, RDF, or ontology-governance artifacts"
+
+table_roles:
+  current_metadata:
+    - "GRPOBJECT"
+    - "GRPATTRIBUTE"
+    - "GRPRELATIONSHIP"
+    - "GRPTABLE"
+    - "GRPVIEW"
+    - "GRPVIEWCOLUMN"
+    - "GRPAPPS"
+  configuration_metadata:
+    - "GRPOBJECTCFG"
+    - "GRPATTRIBUTECFG"
+    - "GRPATTRIBUTEDEFCFG"
+    - "GRPTABLECFG"
+    - "GRPVIEWCFG"
+    - "GRPVIEWCOLUMNCFG"
+  historical_metadata:
+    - "GRPOBJECTHIST"
+    - "GRPATTRIBUTEHIST"
+    - "GRPRELATIONSHIPHIST"
+    - "GRPTABLEHIST"
+    - "GRPVIEWHIST"
+    - "GRPHISTORY"
+  auxiliary_metadata:
+    - "GRPMESSAGES"
+    - "L_GRPMESSAGES"
+    - "GRPSYSKEYS"
+    - "GRPSYSINDEXES"
+    - "GRPCOMPONENT"
+    - "GRPCOMPONENTORG"
+    - "GRPCOMPONENTTYPE"
+    - "GRPCONDITION"
+  precedence_rule: "当前表用于统一语义；CFG 只用于配置差异校验；HIST 只用于溯源和变更解释。"
+
+table_selection:
+  exclusion_pattern:
+    - "*_back"
+    - "*_BACK"
+    - "*YYYYMMDD"
+    - "*626"
+  precedence:
+    - "current_metadata"
+    - "configuration_metadata"
+    - "historical_metadata"
+  backup_rule: "命中排除模式的表不参与当前语义事实，只保留为审计发现。"
+
+normalization:
+  preserve_raw: true
+  unicode_form: "NFKC"
+  trim_whitespace: true
+  collapse_internal_whitespace: true
+  metadata_identifier_case: "UPPER"
+  business_value_case: "preserve_source"
+  empty_values:
+    - null
+    - ""
+    - "N/A"
+    - "NULL"
+  identifier_normalization: "trim + NFKC + UPPER; never use display title as identity"
+
+identity:
+  metadata_row_key:
+    components:
+      - "normalized(schema)"
+      - "normalized(OBJECTNAME)"
+      - "normalized(ENTITYNAME)"
+      - "normalized(ORGCODE)"
+      - "normalized(TENANTID)"
+    rule: "OBJECTID is source-local evidence, not a cross-schema identity; ORGCODE and TENANTID scope same-named rows."
+  semantic_object_key:
+    components:
+      - "normalized(OBJECTNAME)"
+      - "normalized(ENTITYNAME)"
+    rule: "Only use after row-scope conflicts are absent or explicitly reviewed."
+  metadata_attribute_key:
+    components:
+      - "metadata_row_key of parent object"
+      - "normalized(ATTRIBUTENAME)"
+      - "normalized(COLUMNNAME)"
+      - "normalized(TENANTID)"
+  metadata_relationship_key:
+    components:
+      - "normalized(PARENT)"
+      - "normalized(CHILD)"
+      - "normalized(NAME)"
+      - "normalized(TENANTID)"
+  device_identity:
+    stable_source_key:
+      components: ["source_schema", "SITEID", "ASSETNUM"]
+      proof: "HD_SAAS 与 XNY_SAAS 均存在 VALID UNIQUE 索引 (SITEID, ASSETNUM)。"
+    source_surrogate_key: "ASSETID"
+    rule: "设备描述可以重复；设备身份不能重复。优先使用经过有效唯一索引证明的 SITEID+ASSETNUM，ASSETID 作为源证据。"
+  function_location_identity:
+    stable_source_key:
+      components: ["source_schema", "SITEID", "LOCATION"]
+      proof: "HD_SAAS 与 XNY_SAAS 均存在 VALID UNIQUE 索引 (SITEID, LOCATION)。"
+    source_surrogate_key: "LOCATIONSID"
+
+device_scope:
+  primary_objects:
+    - "ASSET"
+    - "LOCATIONS"
+    - "LOCHIERARCHY"
+    - "CLASSIFICATION"
+    - "CLASSSTRUCTURE"
+    - "ASSETATTRIBUTE"
+    - "ASSETSPEC"
+    - "ASSETFEATURE"
+    - "ASSETFEATURESPEC"
+    - "ASSETMETER"
+    - "ASSETHIERARCHY"
+    - "ASSETLOCRELATION"
+  supporting_objects:
+    - "SITE"
+    - "ITEM"
+    - "INVENTORY"
+    - "ST_INVENTORY"
+    - "WORKORDER"
+    - "WORKORDERSPEC"
+    - "SR"
+    - "TICKET"
+    - "PERSON"
+    - "PERSONGROUP"
+  inclusion:
+    rule: "优先纳入主对象中可证明为持久化设备、位置、分类或显式设备关系的对象。"
+    view_policy: "视图只作为读取入口或辅助上下文，不作为设备身份唯一来源。"
+    deletion_policy: "ISDEL 非空或非零时保留原始行并标记 review，不自动丢弃。"
+
+field_mapping:
+  evidence_priority:
+    - "exact canonical column name"
+    - "GRPATTRIBUTE.SAMEASATTRIBUTE + SAMEASOBJECT"
+    - "GRPATTRIBUTE.COLUMNNAME"
+    - "GRPATTRIBUTE.ALIAS"
+    - "GRPATTRIBUTE.TITLE"
+    - "GRPATTRIBUTE.REMARKS"
+    - "business sample confirmation"
+  canonical_concepts:
+    device_id:
+      source_candidates: ["ASSETID", "ASSETNUM"]
+      required: true
+    device_number:
+      source_candidates: ["ASSETNUM"]
+      required: true
+    description:
+      source_candidates: ["DESCRIPTION"]
+      required: false
+    parent_device:
+      source_candidates: ["PARENT"]
+      required: false
+    function_location:
+      source_candidates: ["LOCATION"]
+      required: false
+    site:
+      source_candidates: ["SITEID"]
+      required: true
+    organization:
+      source_candidates: ["ORGID"]
+      required: false
+    status:
+      source_candidates: ["STATUS"]
+      required: false
+    classification:
+      source_candidates: ["CLASSSTRUCTUREID", "CLASSIFICATIONID"]
+      required: false
+    serial_number:
+      source_candidates: ["SERIALNUM"]
+      required: false
+    manufacturer:
+      source_candidates: ["MANUFACTURER"]
+      required: false
+    model:
+      source_candidates: ["PLUSCMODELNUM", "S_MODELNUM", "MODELNUM"]
+      required: false
+    item:
+      source_candidates: ["ITEMNUM"]
+      required: false
+    changed_at:
+      source_candidates: ["CHANGEDATE", "MODIFY_TIME", "MODIFIED_TIME"]
+      required: false
+  conflict_rule: "多个候选字段含义冲突时保留全部证据并进入 needs_review，不按字段名猜测。"
+  claim_rule: "任何统一语义字段都必须记录 source_schema、source_table、source_column、raw_value 和 mapping_rule_version。"
+
+relationship_mapping:
+  required_evidence:
+    - "PARENT"
+    - "CHILD"
+    - "NAME"
+  endpoint_policy: "ASSETLOCRELATION must retain SOURCEASSETNUM/SOURCELOCATION and TARGETASSETNUM/TARGETLOCATION; never collapse a relation object to one device or one location."
+  join_clause_policy: "WHERECLAUSE 仅作为关联证据，不直接执行未经验证的动态 SQL。"
+  validation:
+    - "parent object exists in GRPOBJECT"
+    - "child object exists in GRPOBJECT"
+    - "relationship key is unique within source schema"
+    - "cross-schema relationship differences are reported"
+  ambiguity_policy: "无法确认基数、连接字段或业务含义时进入 needs_review。"
+
+cross_schema_alignment:
+  comparison_key: "normalized semantic_object_key for cross-schema comparison; metadata_row_key within a source"
+  compare:
+    - "object presence"
+    - "attribute presence"
+    - "attribute data type"
+    - "nullable and required flags"
+    - "primary and unique key metadata"
+    - "relationship parent-child-name"
+    - "table and view bindings"
+  non_semantic_display_fields:
+    - "ISVISIBLE"
+    - "CHANGED"
+  semantic_signature_rule: "ISVISIBLE、CHANGED 等界面配置字段单独记录，不参与核心设备语义等价判断。"
+  type_policy: "类型差异不自动转换；记录差异并判断是否为兼容差异或阻断差异。"
+  backup_policy: "带 back、BACK、日期或批次后缀的表不参与当前语义合并，只作为待清理或历史证据。"
+
+validation:
+  duplicate_scope:
+    hard_failure_scope: "device_scope.primary_objects"
+    outside_scope_policy: "保留发现、记录证据并进入 needs_review，不阻断设备语义批次。"
+  hard_failures:
+    - "source connection or schema mismatch"
+    - "missing stable metadata identity"
+    - "duplicate metadata semantic key within device scope"
+    - "unresolved object or attribute conflict"
+    - "cross-schema accidental merge"
+    - "unsupported semantic claim"
+    - "stable identity index is missing or invalid"
+  warnings:
+    - "missing comment or title"
+    - "type or nullability difference"
+    - "ISDEL nonzero or non-null"
+    - "relationship without usable WHERECLAUSE"
+    - "current and CFG metadata mismatch"
+    - "duplicate metadata semantic key outside device scope"
+  reason_codes:
+    - "SOURCE_SCOPE_MISMATCH"
+    - "MISSING_STABLE_IDENTITY"
+    - "DUPLICATE_SEMANTIC_KEY"
+    - "OBJECT_CONFLICT"
+    - "ATTRIBUTE_CONFLICT"
+    - "RELATIONSHIP_CONFLICT"
+    - "TYPE_MISMATCH"
+    - "CFG_CURRENT_MISMATCH"
+    - "INSUFFICIENT_EVIDENCE"
+    - "BACKUP_TABLE_EXCLUDED"
+
+routing:
+  candidate: "唯一键稳定、证据完整、无硬失败、跨库差异已解释"
+  needs_review: "存在软警告、类型差异、语义冲突或需要业务确认"
+  blocked: "身份不稳定、重复键、来源越界或存在未支持的语义断言"
+
+trace:
+  required_fields:
+    - "run_id"
+    - "source_snapshot_id"
+    - "source_schema"
+    - "source_table"
+    - "source_row_hash"
+    - "rule_version"
+    - "validator_version"
+    - "evidence"
+    - "reason_codes"
+    - "status_transition"
+  publication_rule: "只有 approved 结果可以进入正式 Harness 结果层；源 GRP/MaxiEAM 表永不回写。"
+
+release_gates:
+  - "two schemas connected read-only"
+  - "source table counts and distinct semantic keys reconciled"
+  - "current versus CFG versus HIST roles recorded"
+  - "backup tables excluded from current truth"
+  - "all object, attribute, and relationship conflicts routed"
+  - "no unapproved semantic result published"

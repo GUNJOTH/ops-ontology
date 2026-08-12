@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设备语义治理 · 页面设计样稿</title>
+  <link rel="stylesheet" href="static/app.css">
+</head>
+<body>
+<div class="ui-shell">
+  <aside class="ui-sidebar">
+    <div class="ui-brand"><span class="ui-brand-mark">语</span><span>设备语义治理</span></div>
+    <nav class="ui-nav">
+      <div class="ui-nav-label">工作台</div>
+      <a class="active" href="#">总览</a>
+      <a href="#">批次管理</a>
+      <a href="#">设备候选</a>
+      <a href="#">审核工作台</a>
+      <div class="ui-nav-label">治理</div>
+      <a href="#">术语规则</a>
+      <a href="#">回归测试</a>
+      <a href="#">正式结果</a>
+    </nav>
+  </aside>
+  <main class="ui-main">
+    <div class="ui-topbar">
+      <div>工作台 / 总览</div>
+      <div class="ui-topbar-search"><input class="ui-input" aria-label="全局搜索" placeholder="搜索 ASSETNUM、KKS 或原描述"><span class="ui-shortcut">Ctrl K</span></div>
+    </div>
+    <header class="ui-page-head">
+      <div class="ui-page-title"><h1>语义治理总览</h1><p>设备描述统一语义处理进度与质量状态</p></div>
+      <div class="ui-head-meta"><span class="ui-chip">批次 hd-semantic-20260812</span><span class="ui-chip">规则 0.2.0</span><span class="ui-chip readonly">● 源库只读</span></div>
+    </header>
+    <section class="ui-next-step">
+      <div><strong>下一步：审核分层样本</strong><p>300 条样本已经准备，先确认“原描述 → 统一描述”的格式，再沉淀术语规则。</p></div>
+      <div class="ui-actions" style="margin-top:0"><a class="ui-button primary" href="candidate_review_mock.html">继续审核 300 条</a><a class="ui-button" href="#attention">查看问题</a></div>
+    </section>
+    <section class="ui-grid-6">
+      <div class="ui-card ui-metric"><div class="ui-metric-label">处理总量</div><div class="ui-metric-value">382,785</div><div class="ui-metric-note">当前高质量批次</div></div>
+      <div class="ui-card ui-metric"><div class="ui-metric-label">候选生成</div><div class="ui-metric-value">382,785</div><div class="ui-metric-note">高质量批次已冻结</div></div>
+      <div class="ui-card ui-metric"><div class="ui-metric-label">待审核</div><div class="ui-metric-value">0</div><div class="ui-metric-note">等待人工确认</div></div>
+      <div class="ui-card ui-metric"><div class="ui-metric-label">已确认规则</div><div class="ui-metric-value">0</div><div class="ui-metric-note">需要从样本沉淀</div></div>
+      <div class="ui-card ui-metric"><div class="ui-metric-label">正式发布</div><div class="ui-metric-value">0</div><div class="ui-metric-note">审批后独立发布</div></div>
+      <div class="ui-card ui-metric"><div class="ui-metric-label">源库写入</div><div class="ui-metric-value" style="color:var(--ui-ok)">否</div><div class="ui-metric-note">MaxiEAM 保持只读</div></div>
+    </section>
+    <section class="ui-layout-2" id="attention">
+      <div class="ui-card"><div class="ui-card-head"><div><div class="ui-card-title">处理质量漏斗</div><div class="ui-card-subtitle">从来源到正式结果的状态转换</div></div><span class="ui-status">当前：候选层</span></div><div class="ui-card-body">
+        <div class="ui-funnel-row"><span>高质量输入</span><div class="ui-progress"><span style="width:100%"></span></div><strong>382,785</strong></div>
+        <div class="ui-funnel-row"><span>候选生成</span><div class="ui-progress"><span style="width:100%"></span></div><strong>382,785</strong></div>
+        <div class="ui-funnel-row"><span>人工审核</span><div class="ui-progress"><span style="width:1%"></span></div><strong>0</strong></div>
+        <div class="ui-funnel-row"><span>批准发布</span><div class="ui-progress"><span style="width:1%;background:var(--ui-ok)"></span></div><strong>0</strong></div>
+      </div></div>
+      <div class="ui-card"><div class="ui-card-head"><div><div class="ui-card-title">需要关注</div><div class="ui-card-subtitle">下一步建议</div></div></div><div class="ui-card-body">
+        <div class="ui-alert">当前没有已确认术语规则，候选描述暂时保留原描述。</div>
+        <div class="ui-alert info">KKS 位段目录仍在确认，当前只作为证据展示，不自动改写。</div>
+        <div class="ui-alert success">300 条分层样本已准备，可进入审核工作台。</div>
+      </div></div>
+    </section>
+    <section class="ui-layout-3">
+      <div class="ui-card"><div class="ui-card-head"><div class="ui-card-title">电厂覆盖</div></div><div class="ui-card-body"><div class="ui-table-wrap"><table class="ui-table"><thead><tr><th>电厂</th><th>设备数</th><th>占比</th></tr></thead><tbody><tr><td>ZJFD000</td><td>105,110</td><td>27.5%</td></tr><tr><td>XZHR200</td><td>100,657</td><td>26.3%</td></tr><tr><td>HRCS000</td><td>71,284</td><td>18.6%</td></tr></tbody></table></div></div></div>
+      <div class="ui-card"><div class="ui-card-head"><div class="ui-card-title">上下文覆盖</div></div><div class="ui-card-body"><div class="ui-funnel-row"><span>KKS/位置</span><div class="ui-progress"><span style="width:100%"></span></div><strong>100%</strong></div><div class="ui-funnel-row"><span>位置父级</span><div class="ui-progress"><span style="width:100%"></span></div><strong>100%</strong></div><div class="ui-funnel-row"><span>分类</span><div class="ui-progress"><span style="width:30%"></span></div><strong>30%</strong></div></div></div>
+      <div class="ui-card"><div class="ui-card-head"><div class="ui-card-title">系统边界</div></div><div class="ui-card-body"><div class="ui-field"><label>业务主库</label><div class="ui-field-value">SQLite · 批次/候选/审核/发布</div></div><div style="height:12px"></div><div class="ui-field"><label>分析库</label><div class="ui-field-value">DuckDB v1.5.5 · 全量统计</div></div><div style="height:12px"></div><span class="ui-chip readonly">源 MaxiEAM 永不直接回写</span></div></div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

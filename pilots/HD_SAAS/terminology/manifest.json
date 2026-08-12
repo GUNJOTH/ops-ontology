@@ -1,0 +1,13 @@
+{
+  "terminology_run_id": "hd-terminology-20260811T152754Z",
+  "source_snapshot_id": "8ec77ed1bfd07a2be029f9600a28f210631c6dfabc0e05ae382f494d6d35b538",
+  "source_schema": "HD_SAAS",
+  "source_write": false,
+  "grp_attribute_rows": 661,
+  "domain_value_rows": 160,
+  "classification_term_rows": 3999,
+  "terminology_candidate_rows": 4820,
+  "terminology_version": "0.1.0",
+  "status": "candidate_only",
+  "approval_required": true
+}

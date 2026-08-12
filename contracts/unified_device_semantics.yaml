@@ -1,0 +1,174 @@
+version: "1.0.3"
+status: "draft"
+rule_set: "tonghai-grp-semantic-unification@1.0.5"
+purpose: "定义跨 HD_SAAS 与 XNY_SAAS 的设备身份、描述和 supporting context 统一口径。"
+
+source:
+  schemas: ["HD_SAAS", "XNY_SAAS"]
+  metadata_entrypoint:
+    objects: "GRPOBJECT"
+    attributes: "GRPATTRIBUTE"
+    relationships: "GRPRELATIONSHIP"
+    table_bindings: "GRPTABLE"
+  source_write_policy: "never"
+
+identity:
+  metadata_row_key: ["schema", "OBJECTNAME", "ENTITYNAME", "ORGCODE", "TENANTID"]
+  cross_schema_object_key: ["OBJECTNAME", "ENTITYNAME"]
+  device_key: ["source_schema", "SITEID", "ASSETNUM"]
+  device_source_surrogate: "ASSETID"
+  function_location_key: ["source_schema", "SITEID", "LOCATION"]
+  function_location_source_surrogate: "LOCATIONSID"
+  rule: "OBJECTID/ATTRIBUTEID/RELATIONSHIPID 只作为源库证据，不作为跨库统一身份。"
+
+entities:
+  device:
+    source_object: "ASSET"
+    role: "primary"
+    fields:
+      device_id: {source: "ASSETID", required: true}
+      device_number: {source: "ASSETNUM", required: true}
+      description: {source: "DESCRIPTION", required: false}
+      parent_device: {source: "PARENT", required: false}
+      function_location: {source: "LOCATION", required: false}
+      site: {source: "SITEID", required: true}
+      organization: {source: "ORGID", required: false}
+      status: {source: "STATUS", required: false}
+      classification: {source: "CLASSSTRUCTUREID", required: false}
+      serial_number: {source: "SERIALNUM", required: false}
+      manufacturer: {source: "MANUFACTURER", required: false}
+      model: {source_candidates: ["PLUSCMODELNUM", "S_MODELNUM", "MODELNUM"], required: false}
+      item: {source: "ITEMNUM", required: false}
+      changed_at: {source_candidates: ["CHANGEDATE", "MODIFY_TIME", "MODIFIED_TIME"], required: false}
+  function_location:
+    source_object: "LOCATIONS"
+    role: "primary"
+    fields:
+      location_code: {source: "LOCATION", required: true}
+      description: {source: "DESCRIPTION", required: false}
+      site: {source: "SITEID", required: true}
+      organization: {source: "ORGID", required: false}
+      status: {source: "STATUS", required: false}
+  function_location_hierarchy:
+    source_object: "LOCHIERARCHY"
+    role: "primary"
+    fields:
+      location_code: {source: "LOCATION", required: true}
+      parent_location: {source: "PARENT", required: false}
+      site: {source: "SITEID", required: true}
+      organization: {source: "ORGID", required: false}
+      hierarchy_id: {source: "LOCHIERARCHYID", required: true}
+  asset_attribute_definition:
+    source_object: "ASSETATTRIBUTE"
+    role: "primary"
+    fields:
+      asset_attribute_id: {source: "ASSETATTRIBUTEID", required: true}
+      attribute_id: {source: "ASSETATTRID", required: true}
+      description: {source: "DESCRIPTION", required: false}
+      data_type: {source: "DATATYPE", required: false}
+      measure_unit: {source: "MEASUREUNITID", required: false}
+      domain: {source: "DOMAINID", required: false}
+      site: {source: "SITEID", required: false}
+      organization: {source: "ORGID", required: false}
+  classification:
+    source_object: "CLASSIFICATION"
+    role: "primary"
+    fields:
+      classification_id: {source: "CLASSIFICATIONID", required: true}
+      description: {source: "DESCRIPTION", required: false}
+      site: {source: "SITEID", required: false}
+      organization: {source: "ORGID", required: false}
+  classification_structure:
+    source_object: "CLASSSTRUCTURE"
+    role: "primary"
+    fields:
+      class_structure_id: {source: "CLASSSTRUCTUREID", required: true}
+      parent_class_structure: {source: "PARENT", required: false}
+      description: {source: "DESCRIPTION", required: false}
+  device_specification:
+    source_object: "ASSETSPEC"
+    role: "primary"
+    fields:
+      asset_spec_id: {source: "ASSETSPECID", required: true}
+      device_number: {source: "ASSETNUM", required: true}
+      class_structure_id: {source: "CLASSSTRUCTUREID", required: false}
+      site: {source: "SITEID", required: true}
+      organization: {source: "ORGID", required: false}
+      attribute_value: {source_candidates: ["ALNVALUE", "NUMVALUE", "TABLEVALUE"], required: false}
+      extended_value: {source_candidates: ["ES01", "ES02", "ES03", "ES04", "ES05"], required: false}
+  device_feature:
+    source_object: "ASSETFEATURE"
+    role: "primary"
+    fields:
+      asset_feature_id: {source: "ASSETFEATUREID", required: true}
+      device_number: {source: "ASSETNUM", required: true}
+      class_structure_id: {source: "CLASSSTRUCTUREID", required: false}
+      site: {source: "SITEID", required: true}
+  device_feature_specification:
+    source_object: "ASSETFEATURESPEC"
+    role: "primary"
+    fields:
+      feature_spec_id: {source: "ASSETFEATURESPECID", required: true}
+      device_number: {source: "ASSETNUM", required: true}
+      attribute_id: {source: "ASSETATTRID", required: true}
+      site: {source: "SITEID", required: true}
+      class_structure_id: {source: "CLASSSTRUCTUREID", required: false}
+      feature: {source: "FEATURE", required: false}
+      value: {source_candidates: ["ALNVALUE", "NUMVALUE", "TABLEVALUE"], required: false}
+      changed_at: {source: "CHANGEDATE", required: false}
+  device_meter:
+    source_object: "ASSETMETER"
+    role: "primary"
+    fields:
+      device_number: {source: "ASSETNUM", required: true}
+      meter_name: {source: "METERNAME", required: true}
+      site: {source: "SITEID", required: true}
+      organization: {source: "ORGID", required: false}
+  device_hierarchy:
+    source_object: "ASSETHIERARCHY"
+    role: "primary"
+    fields:
+      device_number: {source: "ASSETNUM", required: true}
+      parent_device: {source: "PARENT", required: false}
+      function_location: {source: "LOCATION", required: false}
+      site: {source: "SITEID", required: true}
+      work_order: {source: "WONUM", required: false}
+  device_location_relation:
+    source_object: "ASSETLOCRELATION"
+    role: "primary"
+    fields:
+      relation_id: {source: "ASSETLOCRELATIONID", required: true}
+      relation_number: {source: "ASSETRELATIONNUM", required: false}
+      source_device_number: {source: "SOURCEASSETNUM", required: false}
+      source_function_location: {source: "SOURCELOCATION", required: false}
+      target_device_number: {source: "TARGETASSETNUM", required: false}
+      target_function_location: {source: "TARGETLOCATION", required: false}
+      site: {source: "SITEID", required: true}
+      organization: {source: "ORGID", required: false}
+
+supporting_context:
+  - {object: "SITE", role: "site context"}
+  - {object: "ITEM", role: "item context"}
+  - {object: "WORKORDER", role: "maintenance context"}
+  - {object: "SR", role: "defect context"}
+  - {object: "TICKET", role: "ticket context"}
+
+alignment_policy:
+  exact_name_and_column: "candidate"
+  missing_in_one_schema: "needs_review"
+  domain_or_type_difference: "needs_review"
+  primary_key_sequence_difference: "needs_review"
+  display_only_difference: "record_as_display_config"
+  relationship_where_clause_difference: "needs_review"
+  unsupported_inference: "blocked"
+
+pending_review:
+  - "ASSET.S_PROFESSION: DOMAINID differs between schemas"
+  - "LOCATIONS.C_JZH: DOMAINID differs between schemas"
+  - "LOCATIONS.C_SBLX: DOMAINID differs between schemas"
+  - "LOCATIONS.DESCRIPTION: DOMAINID differs between schemas"
+  - "LOCATIONS.LOCATION: PRIMARYKEYCOLSEQ differs between schemas"
+  - "LOCATIONS.ISDEL: HD_SAAS=1, XNY_SAAS=NULL"
+  - "HD-only and XNY-only attributes listed in the preflight report"
+  - "17 relationship condition or metadata differences listed in the preflight report"
+  - "ASSETLOCRELATION must retain source and target endpoints; validate endpoint cardinality before publication"

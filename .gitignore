@@ -1,0 +1,55 @@
+# Python runtime and local environments
+__pycache__/
+*.py[cod]
+.venv/
+.deps/
+
+# Node build and dependency output
+node_modules/
+dist/
+.vite/
+
+# Local databases, caches, logs, and runtime state
+system/data/
+system/.deps*/
+system/.uv-cache/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.duckdb
+*.duckdb.wal
+*.duckdb.wal.tmp
+*.log
+
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Generated pilot data and source snapshots
+reports/
+pilots/**/snapshot/
+pilots/**/context/
+pilots/**/candidates/
+pilots/**/quality/
+pilots/**/quality_scope/
+pilots/**/quality_scope_after_suspect_exclusion/
+pilots/**/processed_quality/
+pilots/**/semantic_candidates/
+pilots/**/context_candidates/
+pilots/**/description_difference_analysis/
+pilots/**/quality_assessment/
+pilots/**/review/
+pilots/**/samples/
+pilots/**/terminology/*.csv
+pilots/**/kks_dictionary/*.csv
+pilots/**/kks_observed_patterns/*.csv
+pilots/**/kks_observed_patterns/
+pilots/**/reports/
+
+# Editor and OS files
+.idea/
+.vscode/*.user
+*.code-workspace
+Thumbs.db
+Desktop.ini

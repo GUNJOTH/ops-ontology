@@ -1,0 +1,39 @@
+version: "0.1.0"
+status: "draft"
+scope: "HD_SAAS quality batch"
+purpose: "识别和使用 HD_SAAS 中的 KKS 候选编码，避免把资产业务编号、位置代码和系统名称混为一谈。"
+
+candidate_sources:
+  primary:
+    field: "LOCATIONS.LOCATION"
+    evidence: ["LOCATIONS.LOCATION", "LOCHIERARCHY.LOCATION", "LOCHIERARCHY.PARENT", "ASSET.LOCATION"]
+    policy: "作为 KKS 候选和功能位置标识；必须保留 source_schema、SITEID 和原始值。"
+  alternate:
+    field: "LOCATIONS.LOCATIONSCODE"
+    policy: "只有字段有实际值并通过样本核对后才能启用；当前 HD 质量范围未发现非空值。"
+  context_only:
+    - "LOCATIONS.C_SYSTEM"
+    - "LOCATIONS.DESCRIPTION"
+    - "LOCATIONS.C_JZH"
+    - "LOCATIONS.C_SBLX"
+  not_kks_by_default:
+    - "ASSET.ASSETNUM"
+    - "ASSET.ASSETID"
+
+heuristic:
+  purpose: "仅用于筛选 KKS-like 候选，不等同于正式 KKS 解码。"
+  pattern: "starts with two digits, contains letters and digits, no whitespace"
+  retain_original: true
+  do_not_split_without_key_part_catalog: true
+  do_not_translate_key_parts_by_guess: true
+
+semantic_use:
+  device_link: "ASSET.LOCATION -> LOCATIONS.LOCATION"
+  hierarchy: "LOCHIERARCHY.PARENT validates location hierarchy"
+  description_policy: "KKS 作为设备位置/证据字段，不直接拼入设备名称。"
+  mismatch_policy: "missing or conflicting KKS context routes to needs_review"
+
+approval_requirements:
+  - "plant-specific KKS key-part catalogue or confirmed sample mapping"
+  - "confirmation of the two-digit prefix and subsequent key-part boundaries"
+  - "confirmation that LOCATION is KKS rather than a local location code"
