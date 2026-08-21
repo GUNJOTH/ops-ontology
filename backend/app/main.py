@@ -770,213 +770,19 @@ def duckdb_connection() -> Any:
     return _core_duckdb_connection()
 
 
-def metadata_sqlite_connection() -> sqlite3.Connection:
-    return _core_metadata_sqlite_connection()
-
-
-def metadata_filters(
-    concept_type: str | None,
-    search: str | None,
-    ai_category: str | None,
-    semantic_status: str | None,
-    source_schema: str | None,
-) -> tuple[str, list[str]]:
-    clauses = ["1=1"]
-    parameters: list[str] = []
-    if concept_type and concept_type != "all":
-        clauses.append("concept_type = ?")
-        parameters.append(concept_type)
-    if ai_category and ai_category != "all":
-        clauses.append("ai_category = ?")
-        parameters.append(ai_category)
-    if semantic_status and semantic_status != "all":
-        clauses.append("semantic_status = ?")
-        parameters.append(semantic_status)
-    if source_schema and source_schema != "all":
-        clauses.append("source_schemas LIKE ?")
-        parameters.append(f"%{source_schema}%")
-    if search and search.strip():
-        term = f"%{search.strip()}%"
-        clauses.append(
-            "(semantic_id LIKE ? OR semantic_key LIKE ? OR canonical_name LIKE ? "
-            "OR semantic_label_candidate LIKE ? OR description LIKE ? OR parent_or_table LIKE ?)"
-        )
-        parameters.extend([term] * 6)
-    return " AND ".join(clauses), parameters
-
-
-def metadata_row_payload(row: sqlite3.Row) -> dict[str, Any]:
-    return {
-        "semanticId": row["semantic_id"],
-        "dictionaryVersion": row["dictionary_version"],
-        "conceptType": row["concept_type"],
-        "semanticKey": row["semantic_key"],
-        "canonicalName": row["canonical_name"],
-        "semanticLabelCandidate": row["semantic_label_candidate"],
-        "description": row["description"],
-        "dataType": row["data_type"],
-        "length": row["length"],
-        "required": row["required"],
-        "domainId": row["domain_id"],
-        "parentOrTable": row["parent_or_table"],
-        "sourceSchemas": row["source_schemas"],
-        "crossSchemaStatus": row["cross_schema_status"],
-        "aiCategory": row["ai_category"],
-        "aiConfidence": row["ai_confidence"],
-        "aiReason": row["ai_reason"],
-        "semanticStatus": row["semantic_status"],
-        "evidence": row["evidence"],
-        "loadedAt": row["loaded_at"],
-    }
-
-
-# Metadata shaping is a domain service; keep the legacy names available to
-# handlers while the remaining query bodies are migrated incrementally.
-from app.domains.metadata.service import (
-    metadata_filters as _metadata_filters,
-    metadata_row_payload as _metadata_row_payload,
+# Metadata handlers live in the metadata domain.  These aliases preserve the
+# import surface used by existing tests and integrations while the app shell
+# only mounts the domain router.
+from app.domains.metadata.router import (
+    metadata_catalog,
+    metadata_catalog_detail,
+    metadata_export,
+    metadata_summary,
 )
+from app.domains.metadata.service import metadata_filters, metadata_row_payload
 
-metadata_filters = _metadata_filters
-metadata_row_payload = _metadata_row_payload
+metadata_sqlite_connection = _core_metadata_sqlite_connection
 
-
-def metadata_summary() -> dict[str, Any]:
-    """Return summary statistics from the local, versioned metadata layer."""
-    connection = metadata_sqlite_connection()
-    try:
-        run = connection.execute(
-            "SELECT run_id,dictionary_version,row_count,loaded_at,source_write,formal_publication "
-            "FROM metadata_semantic_run ORDER BY loaded_at DESC LIMIT 1"
-        ).fetchone()
-        if run is None:
-            raise HTTPException(status_code=503, detail="元数据语义结果库缺少运行批次")
-        concept_types = connection.execute(
-            "SELECT concept_type, count(*) AS count FROM metadata_semantic_dictionary "
-            "GROUP BY concept_type ORDER BY count DESC, concept_type"
-        ).fetchall()
-        ai_categories = connection.execute(
-            "SELECT COALESCE(NULLIF(ai_category,''),'unclassified') AS category, count(*) AS count "
-            "FROM metadata_semantic_dictionary GROUP BY category ORDER BY count DESC, category"
-        ).fetchall()
-        semantic_statuses = connection.execute(
-            "SELECT COALESCE(NULLIF(semantic_status,''),'unclassified') AS status, count(*) AS count "
-            "FROM metadata_semantic_dictionary GROUP BY status ORDER BY count DESC, status"
-        ).fetchall()
-        finding_count = int(connection.execute("SELECT count(*) FROM metadata_validation_findings").fetchone()[0])
-        finding_types = connection.execute(
-            "SELECT finding_type, count(*) AS count FROM metadata_validation_findings "
-            "GROUP BY finding_type ORDER BY count DESC, finding_type"
-        ).fetchall()
-        return {
-            "resultVersion": run["dictionary_version"],
-            "runId": run["run_id"],
-            "loadedAt": run["loaded_at"],
-            "total": int(run["row_count"]),
-            "conceptTypes": [{"value": row["concept_type"], "count": int(row["count"])} for row in concept_types],
-            "aiCategories": [{"value": row["category"], "count": int(row["count"])} for row in ai_categories],
-            "semanticStatuses": [{"value": row["status"], "count": int(row["count"])} for row in semantic_statuses],
-            "validation": {
-                "findingCount": finding_count,
-                "findingTypes": [{"value": row["finding_type"], "count": int(row["count"])} for row in finding_types],
-            },
-            "sourceWrite": False,
-            "formalPublication": False,
-            "source": "local-versioned-result-layer",
-            "duckdbAvailable": METADATA_DUCKDB_DB.exists(),
-        }
-    finally:
-        connection.close()
-
-
-def metadata_catalog(
-    page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=50, ge=1, le=200),
-    concept_type: str | None = None,
-    search: str | None = None,
-    ai_category: str | None = None,
-    semantic_status: str | None = None,
-    source_schema: str | None = None,
-) -> dict[str, Any]:
-    """Search the approved local dictionary; no source database is opened."""
-    connection = metadata_sqlite_connection()
-    try:
-        where_sql, parameters = metadata_filters(concept_type, search, ai_category, semantic_status, source_schema)
-        total = int(connection.execute(
-            f"SELECT count(*) FROM metadata_semantic_dictionary WHERE {where_sql}", parameters
-        ).fetchone()[0])
-        rows = connection.execute(
-            f"SELECT * FROM metadata_semantic_dictionary WHERE {where_sql} "
-            "ORDER BY concept_type, canonical_name, semantic_id LIMIT ? OFFSET ?",
-            [*parameters, page_size, (page - 1) * page_size],
-        ).fetchall()
-        return {
-            "items": [metadata_row_payload(row) for row in rows],
-            "total": total,
-            "page": page,
-            "pageSize": page_size,
-            "sourceWrite": False,
-            "formalPublication": False,
-        }
-    finally:
-        connection.close()
-
-
-def metadata_catalog_detail(semantic_id: str) -> dict[str, Any]:
-    connection = metadata_sqlite_connection()
-    try:
-        row = connection.execute(
-            "SELECT * FROM metadata_semantic_dictionary WHERE semantic_id=?", (semantic_id,)
-        ).fetchone()
-        if row is None:
-            raise HTTPException(status_code=404, detail="元数据语义记录不存在")
-        related = connection.execute(
-            "SELECT * FROM metadata_semantic_dictionary WHERE concept_type=? AND canonical_name=? "
-            "AND semantic_id<>? ORDER BY semantic_key LIMIT 50",
-            (row["concept_type"], row["canonical_name"], semantic_id),
-        ).fetchall()
-        return {
-            "item": metadata_row_payload(row),
-            "related": [metadata_row_payload(item) for item in related],
-            "sourceWrite": False,
-            "formalPublication": False,
-        }
-    finally:
-        connection.close()
-
-
-def metadata_export(
-    concept_type: str | None = None,
-    search: str | None = None,
-    ai_category: str | None = None,
-    semantic_status: str | None = None,
-    source_schema: str | None = None,
-) -> Response:
-    connection = metadata_sqlite_connection()
-    try:
-        where_sql, parameters = metadata_filters(concept_type, search, ai_category, semantic_status, source_schema)
-        rows = connection.execute(
-            f"SELECT * FROM metadata_semantic_dictionary WHERE {where_sql} "
-            "ORDER BY concept_type, canonical_name, semantic_id", parameters
-        ).fetchall()
-    finally:
-        connection.close()
-    output = io.StringIO(newline="")
-    writer = csv.writer(output)
-    fields = [
-        "semantic_id", "dictionary_version", "concept_type", "semantic_key", "canonical_name",
-        "semantic_label_candidate", "description", "data_type", "length", "required", "domain_id",
-        "parent_or_table", "source_schemas", "cross_schema_status", "ai_category", "ai_confidence",
-        "ai_reason", "semantic_status", "evidence", "loaded_at",
-    ]
-    writer.writerow(fields)
-    for row in rows:
-        writer.writerow([row[field] for field in fields])
-    return Response(
-        content=output.getvalue().encode("utf-8-sig"),
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=metadata_semantic_dictionary.csv"},
-    )
 
 
 def latest_batch(connection: sqlite3.Connection) -> sqlite3.Row:
@@ -3545,7 +3351,6 @@ def auto_approval_preview(connection: sqlite3.Connection, scope: Literal["sample
     }
 
 
-@domain_get("/api/ai-review/preview")
 def ai_review_preview(scope: Literal["sample", "batch"] = "sample") -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -3556,7 +3361,6 @@ def ai_review_preview(scope: Literal["sample", "batch"] = "sample") -> dict[str,
 
 
 
-@domain_get("/api/ai-review/agent-preview")
 def ai_agent_review_preview(
     batch_size: int = Query(default=CANDIDATE_AGENT_DEFAULT_BATCH_SIZE, ge=10, le=CANDIDATE_AGENT_MAX_BATCH_SIZE),
 ) -> dict[str, Any]:
@@ -3569,7 +3373,6 @@ def ai_agent_review_preview(
         sqlite.close()
 
 
-@domain_post("/api/ai-review/auto-approve")
 def ai_auto_approve(request: AutoApprovalRequest) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -3730,7 +3533,6 @@ def ai_auto_approve(request: AutoApprovalRequest) -> dict[str, Any]:
         sqlite.close()
 
 
-@domain_post("/api/ai-review/agent-audit")
 def agent_audit_pending_candidates(request: AgentCandidateReviewRequest) -> dict[str, Any]:
     """Audit one bounded high-quality slice with the model.
 
@@ -6639,7 +6441,6 @@ def queue_rule_agent_proposal(proposal_id: str, request: RuleAgentProposalAction
         sqlite.close()
 
 
-@domain_get("/api/semantic/source-of-truth")
 def semantic_source_of_truth() -> dict[str, Any]:
     """Report the canonical-read cutover coverage without changing data."""
     canonical = canonical_semantics_connection()
@@ -6763,7 +6564,6 @@ def semantic_metrics() -> Response:
     return Response(content=runtime_metrics.prometheus(), media_type="text/plain; version=0.0.4")
 
 
-@domain_get("/api/semantic/canonical/summary")
 def canonical_semantic_summary() -> dict[str, Any]:
     """Return the canonical RDF Dataset run, graphs and safety state."""
     connection = canonical_semantics_connection()
@@ -6806,7 +6606,6 @@ def canonical_semantic_summary() -> dict[str, Any]:
         connection.close()
 
 
-@domain_get("/api/semantic/canonical/statements")
 def canonical_semantic_statements(
     subject_iri: str | None = Query(default=None, alias="subjectIri", max_length=1000),
     predicate_iri: str | None = Query(default=None, alias="predicateIri", max_length=1000),
@@ -6846,7 +6645,6 @@ def canonical_semantic_statements(
         connection.close()
 
 
-@domain_get("/api/semantic/canonical/device/{source_namespace}/{canonical_key}")
 def canonical_semantic_device(source_namespace: str, canonical_key: str) -> dict[str, Any]:
     """Return one device as JSON-LD-compatible data plus provenance."""
     connection = canonical_semantics_connection()
@@ -6913,7 +6711,6 @@ def canonical_semantic_device(source_namespace: str, canonical_key: str) -> dict
         connection.close()
 
 
-@domain_post("/api/semantic/sparql")
 def canonical_semantic_sparql(request: CanonicalSparqlRequest) -> dict[str, Any]:
     """Execute a bounded read-only SPARQL 1.1 SELECT/ASK query on the latest graph."""
     query = request.query.strip()
@@ -7595,7 +7392,6 @@ def review_sample(sample_size: int = Query(default=DEFAULT_SAMPLE_TARGET, ge=1, 
         sqlite.close()
 
 
-@domain_get("/api/ai-review/sample")
 def ai_review_sample(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
@@ -7650,7 +7446,6 @@ def ai_review_sample(
         sqlite.close()
 
 
-@domain_post("/api/ai-review/decision")
 def save_ai_review_decision(request: AiDecisionRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     sample_id, sample_rows = load_ai_review_sample()
     if request.sample_id != sample_id:
@@ -7682,7 +7477,6 @@ def save_ai_review_decision(request: AiDecisionRequest, actor: str = Depends(req
         sqlite.close()
 
 
-@domain_post("/api/ai-review/bulk-decision")
 def save_ai_bulk_decision(request: AiBulkDecisionRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     sample_id, sample_rows = load_ai_review_sample()
     if request.sample_id != sample_id:
@@ -7725,7 +7519,6 @@ def save_ai_bulk_decision(request: AiBulkDecisionRequest, actor: str = Depends(r
         sqlite.close()
 
 
-@domain_get("/api/ai-review/clusters")
 def ai_review_clusters(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
@@ -7767,7 +7560,6 @@ def ai_review_clusters(
         sqlite.close()
 
 
-@domain_get("/api/ai-review/clusters/{cluster_id}")
 def ai_review_cluster_detail(cluster_id: str, page: int = Query(default=1, ge=1), page_size: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -7788,7 +7580,6 @@ def ai_review_cluster_detail(cluster_id: str, page: int = Query(default=1, ge=1)
         sqlite.close()
 
 
-@domain_post("/api/ai-review/clusters/decision")
 def save_ai_cluster_decision(request: AiClusterDecisionRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -7869,7 +7660,6 @@ def save_ai_cluster_decision(request: AiClusterDecisionRequest, actor: str = Dep
         sqlite.close()
 
 
-@domain_get("/api/candidates")
 def candidates(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
@@ -7931,7 +7721,6 @@ def candidates(
         sqlite.close()
 
 
-@domain_get("/api/candidates/facets")
 def candidate_facets(
     quick_filter: Literal["all", "pending", "context", "low", "deferred"] = "all",
     sample_only: bool = False,
@@ -7975,7 +7764,6 @@ def candidate_facets(
         sqlite.close()
 
 
-@domain_get("/api/candidates/{candidate_id}")
 def candidate_detail(candidate_id: str) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -8010,7 +7798,6 @@ def candidate_detail(candidate_id: str) -> dict[str, Any]:
         sqlite.close()
 
 
-@domain_get("/api/formal-approval-queue")
 def formal_approval_queue(
     status: Literal["all", "pending", "approved", "modified", "rejected", "deferred"] = "pending",
     page: int = Query(default=1, ge=1),
@@ -8118,7 +7905,6 @@ def formal_approval_queue(
     return result
 
 
-@domain_post("/api/formal-approval-queue/batch-approve")
 def formal_batch_approve(request: FormalBatchApprovalRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     """Approve every pending row in one replay batch, without publishing."""
     sqlite = sqlite_connection()
@@ -8670,7 +8456,6 @@ def cleaning_task_replay_ids(connection: sqlite3.Connection, task_id: str | None
     return (row["replay_id"],)
 
 
-@domain_get("/api/cleaning/tasks")
 def cleaning_tasks() -> dict[str, Any]:
     """Return the single task model used by preview, replay, approval and publication."""
     sqlite = sqlite_connection()
@@ -8699,7 +8484,6 @@ def cleaning_tasks() -> dict[str, Any]:
         sqlite.close()
 
 
-@domain_get("/api/cleaning/tasks/{task_id}")
 def cleaning_task(task_id: str) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -8711,7 +8495,6 @@ def cleaning_task(task_id: str) -> dict[str, Any]:
         sqlite.close()
 
 
-@domain_post("/api/cleaning/tasks/{task_id}/preview")
 def record_cleaning_preview(task_id: str, request: CleaningTaskPreviewRequest) -> dict[str, Any]:
     """Register a generated preview without changing candidate or source rows."""
     sqlite = sqlite_connection()
@@ -8741,7 +8524,6 @@ def record_cleaning_preview(task_id: str, request: CleaningTaskPreviewRequest) -
         sqlite.close()
 
 
-@domain_post("/api/cleaning/tasks/{task_id}/replay")
 def gate_cleaning_replay(task_id: str, request: CleaningTaskActionRequest) -> dict[str, Any]:
     """Run the task-scoped deterministic replay and open the approval gate."""
     sqlite = sqlite_connection()
@@ -8754,7 +8536,6 @@ def gate_cleaning_replay(task_id: str, request: CleaningTaskActionRequest) -> di
         sqlite.close()
 
 
-@domain_post("/api/cleaning/tasks/{task_id}/advance")
 def advance_cleaning_task(task_id: str, request: CleaningTaskAdvanceRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     """Advance a task once through the common preview/replay/approval/publication state machine."""
     sqlite = sqlite_connection()
@@ -8858,7 +8639,6 @@ def advance_cleaning_task(task_id: str, request: CleaningTaskAdvanceRequest, act
         sqlite.close()
 
 
-@domain_get("/api/cleaning/rules")
 def cleaning_rules() -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -8880,7 +8660,6 @@ def cleaning_rules() -> dict[str, Any]:
         sqlite.close()
 
 
-@domain_post("/api/cleaning/rules")
 def register_cleaning_rule(request: CleaningRuleRegistrationRequest) -> dict[str, Any]:
     sqlite = sqlite_connection()
     try:
@@ -8906,7 +8685,6 @@ def register_cleaning_rule(request: CleaningRuleRegistrationRequest) -> dict[str
         sqlite.close()
 
 
-@domain_get("/api/cleaning")
 def cleaning_queue(
     scope: Literal["cleaning", "keep_original", "all"] = "cleaning",
     status: Literal["all", "pending", "approved", "modified", "rejected", "deferred"] = "pending",
@@ -9047,7 +8825,6 @@ def cleaning_queue(
         sqlite.close()
 
 
-@domain_post("/api/cleaning/batch-approve")
 def cleaning_batch_approve(request: CleaningBatchApprovalRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     """Approve all replay-passed deterministic cleaning rows as one operation."""
     sqlite = sqlite_connection()
@@ -9137,7 +8914,6 @@ def cleaning_batch_approve(request: CleaningBatchApprovalRequest, actor: str = D
         sqlite.close()
 
 
-@domain_post("/api/cleaning/tasks/{task_id}/approve")
 def approve_cleaning_task(task_id: str, request: CleaningTaskActionRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     """Approve one task; the old aggregate endpoint remains a compatibility wrapper."""
     return cleaning_batch_approve(
@@ -9151,7 +8927,6 @@ def approve_cleaning_task(task_id: str, request: CleaningTaskActionRequest, acto
     )
 
 
-@domain_post("/api/cleaning/publish")
 def cleaning_publish(request: CleaningBatchPublishRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     """Publish the already approved cleaning batch into the local formal layer."""
     sqlite = sqlite_connection()
@@ -9257,7 +9032,6 @@ def cleaning_publish(request: CleaningBatchPublishRequest, actor: str = Depends(
         sqlite.close()
 
 
-@domain_post("/api/cleaning/tasks/{task_id}/publish")
 def publish_cleaning_task(task_id: str, request: CleaningTaskActionRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
     """Publish one approved task; publication remains idempotent and local-only."""
     return cleaning_publish(
@@ -9514,16 +9288,67 @@ def create_review(request: ReviewRequest, actor: str = Depends(require_decision_
 # during the migration, while the app shell no longer owns these route paths.
 from app.domains.registry import register_domain_routes
 from app.domains.metadata.router import build_router as build_metadata_router
+from app.domains.candidates.router import build_router as build_candidates_router
+from app.domains.cleaning.router import build_router as build_cleaning_router
+from app.domains.ai_review.router import build_router as build_ai_review_router
+from app.domains.semantic.router import build_router as build_semantic_router
 from app.domains.system.router import build_router as build_system_router
 
 register_domain_routes(app, _DOMAIN_ROUTE_SPECS)
+app.include_router(build_metadata_router())
 app.include_router(
-    build_metadata_router(
+    build_candidates_router(
         {
-            "summary": metadata_summary,
-            "catalog": metadata_catalog,
-            "detail": metadata_catalog_detail,
-            "export": metadata_export,
+            "list": candidates,
+            "facets": candidate_facets,
+            "detail": candidate_detail,
+            "approval_queue": formal_approval_queue,
+            "batch_approve": formal_batch_approve,
+        }
+    )
+)
+app.include_router(
+    build_cleaning_router(
+        {
+            "tasks": cleaning_tasks,
+            "task": cleaning_task,
+            "preview": record_cleaning_preview,
+            "replay": gate_cleaning_replay,
+            "advance": advance_cleaning_task,
+            "approve": approve_cleaning_task,
+            "publish_task": publish_cleaning_task,
+            "rules": cleaning_rules,
+            "register_rule": register_cleaning_rule,
+            "queue": cleaning_queue,
+            "batch_approve": cleaning_batch_approve,
+            "publish": cleaning_publish,
+        }
+    )
+)
+app.include_router(
+    build_ai_review_router(
+        {
+            "preview": ai_review_preview,
+            "agent_preview": ai_agent_review_preview,
+            "auto_approve": ai_auto_approve,
+            "agent_audit": agent_audit_pending_candidates,
+            "sample": ai_review_sample,
+            "decision": save_ai_review_decision,
+            "bulk_decision": save_ai_bulk_decision,
+            "clusters": ai_review_clusters,
+            "cluster_detail": ai_review_cluster_detail,
+            "cluster_decision": save_ai_cluster_decision,
+        }
+    )
+)
+app.include_router(
+    build_semantic_router(
+        {
+            "source_of_truth": semantic_source_of_truth,
+            "summary": canonical_semantic_summary,
+            "statements": canonical_semantic_statements,
+            "device": canonical_semantic_device,
+            "sparql": canonical_semantic_sparql,
         }
     )
 )

@@ -18,6 +18,7 @@ from typing import Iterable
 
 from rdflib import Dataset, Graph, Literal, URIRef
 from rdflib.namespace import OWL, RDF, RDFS, XSD
+from pipeline.contracts import connect_local
 from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE
 
 
@@ -187,8 +188,7 @@ def latest_projection(db: sqlite3.Connection) -> sqlite3.Row:
 
 def persist_inference(target: Path = DEFAULT_TARGET) -> dict[str, object]:
     created = now()
-    db = sqlite3.connect(str(target), timeout=30)
-    db.row_factory = sqlite3.Row
+    db = connect_local(target, timeout=30)
     ensure_schema(db)
     projection = latest_projection(db)
     existing = db.execute(

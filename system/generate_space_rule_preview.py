@@ -5,10 +5,11 @@ import csv
 import hashlib
 import json
 import re
-import sqlite3
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 
 ROOT = Path(__file__).resolve().parent
@@ -98,8 +99,7 @@ def select_sample(rows: list[dict[str, str]], target: int) -> list[dict[str, str
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     batch = connection.execute("SELECT * FROM batch_run ORDER BY started_at DESC LIMIT 1").fetchone()
     if batch is None:
         raise SystemExit("No batch found.")

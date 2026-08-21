@@ -9,10 +9,11 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import sqlite3
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -111,8 +112,7 @@ def main() -> None:
     if len(sample_preserve) != 21 or any(row["DIFF_CATEGORY"] != "minus_or_signed_value_deleted" for row in sample_preserve):
         raise SystemExit("The preserve-original AI sample gate is not exactly 21 signed-value rows.")
 
-    connection = sqlite3.connect(str(DB))
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     rows = connection.execute(
         """
         SELECT c.candidate_id,c.batch_id,c.original_description,c.candidate_description,

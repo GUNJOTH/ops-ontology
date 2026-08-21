@@ -5,10 +5,11 @@ import csv
 import hashlib
 import json
 import re
-import sqlite3
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 
 ROOT = Path(__file__).resolve().parent
@@ -59,8 +60,7 @@ def non_whitespace(value: str) -> str:
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     active = connection.execute(
         "SELECT rule_key,status,version FROM terminology_rule WHERE rule_key IN (?,?,?) ORDER BY rule_key",
         RULE_KEYS,

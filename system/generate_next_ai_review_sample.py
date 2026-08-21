@@ -9,11 +9,12 @@ import csv
 import hashlib
 import json
 import re
-import sqlite3
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -120,8 +121,7 @@ def select_sample(rows: list[dict[str, str]], target: int) -> list[dict[str, str
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(str(DB))
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     rows = connection.execute(
         """
         SELECT c.candidate_id,c.batch_id,c.original_description,c.candidate_description,

@@ -33,6 +33,7 @@ except ImportError as exc:  # pragma: no cover - gives an actionable runtime err
 from semantic_predicates import event_predicate, relation_predicate
 from semantic_registry import object_class_local_name
 from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE, RESOURCE_NAMESPACE, SOURCE_NAMESPACE
+from pipeline.contracts import connect_local, connect_readonly
 
 
 ROOT = Path(__file__).resolve().parent
@@ -1211,15 +1212,11 @@ class CanonicalBuilder:
         if not self.source.exists():
             raise FileNotFoundError(self.source)
         self.target.parent.mkdir(parents=True, exist_ok=True)
-        source_db = sqlite3.connect(f"file:{self.source.resolve()}?mode=ro", uri=True)
-        source_db.row_factory = sqlite3.Row
-        source_db.execute("PRAGMA query_only=ON")
+        source_db = connect_readonly(self.source)
         identity_db: sqlite3.Connection | None = None
         if self.identity_source and self.identity_source.exists():
-            identity_db = sqlite3.connect(f"file:{self.identity_source.resolve()}?mode=ro", uri=True)
-            identity_db.row_factory = sqlite3.Row
-            identity_db.execute("PRAGMA query_only=ON")
-        target_db = sqlite3.connect(str(self.target), timeout=30)
+            identity_db = connect_readonly(self.identity_source)
+        target_db = connect_local(self.target, timeout=30)
         try:
             snapshot = source_db.execute(
                 "SELECT source_snapshot_id,count(*) AS row_count FROM semantic_object_instance WHERE source_snapshot_id IS NOT NULL GROUP BY source_snapshot_id ORDER BY row_count DESC,source_snapshot_id LIMIT 1"

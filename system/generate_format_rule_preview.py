@@ -4,10 +4,11 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import sqlite3
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 
 ROOT = Path(__file__).resolve().parent
@@ -64,8 +65,7 @@ def main() -> None:
     if not INPUT.exists():
         raise SystemExit(f"Frozen quality input does not exist: {INPUT}")
 
-    connection = sqlite3.connect(DB)
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     active = connection.execute(
         "SELECT rule_key,status,version FROM terminology_rule WHERE rule_key IN (?,?) ORDER BY rule_key",
         RULE_KEYS,

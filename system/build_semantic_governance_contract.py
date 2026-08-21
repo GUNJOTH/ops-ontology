@@ -23,6 +23,8 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Any
 
+from pipeline.contracts import connect_local
+
 from semantic_predicates import event_predicate, relation_predicate
 
 
@@ -903,7 +905,7 @@ def quality_check(db: sqlite3.Connection, created: str) -> dict[str, int]:
 
 
 def build(target_path: pathlib.Path) -> dict[str, Any]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

@@ -10,10 +10,11 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import sqlite3
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 
 ROOT = Path(__file__).resolve().parent
@@ -66,8 +67,7 @@ def select_sample(rows: list[dict[str, str]], target: int) -> list[dict[str, str
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(str(DB))
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     rows = connection.execute(
         """
         SELECT c.candidate_id,c.batch_id,c.original_description,c.candidate_description,
@@ -167,7 +167,7 @@ def main() -> None:
         "source_write": False,
         "formal_publication": False,
     }
-    connection = sqlite3.connect(str(DB))
+    connection = connect_readonly(DB)
     summary["pending_high_quality_scope"] = connection.execute(
         """
         SELECT count(*) FROM semantic_candidate c JOIN device_identity d ON d.device_id=c.device_id

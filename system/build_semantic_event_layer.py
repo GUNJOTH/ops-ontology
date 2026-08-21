@@ -8,6 +8,8 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local
+
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -118,7 +120,7 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 
 def build(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys=ON")
     db.execute("PRAGMA busy_timeout=30000")

@@ -15,6 +15,8 @@ import sqlite3
 from collections import defaultdict
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local
+
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -291,8 +293,7 @@ def choose_rule(
 
 
 def replay(target_path: pathlib.Path, subject_type: str | None = None, subject_key: str | None = None) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
-    db.row_factory = sqlite3.Row
+    db = connect_local(target_path, timeout=30)
     db.execute("PRAGMA foreign_keys=ON")
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

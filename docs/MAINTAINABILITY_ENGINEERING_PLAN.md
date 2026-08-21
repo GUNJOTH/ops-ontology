@@ -9,6 +9,9 @@
 - `system/run_semantic_closure.py`：保留原命令入口，改为由 DAG runner 执行；支持 `--spec` 和 `--resume-manifest`，不改变源系统和正式发布边界。
 - `system/tests/test_pipeline_framework.py`：覆盖 DAG 顺序、幂等键、来源 manifest、只读连接和安全边界；已纳入后端 pytest 的默认测试路径。
 - `semantic_registry.validate_registry_contract()`：校验关系域/值域、别名目标和事件谓词注册；补齐 `related_device` 的正式关系映射。
+- 第一批闭环构建器已使用共享 `connect_local` / `connect_readonly`：统一语义、事件、运行契约、治理契约、状态、事实、决策、执行台账、覆盖报告、Canonical 投影和 OWL RL 回放。
+- 系统域的健康、指标和 Semantic Release 路由已迁入原生 `APIRouter`；其余业务域保持兼容入口，按低耦合顺序继续迁移。
+- 工作流库已登记 `semantic_schema_migration`，生产迁移使用显式版本号，不再只依赖重复执行 `CREATE IF NOT EXISTS`。
 
 ## 运行约定
 

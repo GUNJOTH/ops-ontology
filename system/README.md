@@ -10,6 +10,8 @@
 - `data/semantic_analytics_v155.duckdb`：分析查询库。保存宽表和上下文，负责质量统计、站点分布、规则影响分析和导出。
 - `data/unified_semantics.sqlite3`：本地语义覆盖层。保存对象身份、关系契约、事件投影、状态、事实、规则、行动和质量台账；不回写源系统。
 
+工作流库的本地结构由 `backend/app/migrations/workflow_schema.py` 在启动阶段登记到 `semantic_schema_migration`。生产迁移必须使用显式版本号（例如 `workflow-cleaning-v2`）；请求处理期间不触发迁移，源系统不参与迁移。
+
 ## 双库基线
 
 SQLite 与 DuckDB 必须使用同一个 `batch_id`、`source_snapshot_id` 和源快照哈希，不能只比较行数。当前正式本地基线为：

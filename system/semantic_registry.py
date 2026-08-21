@@ -73,6 +73,16 @@ RELATION_REGISTRY: dict[str, tuple[str, str, str]] = {
 }
 
 
+# Values persisted by unified_device_relation.predicate.  This is the single
+# contract used both to generate the SQLite CHECK constraint and to verify
+# that every accepted storage spelling can be resolved by the RDF registry.
+RELATIONAL_STORAGE_PREDICATES: tuple[str, ...] = (
+    "parent_device",
+    "same_function_location",
+    "related_device",
+)
+
+
 # Legacy/camelCase spellings are accepted only as input aliases and are
 # normalized to a stable relational key before validation or projection.
 RELATION_ALIASES: dict[str, str] = {
@@ -91,6 +101,7 @@ RELATION_ALIASES: dict[str, str] = {
     "parentOf": "device_parent_of",
     "parent_device": "device_parent_of",
     "sameFunctionLocation": "device_same_function_location",
+    "same_function_location": "device_same_function_location",
     "related_device": "device_related_to_device",
     "relatedTo": "device_related_to_device",
     "hasSubject": "recorded_for",
@@ -168,6 +179,13 @@ def validate_registry_contract() -> list[str]:
     for alias, target in RELATION_ALIASES.items():
         if target not in RELATION_REGISTRY and target not in EVENT_RELATION_REGISTRY:
             failures.append(f"RELATION_ALIAS_TARGET_UNREGISTERED:{alias}:{target}")
+    for storage_predicate in RELATIONAL_STORAGE_PREDICATES:
+        target = RELATION_ALIASES.get(storage_predicate)
+        if target is None:
+            failures.append(f"RELATION_STORAGE_PREDICATE_ALIAS_MISSING:{storage_predicate}")
+            continue
+        if target not in RELATION_REGISTRY:
+            failures.append(f"RELATION_STORAGE_PREDICATE_TARGET_UNREGISTERED:{storage_predicate}:{target}")
     for key, predicate in EVENT_RELATION_REGISTRY.items():
         if not key or not predicate:
             failures.append("EVENT_RELATION_CONTRACT_INCOMPLETE")

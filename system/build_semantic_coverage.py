@@ -15,6 +15,8 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local, connect_readonly
+
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -91,8 +93,7 @@ def backlog_counts(path: pathlib.Path, metadata_path: pathlib.Path) -> tuple[int
     metadata_findings = 0
     detail: dict[str, object] = {}
     if path.exists():
-        db = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
-        db.row_factory = sqlite3.Row
+        db = connect_readonly(path)
         try:
             approval_pending = int(db.execute("SELECT count(*) FROM formal_approval_queue WHERE status='pending'").fetchone()[0])
             cleaning_pending = int(db.execute("SELECT count(*) FROM cleaning_run WHERE status IN ('draft','pending_approval')").fetchone()[0])
@@ -101,8 +102,7 @@ def backlog_counts(path: pathlib.Path, metadata_path: pathlib.Path) -> tuple[int
         finally:
             db.close()
     if metadata_path.exists():
-        db = sqlite3.connect(f"file:{metadata_path.resolve()}?mode=ro", uri=True)
-        db.row_factory = sqlite3.Row
+        db = connect_readonly(metadata_path)
         try:
             metadata_findings = int(db.execute("SELECT count(*) FROM metadata_validation_findings").fetchone()[0])
             detail["metadata_findings"] = [dict(row) for row in db.execute("SELECT finding_type,count(*) AS count FROM metadata_validation_findings GROUP BY finding_type ORDER BY finding_type").fetchall()]
@@ -112,8 +112,7 @@ def backlog_counts(path: pathlib.Path, metadata_path: pathlib.Path) -> tuple[int
 
 
 def build(target_path: pathlib.Path, workflow_path: pathlib.Path = DEFAULT_WORKFLOW, metadata_path: pathlib.Path = DEFAULT_METADATA) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
-    db.row_factory = sqlite3.Row
+    db = connect_local(target_path, timeout=30)
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)
     created = now()

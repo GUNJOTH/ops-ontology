@@ -14,6 +14,9 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local, connect_readonly
+from semantic_registry import RELATIONAL_STORAGE_PREDICATES
+
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -40,8 +43,9 @@ def latest_identity_db() -> pathlib.Path:
 
 
 def init_overlay(connection: sqlite3.Connection) -> None:
+    predicate_values = ", ".join(f"'{value}'" for value in RELATIONAL_STORAGE_PREDICATES)
     connection.executescript(
-        """
+        f"""
         PRAGMA foreign_keys=ON;
         CREATE TABLE IF NOT EXISTS semantic_concept (
           concept_key TEXT PRIMARY KEY,
@@ -65,7 +69,7 @@ def init_overlay(connection: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS unified_device_relation (
           relation_id TEXT PRIMARY KEY,
           subject_unified_device_id TEXT NOT NULL,
-          predicate TEXT NOT NULL CHECK (predicate IN ('parent_device','same_function_location','related_device')),
+          predicate TEXT NOT NULL CHECK (predicate IN ({predicate_values})),
           object_unified_device_id TEXT,
           source_schema TEXT NOT NULL,
           source_table TEXT NOT NULL,
@@ -117,10 +121,8 @@ def init_overlay(connection: sqlite3.Connection) -> None:
 
 def build(identity_db: pathlib.Path, overlay_db: pathlib.Path) -> dict[str, object]:
     overlay_db.parent.mkdir(parents=True, exist_ok=True)
-    identity = sqlite3.connect(f"file:{identity_db.resolve()}?mode=ro", uri=True, timeout=30)
-    identity.row_factory = sqlite3.Row
-    target = sqlite3.connect(str(overlay_db), timeout=30)
-    target.row_factory = sqlite3.Row
+    identity = connect_readonly(identity_db, timeout=30)
+    target = connect_local(overlay_db, timeout=30)
     target.execute("PRAGMA journal_mode=WAL")
     target.execute("PRAGMA foreign_keys=ON")
     init_overlay(target)

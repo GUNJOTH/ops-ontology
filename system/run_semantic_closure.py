@@ -17,7 +17,7 @@ import sqlite3
 import sys
 from typing import Any
 
-from pipeline.contracts import PipelineContext
+from pipeline.contracts import PipelineContext, connect_local
 from pipeline.dag import PipelineRunner, load_spec
 
 
@@ -72,7 +72,7 @@ def run(
     pipeline_manifest = ROOT / "reports" / "pipeline-runs" / f"{run_id}.json"
     stages: dict[str, object] = {}
     created = dt.datetime.now(dt.timezone.utc).isoformat()
-    db = sqlite3.connect(str(target), timeout=30)
+    db = connect_local(target, timeout=30)
     try:
         ensure_schema(db)
         db.execute(
@@ -136,7 +136,7 @@ def run(
         inference = stages.get("owl_rl_replay") or {}
         final_status = "completed" if coverage.get("status") == "completed" and int(canonical.get("validationErrorCount") or 0) == 0 and inference.get("status") == "completed" else "completed_with_gaps"
         finished = dt.datetime.now(dt.timezone.utc).isoformat()
-        db = sqlite3.connect(str(target), timeout=30)
+        db = connect_local(target, timeout=30)
         try:
             db.execute(
                 "UPDATE semantic_closure_run SET status=?,stage_results_json=?,coverage_run_id=?,finished_at=? WHERE run_id=?",
@@ -155,7 +155,7 @@ def run(
             "formalPublication": False,
         }
     except Exception as exc:
-        db = sqlite3.connect(str(target), timeout=30)
+        db = connect_local(target, timeout=30)
         try:
             db.execute(
                 "UPDATE semantic_closure_run SET status='failed',stage_results_json=?,finished_at=? WHERE run_id=?",

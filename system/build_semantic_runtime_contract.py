@@ -14,6 +14,8 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local
+
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -204,7 +206,7 @@ def upsert_object(db: sqlite3.Connection, object_type: str, canonical_key: str, 
 
 
 def build(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

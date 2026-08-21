@@ -4,9 +4,10 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+
+from pipeline.contracts import connect_readonly
 
 
 ROOT = Path(__file__).resolve().parent
@@ -41,8 +42,7 @@ def main() -> None:
         if expected_rows != len(preview):
             raise SystemExit(f"Preview/manifest count mismatch: {len(preview)} != {expected_rows}")
 
-    connection = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
-    connection.row_factory = sqlite3.Row
+    connection = connect_readonly(DB)
     results: list[dict[str, str]] = []
     for item in preview:
         candidate = connection.execute(
