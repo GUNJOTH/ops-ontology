@@ -66,10 +66,10 @@ from app.core.idempotency import find_audit_event_by_idempotency
 from app.core.metrics import runtime_metrics
 from app.core.tx import begin_write, commit_write
 from app.core.utils import parse_json_array, utc_now
+from app.domains.candidates.serializers import PUBLISHED_SELECT, row_to_publication
 from app.domains.candidates.service import (
     DEFAULT_SAMPLE_TARGET,
     MAX_SAMPLE_TARGET,
-    PUBLISHED_SELECT,
     agent_audit_pending_candidates,
     ai_agent_review_preview,
     ai_auto_approve,
@@ -87,7 +87,6 @@ from app.domains.candidates.service import (
     formal_batch_approve,
     latest_batch,
     review_sample_summary,
-    row_to_publication,
     save_ai_bulk_decision,
     save_ai_cluster_decision,
     save_ai_review_decision,

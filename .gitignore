@@ -88,3 +88,6 @@ pilots/**/__pycache__/
 *.code-workspace
 Thumbs.db
 Desktop.ini
+
+.coverage
+

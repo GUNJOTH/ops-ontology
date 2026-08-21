@@ -54,11 +54,26 @@ PREFIXES = [
 ]
 
 
+def _is_runnable_script(path: Path) -> bool:
+    """A CLI script should be executable from the command line.
+
+    Library modules such as semantic_registry.py / semantic_namespaces.py are
+    imported by other scripts and should not be exposed as CLI commands.
+    """
+    if path.name == "cli.py":
+        return False
+    try:
+        content = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return 'if __name__ == "__main__":' in content or "if __name__ == '__main__':" in content
+
+
 def _available_scripts(prefix: str) -> list[str]:
     return sorted(
         path.name
         for path in ROOT.glob(f"{prefix}_*.py")
-        if path.is_file() and path.name != "cli.py"
+        if path.is_file() and _is_runnable_script(path)
     )
 
 

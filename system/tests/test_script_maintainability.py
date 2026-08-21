@@ -150,4 +150,8 @@ def test_cli_exposes_all_script_families() -> None:
     for prefix in cli.PREFIXES:
         assert cli._available_scripts(prefix), f"CLI prefix without scripts: {prefix}"
     assert "build_business_semantics_layer.py" in cli._available_scripts("build")
+    assert "semantic_registry.py" not in cli._all_scripts()
+    assert "semantic_namespaces.py" not in cli._all_scripts()
+    assert all("__main__" in (cli.ROOT / name).read_text(encoding="utf-8", errors="replace") for name in cli._all_scripts())
+
 

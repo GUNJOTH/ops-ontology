@@ -56,6 +56,10 @@ if (Test-Path -LiteralPath $ruff) {
     Write-Warning 'ruff 未安装（requirements-dev.txt 缺失）；跳过 lint 门禁。'
 }
 
+# Maintainability budget: fail fast when module/script scale budgets are exceeded.
+& $python (Join-Path $systemRoot 'verify_maintainability.py') --strict
+if ($LASTEXITCODE -ne 0) { Write-Error 'maintainability budget failed (exit ' + $LASTEXITCODE + ').'; exit $LASTEXITCODE }
+
 # Run pytest. Include system so the shared pipeline/semantic contracts are
 # tested by the same entrypoint as the backend.
 $env:PYTHONPATH = "$deps;$backendRoot;$systemRoot"

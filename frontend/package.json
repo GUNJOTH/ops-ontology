@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "check": "tsc -b --pretty false",
+    "build": "npm run check && vite build",
+    "build:bundle": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
