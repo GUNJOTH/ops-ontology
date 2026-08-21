@@ -5,6 +5,7 @@ __pycache__/
 .deps/
 .uv-cache/
 /.uv-cache-semantic/
+.ruff_cache/
 
 # Node build and dependency output
 node_modules/
@@ -24,6 +25,9 @@ backend/_probe3
 backend/_mkdtemp_*
 
 # Local databases, caches, logs, and runtime state
+runtime-logs/
+system/staging/
+.reset-quarantine-*/
 system/data/
 system/.deps*/
 system/.uv-cache/

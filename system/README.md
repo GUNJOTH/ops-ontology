@@ -1,4 +1,4 @@
-# 流程库与分析库
+# 本体语义运行层：本地运行说明
 
 `system/` 是本地语义治理与本体运行层，不是源库镜像。Canonical RDF Dataset 是标准语义权威；关系表只承担映射、治理、回放、审批、审计和查询索引职责。系统继续提供 RDF/JSON-LD 投影、SHACL 校验、SPARQL 语义查询和 PROV-O 来源追溯，不要求立即引入外部图数据库。
 
@@ -12,16 +12,16 @@
 
 工作流库的本地结构由 `backend/app/migrations/workflow_schema.py` 在启动阶段登记到 `semantic_schema_migration`。生产迁移必须使用显式版本号（例如 `workflow-cleaning-v2`）；请求处理期间不触发迁移，源系统不参与迁移。
 
-## 双库基线
+## 本地测试基线
 
-SQLite 与 DuckDB 必须使用同一个 `batch_id`、`source_snapshot_id` 和源快照哈希，不能只比较行数。当前正式本地基线为：
+SQLite 与 DuckDB 必须使用同一个 `batch_id`、`source_snapshot_id` 和源快照哈希，不能只比较行数。当前受控测试基线为：
 
-- 批次：`semantic-rule-approval-semantic-rule-approval-queue-20260816T100527Z`
-- 源快照：`semantic-source-identity-layer-v1-20260816T063454Z-rule-queue`
-- 候选、设备身份和 DuckDB fact：`397758`
-- 当前批次验证明细：`397758 × 5 = 1988790`
+- 测试快照：`identity-test-snapshot-5000-20260821T030346Z`
+- 设备身份：`5,000`（HD/XNY 各 2,500）
+- Canonical RDF：`6` 个 Named Graph、`5,211` 个资源、`30,769` 条语句
+- 受控结果只用于标准验证、回放和发布链路测试，不代表生产全量覆盖。
 
-从 SQLite 最新批次重建 DuckDB 使用 `build_duckdb_from_sqlite.py`；完整校验使用 `verify_system.py`。旧的 `382785` 是历史 HD-only 快照，不能再作为当前 SQLite 批次的验收分母。
+从 SQLite 重建 DuckDB 使用 `build_duckdb_from_sqlite.py`；完整校验使用 `verify_system.py`。历史全量快照不作为当前标准验收分母。
 - SQLite 的审批/发布状态优先；DuckDB 不作为审批状态权威副本。
 - 两库通过 `candidate_id`、`batch_id` 和 `source_snapshot_id` 对齐。
 
@@ -47,7 +47,7 @@ cleaning task
 - `sourceWrite=False`、`formalPublication=False` 的结果安全门禁；
 - 依赖、重试和受控恢复。
 
-语义闭环的步骤依赖定义在 `pipelines/semantic_closure.json`，当前包含 11 个步骤。旧命令仍保留，但只作为入口适配器；新增步骤应先登记到 DAG，再实现 handler。可用 `--resume-manifest` 复用幂等键一致且已完成的步骤，不跳过回放、审批或正式发布门禁。
+语义闭环的步骤依赖定义在 `pipelines/semantic_closure.json`，当前包含 17 个步骤（含 Action 目录）。旧命令仍保留，但只作为入口适配器；新增步骤应先登记到 DAG，再实现 handler。可用 `--resume-manifest` 复用幂等键一致且已完成的步骤，不跳过回放、审批或正式发布门禁。
 
 ## 脚本命名约定
 
@@ -76,6 +76,9 @@ python system\verify_state_replay.py
 python system\build_semantic_fact_builders.py
 python system\verify_fact_builders.py
 python system\verify_decision_action_layer.py
+python system\build_semantic_action_catalog.py
+python system\verify_semantic_action_catalog.py
+
 python system\build_semantic_execution_layer.py
 python system\verify_rule_agent_runtime.py
 python system\diagnose_governance_backlog.py
@@ -104,9 +107,9 @@ python system\verify_semantic_closure.py
 5. `source_write` 不为 0；
 6. 发布前没有可定位的数据库备份。
 
-## 当前数据库快照
+## 当前受控运行状态
 
-状态数字以本地 SQLite 为准。当前批次共有 397,758 个候选，正式结果层 382,780 条；正式审批队列待审批 397,775 条。元数据语义字典为 76,286 条，9,391 条结构问题保持隔离；源写入与正式发布标记均为 0。需要刷新时运行 `verify_system.py` 和 `diagnose_governance_backlog.py`，不要手工修改本文件中的历史记录。
+状态数字以本地 SQLite 和 Canonical 投影台账为准。当前受控测试包含 5,000 个设备身份、1,579 条业务/上下文记录；身份候选中 48 条已接受、197 条待复核、1,334 条隔离。Canonical 投影、OWL 2 RL 回放、SHACL、JSON-LD、SPARQL、Release 备份/恢复/回滚均以受控测试报告为准；源写入与正式生产发布仍为 0。需要刷新时运行验证脚本，不要手工修改本文件中的运行状态。
 
 AI 智能体调用采用 OpenAI 兼容接口，默认最多 2 次有限尝试；403/401 等权限错误不重试，连接/超时/5xx 可有限重试，非法 JSON 只进入失败审计。模型调用失败不会使用本地目录结果冒充 AI；只有模型成功但没有绑定本地规则时，才会在审计中明确记录确定性目录兜底。
 
