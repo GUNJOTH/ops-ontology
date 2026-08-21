@@ -1,12 +1,12 @@
-# 企业运维语义工程标准要求
+# 企业运维本体语义运行平台：标准要求
 
-版本：`standard-semantic-engineering-v1-20260820`
+版本：`standard-semantic-engineering-v2-20260821`
 
-本文件是本项目后续开发的标准基线和技能要求。它约束的是语义模型、数据交换、校验、查询、推理、来源追溯和审批边界，不要求一次性重建数据库，也不允许修改 HD/XNY/DM8/MaxiEAM 源系统。
+本文件是本公共项目的标准基线和工程要求。它约束语义模型、数据交换、校验、查询、推理、来源追溯、版本发布和审批边界，不要求一次性重建数据库，也不允许修改 HD/XNY/DM8/MaxiEAM 源系统。
 
 ## 1. 总体目标
 
-把当前本地关系型语义治理层逐步提升为可互操作的标准语义运行层：
+建设可互操作、可验证、可回放和可治理的企业运维本体语义运行层：
 
 ```text
 只读源快照
@@ -20,6 +20,8 @@
 ```
 
 标准化的目标不是把所有数据搬到图数据库，而是让同一个设备、位置、事件、规则和知识资产具有稳定的身份、关系、约束、来源、版本和可解释结果。
+
+本体不是把所有数据搬到一起，而是让不同数据围绕同一个业务对象和统一语义被理解、关联、验证、推理和安全行动。
 
 ## 2. 标准基线
 
@@ -84,7 +86,7 @@ xsd:     http://www.w3.org/2001/XMLSchema#
 
 ### 对象和关系
 
-- Device、Location、Organization、Inspection、Defect、WorkOrder、Rule、Fact、ActionPlan 必须有明确类型。
+- Device、Location、Organization、Inspection、Defect、WorkOrder、Rule、Fact、ActionPlan、Action、ActionExecution、ActionAdapter 必须有明确类型。
 - 关系必须符合 `semantic_relation_contract` 的 source type、target type、cardinality 和生命周期。
 - 设备位置关系必须保留有效期；位置迁移不能覆盖历史关系。
 - `business_record_link` 只能作为兼容读取入口，新关系必须登记为强类型关系，不得继续扩展为万能关联表。
@@ -100,6 +102,7 @@ xsd:     http://www.w3.org/2001/XMLSchema#
 - 规则必须登记输入事实、条件表达式、输出事实/决定、适用对象、版本、证据和审核状态。
 - 大模型只能发现规则草案、分类证据或解释候选，不得替代确定性判断。
 - `Fact -> Rule Decision -> ActionPlan -> Approval` 必须保留解释、证据、审批凭据和幂等键。
+- Action 是独立业务资产，必须回答“业务含义、何时允许、需要哪些输入 Fact、谁有权、映射哪个适配器、成功后产生什么 New Fact”。
 - ActionPlan 不是源系统写入授权；所有外部执行都必须经独立适配器、审批和回执。
 
 ## 6. 标准化开发阶段
@@ -121,7 +124,7 @@ xsd:     http://www.w3.org/2001/XMLSchema#
 
 ### 阶段 2：SHACL 形状和质量门禁
 
-为 Device、Location、IdentityAssertion、BusinessEvent、Defect、WorkOrder、Rule、Fact、ActionPlan 建立 SHACL Core 形状，至少覆盖：
+为 Device、Location、IdentityAssertion、BusinessEvent、Defect、WorkOrder、Rule、Fact、ActionPlan、Action 建立 SHACL Core 形状，至少覆盖：
 
 - 必填属性和数据类型；
 - domain/range；
@@ -211,17 +214,18 @@ SHACL 失败只能进入隔离/复核，不得直接发布。
 
 ## 9. 当前项目状态和下一步
 
-当前 Canonical RDF 语义层已经具备统一对象、身份断言、关系契约、事件投影、状态回放、事实、规则、行动台账和审批门禁；SQLite/DuckDB 与 `semantic_*` 只承担映射、治理、回放、审批和审计运行职责，不再作为标准语义定义源。
+当前 Canonical RDF 语义运行层已经具备统一对象、身份断言、关系契约、标准资产、OWL 2 RL 回放、SHACL 门禁、SPARQL 查询、JSON-LD 交换、来源追溯、Semantic Release、版本指针、备份恢复、回滚和监控能力；SQLite/DuckDB 与 `semantic_*` 只承担映射、治理、回放、审批和审计运行职责，不再作为标准语义定义源。
 
-标准路线当前可运行切片已经完成：从当前本地语义快照生成了 6 个命名图、2,589,079 个资源、15,534,573 条 RDF 语句，其中完整身份图覆盖 2,587,451 台设备；静态 SKOS 词表 153 条语句，包含 5 个设备分类、5 个静态单位概念、8 个 Canonical 状态和 6 个运维术语；运行时投影包含 7 个业务概念、14 个源状态候选和 6 个规则术语；source/derived provenance 覆盖率 100%。OWL 2 RL 可回放子集基于有界语义图生成 1,067 条推理语句并在 2 轮收敛，完整身份图不参与无意义的全量 superclass 物化。RDF TriG、JSON-LD 1.1、ontology.ttl、vocabularies.ttl 和 `enterprise-operations.shacl.ttl` 均已通过解析检查，12 个 SHACL NodeShape 覆盖设备、位置、身份断言、事件、缺陷、工单、事实（含源/派生）、规则、行动计划和位置历史关系，SHACL Core 子集门禁 0 个错误，SPARQL 契约查询通过，JSON-LD context 属性覆盖 75/75。标准资产清单为 `standards/semantic-asset-manifest.json`，RDF Dataset 契约为 `standards/rdf-dataset.json`。该结果只写入本地 `canonical_semantic.sqlite3` 和 `system/canonical-runs/`，不写源系统、不进入正式业务发布层。
+标准路线的受控 5,000 条只读测试基线已经通过项目标准门禁：HD_SAAS 与 XNY_SAAS 各 2,500 条设备，生成 6 个命名图、5,211 个资源和 30,769 条 RDF 语句；Canonical 身份覆盖 5,000 条设备，source/derived provenance 覆盖率 100%；OWL 2 RL 可回放子集生成 38 条推理语句并在 2 轮收敛；13 个 SHACL NodeShape 通过，JSON-LD context 属性覆盖 84/84，SPARQL 3 个查询契约通过；标准 Release、备份恢复、激活和跨版本回滚验证通过。测试基线只写入本地结果和报告，不写源系统、不进入真实生产发布。
 
 当前仍保留的受控业务缺口和后续工作：
 
-1. 处理 4 组身份冲突和 23 条待确认映射，保持无证据记录隔离；
-2. 用真实位置记录填充 `LocationAssignment` 的设备—位置历史证据；
-3. 根据真实源记录建立巡检→缺陷→工单→消缺因果链；
-4. 完成正式 ontology v2 变更时的迁移、回放、审批和回滚演练；
-5. 持续通过 `.github/workflows/semantic-ci.yml` 执行标准一致性测试和交付检查。
+1. 5000 条受控测试基线仍有 498 条身份断言待复核，11 组业务事件证据处于 `needs_evidence`；
+2. 当前测试基线没有足够的已确认巡检、缺陷和工单设备桥接，因此事实、事件和当前状态不自动生成；
+3. 跨系统候选默认关闭，候选数为 0 不代表两个系统没有关系，只代表没有未经证据和审批的跨系统合并；
+4. 继续用真实源记录补充设备—位置历史和巡检→缺陷→工单→消缺因果链；
+5. 后续 ontology v2 变更必须继续经过迁移、回放、审批、备份、回滚和 CI 标准门禁；
+6. 持续通过 `.github/workflows/semantic-ci.yml` 执行标准一致性测试和交付检查。
 
 本次实现只写入本地 Canonical 结果、推理结果、版本注册和验证报告，不修改源表，不正式发布源系统数据。
 

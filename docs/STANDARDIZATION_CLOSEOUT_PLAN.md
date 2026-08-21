@@ -70,14 +70,14 @@ SPARQL / JSON-LD / OWL 2 RL 回放
 |---|---|---|
 | P0-01 Namespace/IRI | 已收口 | `standards/namespace.json` 为唯一命名空间契约，构建器和回放器已读取 |
 | P0-02 OWL 本体 | 基本完成 | `ontology.ttl` 是当前唯一正式定义源，不重复拆出冲突文件 |
-| P0-03 RDF Dataset | 已完成 | Canonical SQLite 投影 + TriG + JSON-LD，六类命名图；完整身份图覆盖 2,587,451 台设备 |
+| P0-03 RDF Dataset | 已完成测试闭环 | Canonical SQLite 投影 + TriG + JSON-LD，六类命名图；5000 条受控身份测试基线覆盖 5,000 台设备 |
 | P0-04 RDF Mapping | 基本完成 | 现有本地 Mapping Engine，源系统只读；R2RML 暂不作为前置条件 |
 | P0-05 SHACL | 已完成基础门禁 | 12 类 NodeShape、验证报告和 CI 已接入；后续补标准实现级校验器 |
 | P0-06 SPARQL | 已完成基础能力 | 只读查询契约、回放和 API 已接入 |
-| P0-07 JSON-LD | 已完成 | 当前本体属性 75/75 已映射 |
+| P0-07 JSON-LD | 已完成测试闭环 | 当前本体属性 84/84 已映射 |
 | P0-08 PROV-O | 已完成基础闭环 | 当前 Canonical 可追溯语句 provenance 覆盖率 100% |
 | P0-09 Ontology 版本 | 部分完成 | v1、迁移模板和回滚策略已有，需补发布/回滚验收 |
-| P0-10 Source of Truth 切换 | 已完成首轮切换 | Canonical RDF 已覆盖当前身份快照中的 2,587,451 台设备，覆盖率 100%；读取适配器、覆盖率 API 和切换门禁均通过，未确认身份仍以隔离记录保留，不被自动合并 |
+| P0-10 Source of Truth 切换 | 已完成测试闭环 | Canonical RDF 覆盖受控身份快照中的 5,000 台设备，覆盖率 100%；读取适配器、覆盖率 API 和切换门禁均通过，未确认身份仍以隔离记录保留，不被自动合并 |
 
 ## 当前阻塞
 

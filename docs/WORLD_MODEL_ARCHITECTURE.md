@@ -45,10 +45,11 @@ SPARQL / JSON-LD / Agent Semantic Facade
 | P3 分层事实 | 进行中 | 来源事实、确定性派生事实和证据链已分表保存 |
 | P4 规则体系 | 进行中 | 确定性规则登记、执行和回放已存在；规则发现与启用保持分离 |
 | P5 决策与行动 | 已完成首版 | 105 条规则判断已进入决策台账；ActionPlan、审批凭据和源写入门禁已实现。当前没有明确行动规则，因此行动计划 0 条，不擅自生成工单 |
+| P5.1 统一 Action 目录 | 已完成首版 | 已建立 `semantic_action_definition`：业务含义、前置条件、输入 Fact、权限范围、MCP/Workflow/API 映射、效果和执行状态机；外部适配器默认 disabled |
 | M1 本体元模型 | 已完成首版 | 已建立对象、属性、关系、事件、缺陷状态机和迁移规则注册表；未知关系/事件只标记 `needs_review` |
-| Canonical Semantic Model | 已完成标准化只读投影 | 6 个命名图、2,589,079 个资源、15,534,573 条 RDF 语句；完整身份图覆盖 2,587,451 台设备；source/derived provenance 覆盖率 100%；12 个 SHACL NodeShape 覆盖设备、位置、身份断言、事件、缺陷、工单、事实、规则、行动计划及位置历史关系；门禁 0 个错误；TriG/JSON-LD 可解析 |
+| Canonical Semantic Model | 已完成受控测试投影 | 6 个命名图、5,211 个资源、30,769 条 RDF 语句；受控身份图覆盖 5,000 台设备；source/derived provenance 覆盖率 100%；13 个 SHACL NodeShape 通过；RDF/TriG/JSON-LD 可解析，标准门禁 0 个错误 |
 | SKOS Vocabulary | 已接入版本化词表 | 153 条静态词表语句、7 个业务概念、8 个 Canonical 状态、14 个源状态候选、6 个规则术语；源状态映射仍按审批门禁执行 |
-| OWL 2 RL Replay | 已接入可回放子集 | `owl2rl-replay-subset-v1` 生成 1,067 条推理语句，2 轮收敛，结果进入独立 inference graph |
+| OWL 2 RL Replay | 已接入可回放子集 | `owl2rl-replay-subset-v1` 在受控测试图中生成 38 条推理语句，2 轮收敛，结果进入独立 inference graph |
 | Version / CI Gate | 已接入 | ontology 版本注册、快照、回滚指针和统一标准 CI 验证；未通过验证的版本不激活 |
 | Agent Semantic Facade | 已完成首版 | 已提供设备 World Context、时间线、Fact Explain、Decision Explain 契约，页面入口为 `/ontology-runtime` |
 
@@ -65,8 +66,9 @@ SPARQL / JSON-LD / Agent Semantic Facade
 1. `semantic_fact` 中的来源/派生事实作为输入，保留源表、源行和快照证据。
 2. `semantic_rule_decision` 只登记确定性规则判断，并保存规则版本、输入事实、解释和置信度。
 3. 只有显式的 `semantic_escalation_action` 才能物化为 `semantic_action_plan`；没有行动证据的判断不猜测成工单。
-4. 需要审批的行动生成 `semantic_action_approval`，在 `/decisions` 中单独批准或驳回。
-5. 当前审批只改变本地行动计划状态并生成凭据，`source_write=0`、`formal_publication=0`，没有源系统执行器。
+4. 每个 `semantic_action_plan` 可关联 `semantic_action_definition`，展示业务含义、前置条件、权限和效果；适配器映射只描述“如何做”，默认不启用。
+5. 需要审批的行动生成 `semantic_action_approval`，在 `/decisions` 中单独批准或驳回。
+6. 当前审批只改变本地行动计划状态并生成凭据，`source_write=0`、`formal_publication=0`，没有源系统执行器。
 
 当前状态：已登记 `SAR:defect-pending-risk-treatment` v1：缺陷状态为 `PENDING` 且存在 `risk_assessment.risk_score >= 3` 时，生成 `create_work_order` 待审批建议。当前正式快照没有 `PENDING` 状态和风险事实，因此真实回放为 0 命中、0 行动计划、0 待审批；隔离副本已验证命中、生成计划和审批通过链路，未写源系统。
 

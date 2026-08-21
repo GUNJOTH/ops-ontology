@@ -1,10 +1,10 @@
-# 项目规范
+# 企业运维本体语义运行平台：项目规范
 
 ## 1. 目标和边界
 
-本项目建设企业运维语义治理与本体运行层：从 MaxiEAM/DM8/HD_SAAS/XNY_SAAS 只读抽取快照，围绕设备、位置、组织、巡检、缺陷、工单、事实、规则和行动建立统一语义，经过规则、标准校验、回放和审批后写入本地正式结果层。
+本项目建设面向公共使用的企业运维本体语义运行平台：从外部业务系统只读抽取快照，围绕设备、位置、组织、巡检、缺陷、工单、事实、规则、状态、决策和行动建立统一语义，经过标准校验、回放、审批、版本发布和监控后形成可追溯的本地语义结果。
 
-项目定位：**Canonical RDF-first、Ontology-native、关系运行层兼容**。`.ttl` 本体、`.shacl.ttl` 约束、RDF Dataset、SPARQL 查询、SKOS 词表和 OWL 2 RL 回放是正式工程资产；SQLite/DuckDB 与 `semantic_*` 只服务于映射、治理、审批、回放、审计和分析运行。
+项目定位：**Ontology-driven、Canonical RDF-first、standard-gated、关系运行层兼容**。本体、词表、约束、查询、来源和交换契约是正式工程资产；SQLite/DuckDB 与 `semantic_*` 只服务于映射、治理、审批、回放、审计和分析运行。
 
 本项目不修改源库，不未经批准跨系统静默合并。Canonical RDF Dataset 是标准语义表达的权威；现有 SQLite/DuckDB 与 `semantic_*` 关系层只承担映射、治理、回放、审批、审计和分析运行职责，不再作为标准语义定义源。
 
@@ -24,6 +24,26 @@
 - 派生事实必须携带输入快照证据：单一输入快照沿用原快照 ID，多快照输入使用稳定的 `derived:<digest>` 快照引用，并通过 `DerivedFactShape` 门禁；不得以空快照进入 Canonical 图。
 - `semantic_*` 本体运行层的 `formal_publication` 永远为 0；设备描述清洗工作流中 `batch_run.formal_publication` 表示本地清洗结果层发布，二者数据库职责不同，不得跨层解释或复用为源系统写入标志。
 
+### 标准执行与遵守
+
+标准遵守通过可重复的工程链实现，而不是通过人工口径声明：
+
+```text
+标准基线 → 标准资产 → Canonical 投影 → 自动验证 → Release 审批
+→ 备份恢复 → 激活/回滚 → 运行监控
+```
+
+每个可发布版本至少必须通过：RDF/JSON-LD 解析、OWL 2 RL 可回放推理、SHACL 约束、SPARQL 查询契约、SKOS 词表一致性、PROV-O 来源覆盖、Namespace/IRI 稳定性、源写入安全边界和回滚恢复检查。门禁通过表示“符合本项目标准验收”，不宣称已经取得第三方标准认证。
+
+项目状态必须分级记录：
+
+1. **标准资产可解析**：文件和契约语法正确；
+2. **项目标准门禁通过**：全套验证链通过；
+3. **Release 可发布**：审批、备份、恢复和回滚通过；
+4. **生产可切换**：部署、性能、监控和真实业务证据也通过。
+
+没有真实业务证据的对象、关系、事件或状态只能进入 `needs_review`/`blocked`，不能为了提高通过率而伪造事实或放宽约束。
+
 ## 2. 目录职责
 
 | 层 | 目录 | 规范 |
@@ -37,6 +57,14 @@
 | 文档 | `docs/` | 规范和运行手册 |
 
 本地数据库、依赖、日志和发布备份不进入 Git：`system/data/`、`system/backups/`、`.deps/`、`.env`、`*.log`。
+
+### 统一依赖
+
+- Python 依赖统一以 `backend/requirements.lock` 为精确基线，安装到 `backend/.deps`。
+- `backend/requirements.txt` 声明运行时依赖，`backend/requirements-dev.txt` 声明测试/静态检查依赖；两者由 `uv pip compile` 生成 `backend/requirements.lock`。
+- `backend/.deps` 同时供 `backend/` 与 `system/` 使用；禁止创建 `system/.deps`、根目录 `.deps`、`.deps_*` 等其他 Python 依赖副本。
+- `system/requirements.txt` 已废弃，仅作兼容提示，不要单独安装。
+- 前端依赖仍由 `frontend/package-lock.json` 锁定，安装到 `frontend/node_modules`。
 
 前端请求只允许访问 FastAPI；禁止使用 Mock 数据或在接口失败时回退到伪造统计。测试数据应放在独立测试夹具中，不得进入正式页面请求路径。
 
