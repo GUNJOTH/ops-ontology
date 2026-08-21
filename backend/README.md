@@ -37,9 +37,12 @@ python backend\dev_start.py --check
 ## 依赖和配置
 
 ```powershell
-Set-Location 'D:\项目\同海\semantic-engineering\backend'
+Set-Location 'D:\项目\同海\ops-ontology\backend'
 .\install_backend.ps1
 ```
+
+
+`backend/.deps` 同时是 `system/` 脚本的统一 Python 依赖目录；不要恢复 `system/.deps` 或根目录 `.deps`。`system/requirements.txt` 仅作兼容提示，不要单独安装。
 
 本地 AI 配置复制 [`backend/.env.example`](.env.example) 为 `.env` 后填写。常用变量为 `RULE_AGENT_BASE_URL`、`RULE_AGENT_MODEL`、`RULE_AGENT_API_KEY`、`RULE_AGENT_TIMEOUT`、`RULE_AGENT_MAX_TOKENS` 和 `RULE_AGENT_MAX_PROPOSALS`。`.env` 永远不要提交。
 

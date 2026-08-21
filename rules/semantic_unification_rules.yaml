@@ -9,7 +9,7 @@ scope:
     - "XNY_SAAS"
   source_host: "env:HD_DM_DSN"
   source_boundary: "read_only"
-  target_boundary: "semantic-engineering directory and approved Harness result layer only"
+  target_boundary: "ops-ontology directory and approved Harness result layer only"
   excluded:
     - "source table updates"
     - "silent cross-schema merges"

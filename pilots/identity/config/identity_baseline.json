@@ -4,14 +4,14 @@
   "identity_key": ["source_schema", "SITEID", "ASSETNUM"],
   "asset_snapshot": {
     "snapshot_id": "identity-source-snapshot-20260816T031949Z",
-    "relative_path": "semantic-engineering/pilots/identity/snapshots/identity-source-snapshot-20260816T031949Z",
+    "relative_path": "ops-ontology/pilots/identity/snapshots/identity-source-snapshot-20260816T031949Z",
     "manifest_sha256": "AD614AA7A13B963E2964929D1B87C1740F88655BBD1E9A8AE1A59627B9A11D43",
     "read_only": true,
     "source_write": false
   },
   "operational_snapshot": {
     "snapshot_id": "identity-operational-snapshot-20260816T032401Z",
-    "relative_path": "semantic-engineering/pilots/identity/snapshots/identity-operational-snapshot-20260816T032401Z",
+    "relative_path": "ops-ontology/pilots/identity/snapshots/identity-operational-snapshot-20260816T032401Z",
     "manifest_sha256": "03F6A5DC61160B0A28059BC25713649DE519F3CFD594BA883C585CE74F8311D8",
     "read_only": true,
     "source_write": false,
@@ -20,7 +20,7 @@
   "auxiliary_snapshots": [
     {
       "snapshot_id": "identity-operational-snapshot-20260816T050345Z",
-      "relative_path": "semantic-engineering/pilots/identity/snapshots/identity-operational-snapshot-20260816T050345Z",
+      "relative_path": "ops-ontology/pilots/identity/snapshots/identity-operational-snapshot-20260816T050345Z",
       "manifest_sha256": "77690DD0857EB976A9E59750D47280E06B0F470753AF982E04D31A24A2D20C87",
       "scope": "inspection_only_diagnostic",
       "formal_baseline": false,

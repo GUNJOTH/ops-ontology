@@ -3,7 +3,7 @@
   "source_schema": "HD_SAAS",
   "source_table": "LOCATIONS",
   "scope": "frozen HD quality batch only",
-  "source_quality_file": "D:\\项目\\同海\\semantic-engineering\\pilots\\HD_SAAS\\quality\\hd_quality_candidates.csv",
+  "source_quality_file": "D:\\项目\\同海\\ops-ontology\\pilots\\HD_SAAS\\quality\\hd_quality_candidates.csv",
   "source_quality_file_sha256": "6745441df87b116ee16e17c2062dcb3e598395d9645a9ef629dffc4a6e481334",
   "source_quality_manifest_sha256": "6745441df87b116ee16e17c2062dcb3e598395d9645a9ef629dffc4a6e481334",
   "quality_rows_profiled": 385582,

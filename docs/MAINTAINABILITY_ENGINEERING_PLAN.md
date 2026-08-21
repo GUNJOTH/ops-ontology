@@ -10,13 +10,14 @@
 - `system/tests/test_pipeline_framework.py`：覆盖 DAG 顺序、幂等键、来源 manifest、只读连接和安全边界；已纳入后端 pytest 的默认测试路径。
 - `semantic_registry.validate_registry_contract()`：校验关系域/值域、别名目标和事件谓词注册；补齐 `related_device` 的正式关系映射。
 - 第一批闭环构建器已使用共享 `connect_local` / `connect_readonly`：统一语义、事件、运行契约、治理契约、状态、事实、决策、执行台账、覆盖报告、Canonical 投影和 OWL RL 回放。
-- 系统域的健康、指标和 Semantic Release 路由已迁入原生 `APIRouter`；其余业务域保持兼容入口，按低耦合顺序继续迁移。
+- 系统域与语义域的 handler 已迁入 `domains/system`、`domains/semantic`：路由定义与注册同文件自持（`build_router()` 不再接收 handler 字典），读逻辑在 `service.py`，`main.py` 仅 `include_router` 并保留导入别名；`require_decision_auth` 抽到 `app/core/auth.py`。其余业务域保持兼容入口，按低耦合顺序继续迁移。
 - 工作流库已登记 `semantic_schema_migration`，生产迁移使用显式版本号，不再只依赖重复执行 `CREATE IF NOT EXISTS`。
+- Python 依赖已统一：以 `backend/requirements.lock` 为精确基线，安装到 `backend/.deps`；backend 与 system 共用一份依赖，`system/requirements.txt` 已废弃，禁止恢复 `system/.deps` 或根目录 `.deps`。
 
 ## 运行约定
 
 ```powershell
-$env:PYTHONPATH = 'D:\项目\同海\semantic-engineering\system;D:\项目\同海\semantic-engineering\backend\.deps;D:\项目\同海\semantic-engineering\backend'
+$env:PYTHONPATH = 'D:\项目\同海\ops-ontology\system;D:\项目\同海\ops-ontology\backend\.deps;D:\项目\同海\ops-ontology\backend'
 python system\run_semantic_closure.py --help
 python -m pytest backend\tests system\tests -q
 ```

@@ -2,7 +2,7 @@
   "freeze_run_id": "hd-quality-freeze-20260811T152640Z",
   "frozen_at_utc": "2026-08-11T15:26:40.780177+00:00",
   "source_snapshot_id": "8ec77ed1bfd07a2be029f9600a28f210631c6dfabc0e05ae382f494d6d35b538",
-  "quality_file": "D:\\项目\\同海\\semantic-engineering\\pilots\\HD_SAAS\\quality\\hd_quality_candidates.csv",
+  "quality_file": "D:\\项目\\同海\\ops-ontology\\pilots\\HD_SAAS\\quality\\hd_quality_candidates.csv",
   "quality_file_sha256": "6745441df87b116ee16e17c2062dcb3e598395d9645a9ef629dffc4a6e481334",
   "quality_rows": 385582,
   "quality_rule": "CONTEXT_STATUS=complete and CONTEXT_REASON_CODES empty",

@@ -5,7 +5,7 @@
 首次运行：
 
 ```powershell
-Set-Location 'D:\项目\同海\semantic-engineering\frontend'
+Set-Location 'D:\项目\同海\ops-ontology\frontend'
 npm install
 ```
 
