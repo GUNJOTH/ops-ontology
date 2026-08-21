@@ -2,17 +2,16 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import sqlite3
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import DEFAULT_WORKFLOW, sha256_bytes, utc_now
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
-DB = ROOT / "data" / "semantic_workflow.sqlite3"
+DB = DEFAULT_WORKFLOW
 PREVIEW_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "format_rule_preview"
 PREVIEW_CSV = PREVIEW_DIR / "format_rule_rewrite_preview.csv"
 PREVIEW_MANIFEST = PREVIEW_DIR / "manifest.json"
@@ -25,20 +24,8 @@ RULE_KEYS = (
 PUBLISHER = "local-user-confirmed-format-batch"
 
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
-
-
 def load_preview() -> tuple[dict[str, object], list[dict[str, str]]]:
     manifest = json.loads(PREVIEW_MANIFEST.read_text(encoding="utf-8"))
-    digest = hashlib.sha256()
-    with PREVIEW_CSV.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
     if manifest.get("rule_status") != "active":
         raise SystemExit("Preview rules are not active.")
     if manifest.get("source_write") is not False or manifest.get("formal_publication") is not False:

@@ -9,9 +9,9 @@ import hashlib
 import json
 import sqlite3
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -26,10 +26,6 @@ BACKEND_ROOT = PROJECT_ROOT / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 from app.main import ai_cluster_id, classify_ai_cluster, cluster_pattern  # noqa: E402
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def stable_replay_id(candidate_ids: list[str]) -> str:

@@ -5,10 +5,12 @@ import json
 import sqlite3
 from pathlib import Path
 
+from pipeline.contracts import resolve_artifact_path
+
 try:
     from rdflib import Dataset, Graph
 except ImportError as exc:  # pragma: no cover
-    raise SystemExit("缺少 rdflib，请安装 system/requirements.txt") from exc
+    raise SystemExit("缺少 rdflib，请先安装统一 Python 依赖：uv pip install --target backend/.deps -r backend/requirements.lock") from exc
 
 
 ROOT = Path(__file__).resolve().parent
@@ -17,11 +19,11 @@ SOURCE = ROOT / "data" / "unified_semantics.sqlite3"
 OUTPUT = ROOT / "data" / "canonical_semantic_verification.json"
 
 
-def verify_streamed_artifacts(manifest: dict[str, object]) -> dict[str, object]:
+def verify_streamed_artifacts(manifest: dict[str, object], run_dir: Path | None = None) -> dict[str, object]:
     """Validate large streamed RDF artifacts without loading them into rdflib."""
     artifacts = manifest.get("artifacts") or {}
-    trig_path = Path(str(artifacts.get("trig") or ""))
-    jsonld_path = Path(str(artifacts.get("jsonld") or ""))
+    trig_path = resolve_artifact_path(artifacts.get("trig") or "", run_dir)
+    jsonld_path = resolve_artifact_path(artifacts.get("jsonld") or "", run_dir)
     expected = int((manifest.get("canonicalScope") or {}).get("sourceIdentityDeviceCount") or 0)
     trig_devices = 0
     jsonld_devices = 0
@@ -119,9 +121,10 @@ def verify(target: Path = TARGET) -> dict[str, object]:
     if run:
         manifest = json.loads(run["manifest_json"])
         artifacts = dict(manifest.get("artifacts") or {})
+        run_dir = ROOT / "canonical-runs" / str(run["run_id"])
         manifest_streamed = bool(manifest.get("streamingProjection"))
         if manifest_streamed:
-            streamed = verify_streamed_artifacts(manifest)
+            streamed = verify_streamed_artifacts(manifest, run_dir)
             parsed["streamedArtifacts"] = streamed
             parsed["trig"] = bool(streamed["trig"])
             parsed["jsonld"] = bool(streamed["jsonld"])
@@ -133,26 +136,26 @@ def verify(target: Path = TARGET) -> dict[str, object]:
             # identity graph is validated by the deterministic stream gate.
             try:
                 reasoning = Dataset()
-                reasoning.parse(str(artifacts.get("reasoningTrig") or artifacts["trig"]), format="trig")
+                reasoning.parse(resolve_artifact_path(artifacts.get("reasoningTrig") or artifacts["trig"], run_dir), format="trig")
                 parsed["reasoningTrig"] = len(list(reasoning.quads((None, None, None, None)))) > 0
             except Exception as exc:  # pragma: no cover
                 failures.append(f"REASONING_TRIG_PARSE_FAILED:{exc}")
             try:
                 reasoning_jsonld = Dataset()
-                reasoning_jsonld.parse(str(artifacts.get("reasoningJsonLd") or artifacts["jsonld"]), format="json-ld")
+                reasoning_jsonld.parse(resolve_artifact_path(artifacts.get("reasoningJsonLd") or artifacts["jsonld"], run_dir), format="json-ld")
                 parsed["reasoningJsonLd"] = len(list(reasoning_jsonld.quads((None, None, None, None)))) > 0
             except Exception as exc:  # pragma: no cover
                 failures.append(f"REASONING_JSONLD_PARSE_FAILED:{exc}")
         else:
             try:
                 dataset = Dataset()
-                dataset.parse(artifacts["trig"], format="trig")
+                dataset.parse(resolve_artifact_path(artifacts["trig"], run_dir), format="trig")
                 parsed["trig"] = len(list(dataset.quads((None, None, None, None)))) > 0
             except Exception as exc:  # pragma: no cover - exact parser errors depend on rdflib version
                 failures.append(f"TRIG_PARSE_FAILED:{exc}")
             try:
                 jsonld_dataset = Dataset()
-                jsonld_dataset.parse(artifacts["jsonld"], format="json-ld")
+                jsonld_dataset.parse(resolve_artifact_path(artifacts["jsonld"], run_dir), format="json-ld")
                 parsed["jsonld"] = len(list(jsonld_dataset.quads((None, None, None, None)))) > 0
                 if not parsed["jsonld"]:
                     failures.append("JSONLD_EMPTY")

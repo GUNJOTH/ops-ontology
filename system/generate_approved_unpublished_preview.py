@@ -10,7 +10,6 @@ from pathlib import Path
 
 from pipeline.contracts import connect_readonly
 
-
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
 OUT = ROOT.parent / "pilots" / "HD_SAAS" / "approved_unpublished_preview"

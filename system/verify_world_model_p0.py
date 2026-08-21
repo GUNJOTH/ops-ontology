@@ -6,7 +6,6 @@ import pathlib
 import sqlite3
 import sys
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 SOURCE_DB = ROOT / "data" / "unified_semantics.sqlite3"

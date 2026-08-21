@@ -11,9 +11,9 @@ import re
 import sqlite3
 import unicodedata
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
 
 ROOT = Path(__file__).resolve().parent
 SQLITE_DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -28,9 +28,6 @@ SPACE_CASES = {
     "manual_normalization",
 }
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def deterministic_format_transform(value: str) -> str:

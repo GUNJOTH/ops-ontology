@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-
 from app.core.config import METADATA_SQLITE_DB
 from app.main import metadata_catalog, metadata_catalog_detail, metadata_export, metadata_summary
 

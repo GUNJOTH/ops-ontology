@@ -16,7 +16,7 @@ DATA_DIR = ROOT / "data"
 DUCKDB_DB = DATA_DIR / "semantic_analytics.duckdb"
 INPUT_ALIAS_DIR = DATA_DIR / "input_alias"
 INPUT_ALIAS = INPUT_ALIAS_DIR / "semantic_candidates.csv"
-DEPENDENCY_DIR = ROOT / ".deps_latest"
+DEPENDENCY_DIR = SEMANTIC_ROOT / "backend" / ".deps"
 
 
 def sha256(path: Path) -> str:

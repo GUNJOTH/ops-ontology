@@ -20,7 +20,7 @@ DATA_DIR = ROOT / "data"
 SQLITE_DB = DATA_DIR / "semantic_workflow.sqlite3"
 DEFAULT_OUTPUT = DATA_DIR / "semantic_analytics_v155.rebuilt.duckdb"
 DEFAULT_MANIFEST = DATA_DIR / "duckdb_baseline_manifest.json"
-DEPENDENCY_DIRS = (ROOT / ".deps_latest", ROOT / ".deps_121", ROOT / ".deps")
+DEPENDENCY_DIRS = (ROOT.parent / "backend" / ".deps",)
 
 FACT_COLUMNS = (
     "CANDIDATE_ID", "SOURCE_SNAPSHOT_ID", "SOURCE_ROW_HASH", "ASSETID",

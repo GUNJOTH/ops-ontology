@@ -14,7 +14,6 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 STANDARD_ROOT = PROJECT_ROOT / "standards"
@@ -82,9 +81,6 @@ def register_spec(spec_path: Path, activate: bool = False) -> dict[str, object]:
 
 
 def register_current() -> dict[str, object]:
-    spec = json.loads(VERSION_SPEC.read_text(encoding="utf-8"))
-    registry = load_registry()
-    version = str(spec["version"])
     result = register_spec(VERSION_SPEC, activate=True)
     result["status"] = "registered"
     return result

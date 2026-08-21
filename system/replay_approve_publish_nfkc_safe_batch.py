@@ -7,23 +7,27 @@ before any candidate is approved. Row-level failures are isolated as
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
-import shutil
 import sqlite3
 import unicodedata
 import uuid
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+from common import (
+    DEFAULT_DUCKDB,
+    DEFAULT_WORKFLOW,
+    backup_before_publish,
+    sha256_bytes,
+    sha256_file,
+    utc_now,
+)
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
-DATA_DIR = ROOT / "data"
-DB = DATA_DIR / "semantic_workflow.sqlite3"
-DUCKDB = DATA_DIR / "semantic_analytics_v155.duckdb"
-DUCKDB_WAL = DATA_DIR / "semantic_analytics_v155.duckdb.wal"
+DB = DEFAULT_WORKFLOW
+DUCKDB = DEFAULT_DUCKDB
+DUCKDB_WAL = Path(str(DEFAULT_DUCKDB) + ".wal")
 PREVIEW_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "nfkc_safe_format_preview"
 PREVIEW_CSV = PREVIEW_DIR / "rewrite_preview.csv"
 PREVIEW_MANIFEST = PREVIEW_DIR / "manifest.json"
@@ -38,22 +42,6 @@ RULE_VERSION = "nfkc-format-proposed-20260812-v1"
 VALIDATOR_VERSION = "hd-semantic-validator-0.2.0"
 RULE_KEY = "format.nfkc_compatibility_normalization"
 PUBLISHER = "local-user-confirmed-nfkc-safe-4306"
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
 
 
 def load_preview() -> tuple[dict[str, object], dict[str, object], list[dict[str, str]]]:
@@ -83,36 +71,6 @@ def load_preview() -> tuple[dict[str, object], dict[str, object], list[dict[str,
         if row["PREVIEW_STATUS"] != "proposed_not_active":
             raise SystemExit("NFKC preview contains an unexpected row status.")
     return manifest, sample_manifest, rows
-
-
-def backup_before_publish(connection: sqlite3.Connection, stamp: str) -> tuple[Path, list[Path]]:
-    backup_dir = ROOT / "backups" / f"nfkc-safe-publication-pre-{stamp}"
-    backup_dir.mkdir(parents=True, exist_ok=False)
-    sqlite_backup = backup_dir / DB.name
-    backup_connection = sqlite3.connect(str(sqlite_backup))
-    connection.backup(backup_connection)
-    backup_connection.close()
-    files = [sqlite_backup]
-    for source in (DUCKDB, DUCKDB_WAL):
-        if source.exists():
-            destination = backup_dir / source.name
-            shutil.copy2(source, destination)
-            files.append(destination)
-    (backup_dir / "manifest.json").write_text(
-        json.dumps(
-            {
-                "status": "pre_publication_backup",
-                "created_at_utc": utc_now(),
-                "files": [{"path": str(path), "size": path.stat().st_size} for path in files],
-                "source_write": False,
-                "formal_publication": False,
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
-    return backup_dir, files
 
 
 def append_reason(existing: str, reason: str) -> str:
@@ -213,7 +171,12 @@ def main() -> None:
     # Keep the full replay result even when an unexpected row-level failure is
     # found. A second passed replay is created for the exact publish subset.
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_dir, backup_files = backup_before_publish(connection, stamp)
+    backup_dir, backup_files = backup_before_publish(
+        connection,
+        "nfkc-safe-publication",
+        stamp,
+        (DUCKDB, DUCKDB_WAL),
+    )
     now = utc_now()
     full_replay_id = f"replay-nfkc-full-{uuid.uuid4().hex}"
     subset_replay_id = f"replay-nfkc-passed-{uuid.uuid4().hex}"

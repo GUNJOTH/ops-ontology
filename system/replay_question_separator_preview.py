@@ -6,9 +6,9 @@ import hashlib
 import json
 import sqlite3
 from collections import Counter
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -24,9 +24,6 @@ RULE_KEY = "semantic.separator.fullwidth_question_mark_to_space"
 VALIDATOR_VERSION = "question-separator-replay-validator-v1"
 FULLWIDTH_QUESTION = "\uff1f"
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def stable_replay_id(candidate_ids: list[str]) -> str:

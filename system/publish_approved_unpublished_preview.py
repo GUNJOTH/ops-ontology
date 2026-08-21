@@ -10,27 +10,18 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from common import DEFAULT_WORKFLOW
+from common import sha256_file as digest
+from common import utc_now as now
 
 ROOT = Path(__file__).resolve().parent
-DB = ROOT / "data" / "semantic_workflow.sqlite3"
+DB = DEFAULT_WORKFLOW
 OUT = ROOT.parent / "pilots" / "HD_SAAS" / "approved_unpublished_preview"
 PREVIEW = OUT / "publication_preview.csv"
 REPLAY = OUT / "replay_manifest.json"
 PUBLICATION = OUT / "publication_manifest.json"
 BACKUPS = ROOT / "backups"
 PUBLISHER = "local-user-approved-unpublished"
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def digest(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def main() -> None:

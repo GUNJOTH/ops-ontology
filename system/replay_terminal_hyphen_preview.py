@@ -6,9 +6,9 @@ import hashlib
 import json
 import sqlite3
 from collections import Counter
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -23,9 +23,6 @@ RULE_VERSION = "terminal-hyphen-proposed-20260813-v1"
 RULE_KEY = "format.terminal_hyphen_trim"
 VALIDATOR_VERSION = "terminal-hyphen-replay-validator-v1"
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def stable_replay_id(candidate_ids: list[str]) -> str:

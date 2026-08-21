@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "description": "Repository maintainability budgets. These are regression guards, not a substitute for gradual refactoring.",
+  "max": {
+    "backend_main_lines": 2200,
+    "largest_backend_module_lines": 2300,
+    "largest_system_script_lines": 1400,
+    "system_scripts": 100,
+    "direct_sqlite_connect_scripts": 56,
+    "direct_duckdb_connect_scripts": 7
+  },
+  "min": {
+    "pipeline_users": 32,
+    "backend_test_files": 26,
+    "system_test_files": 3
+  }
+}

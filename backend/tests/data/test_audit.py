@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 
 import pytest
-
 from app.core.audit import append_audit_event
 
 pytestmark = pytest.mark.unit

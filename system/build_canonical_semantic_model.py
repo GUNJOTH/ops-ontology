@@ -17,24 +17,23 @@ import json
 import re
 import shutil
 import sqlite3
-from typing import Any, Iterable
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Iterable
 from urllib.parse import quote
 
 try:
     from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
-    from rdflib.namespace import OWL, RDF, RDFS, XSD
+    from rdflib.namespace import RDF, RDFS, XSD
 except ImportError as exc:  # pragma: no cover - gives an actionable runtime error
     raise SystemExit(
-        "缺少 rdflib，请安装 system/requirements.txt 后重试：pip install -r system/requirements.txt"
+        "缺少 rdflib，请先安装统一 Python 依赖：uv pip install --target backend/.deps -r backend/requirements.lock"
     ) from exc
 
+from pipeline.contracts import connect_local, connect_readonly, manifest_path
+from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE, RESOURCE_NAMESPACE, SOURCE_NAMESPACE
 from semantic_predicates import event_predicate, relation_predicate
 from semantic_registry import object_class_local_name
-from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE, RESOURCE_NAMESPACE, SOURCE_NAMESPACE
-from pipeline.contracts import connect_local, connect_readonly
-
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -44,6 +43,8 @@ IDENTITY_ROOT = PROJECT_ROOT / "pilots" / "identity" / "results"
 STANDARD_ROOT = PROJECT_ROOT / "standards"
 RUN_ROOT = ROOT / "canonical-runs"
 VOCABULARY_PATH = STANDARD_ROOT / "vocabularies.ttl"
+
+
 VERSION_SPEC_PATH = STANDARD_ROOT / "ontology-version.json"
 
 EX = Namespace(ONTOLOGY_NAMESPACE)
@@ -585,7 +586,6 @@ class CanonicalBuilder:
             for row in source_db.execute(
                 "SELECT * FROM semantic_canonical_state WHERE status='active' ORDER BY state_domain,sort_order,canonical_state"
             ):
-                state_key = f"{row['state_domain']}/{row['canonical_state']}"
                 concept = URIRef(EX + "state/" + safe_segment(row["state_domain"]) + "/" + safe_segment(row["canonical_state"]))
                 add_concept(
                     concept,
@@ -812,6 +812,25 @@ class CanonicalBuilder:
                 (EX.sourceSnapshotId, row["source_version_id"], XSD.string),
             ])
             self.add_provenance("rule_projection", row["rule_id"], rule, source_system="local", source_table="semantic_executable_rule", source_row_id=row["rule_id"], source_snapshot_id=row["source_version_id"], evidence=row["provenance_json"])
+        has_action_definition = source_db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_action_definition'").fetchone() is not None
+        if has_action_definition:
+            for row in source_db.execute("SELECT * FROM semantic_action_definition ORDER BY action_id"):
+                action = URIRef(EX + "action/" + safe_segment(row["action_id"]))
+                self.add(graph, action, RDF.type, EX.Action, provenance=dict(row))
+                add_literal_properties(self.dataset, graph, action, [
+                    (EX.actionName, row["action_name"], XSD.string),
+                    (EX.businessMeaning, row["business_meaning"], XSD.string),
+                    (EX.actionVersion, row["version"], XSD.string),
+                    (EX.targetObjectType, row["target_type"], XSD.string),
+                    (EX.allowedWhenJson, row["allowed_when_json"], XSD.string),
+                    (EX.requiredInputFactsJson, row["required_facts_json"], XSD.string),
+                    (EX.permissionScopeJson, row["permission_scope_json"], XSD.string),
+                    (EX.adapterMappingsJson, row["adapter_mappings_json"], XSD.string),
+                    (EX.effectsJson, row["effects_json"], XSD.string),
+                    (EX.executionStatesJson, row["execution_states_json"], XSD.string),
+                    (EX.status, row["status"], XSD.string),
+                ])
+                self.add_provenance("action_definition_projection", row["action_id"], action, source_system="local", source_table="semantic_action_definition", source_row_id=row["action_id"], evidence=row["business_meaning"])
         has_action_plan = source_db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_action_plan'").fetchone() is not None
         if has_action_plan:
             for row in source_db.execute("SELECT * FROM semantic_action_plan ORDER BY plan_id"):
@@ -1044,7 +1063,7 @@ class CanonicalBuilder:
         reasoning_jsonld_path = run_dir / "canonical.reasoning.jsonld"
         base_trig_path = run_dir / "canonical.base.trig"
         base_jsonld_path = run_dir / "canonical.base.jsonld"
-        manifest_path = run_dir / "projection_manifest.json"
+        manifest_file = run_dir / "projection_manifest.json"
         validation_path = run_dir / "shacl_validation_report.json"
 
         # The bounded semantic graph is also the reasoning input.  Full source
@@ -1164,7 +1183,7 @@ class CanonicalBuilder:
         manifest = {
             "schemaVersion": "canonical-semantic-model-v1",
             "runId": self.run_id,
-            "sourceDb": str(self.source),
+            "sourceDb": manifest_path(self.source, run_dir),
             "sourceSnapshotId": self.source_snapshot_id,
             "ontologyVersion": self.ontology_version,
             "standardBaseline": ["RDF 1.1", "RDFS 1.1", "OWL 2 RL", "SKOS", "SHACL 1.0", "SPARQL 1.1", "PROV-O", "JSON-LD 1.1"],
@@ -1190,16 +1209,16 @@ class CanonicalBuilder:
                 "byGraph": provenance_by_graph,
             },
             "artifacts": {
-                "trig": str(trig_path),
-                "jsonld": str(jsonld_path),
-                "reasoningTrig": str(reasoning_trig_path),
-                "reasoningJsonLd": str(reasoning_jsonld_path),
-                "validation": str(validation_path),
-                "rdfDatasetManifest": str(STANDARD_ROOT / str(self.version_spec.get("rdfDatasetManifest", "rdf-dataset.json"))),
-                "assetManifest": str(STANDARD_ROOT / str(self.version_spec.get("assetManifest", "semantic-asset-manifest.json"))),
+                "trig": manifest_path(trig_path, run_dir),
+                "jsonld": manifest_path(jsonld_path, run_dir),
+                "reasoningTrig": manifest_path(reasoning_trig_path, run_dir),
+                "reasoningJsonLd": manifest_path(reasoning_jsonld_path, run_dir),
+                "validation": manifest_path(validation_path, run_dir),
+                "rdfDatasetManifest": manifest_path(STANDARD_ROOT / str(self.version_spec.get("rdfDatasetManifest", "rdf-dataset.json")), run_dir),
+                "assetManifest": manifest_path(STANDARD_ROOT / str(self.version_spec.get("assetManifest", "semantic-asset-manifest.json")), run_dir),
             },
         }
-        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        manifest_file.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
         validation_path.write_text(json.dumps({"conforms": not issues, "issues": issues, "identityPreflight": self.identity_preflight}, ensure_ascii=False, indent=2), encoding="utf-8")
         db.execute(
             "INSERT INTO canonical_projection_run(run_id,semantic_source_db,source_snapshot_id,ontology_version,graph_count,resource_count,statement_count,validation_error_count,status,manifest_json,source_write,formal_publication,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",

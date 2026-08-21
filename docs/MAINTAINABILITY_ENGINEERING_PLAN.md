@@ -20,7 +20,11 @@
 $env:PYTHONPATH = 'D:\项目\同海\ops-ontology\system;D:\项目\同海\ops-ontology\backend\.deps;D:\项目\同海\ops-ontology\backend'
 python system\run_semantic_closure.py --help
 python -m pytest backend\tests system\tests -q
+python system\verify_maintainability.py --strict
 ```
+
+`verify_maintainability.py` 只扫描代码、测试和入口使用情况，不打开 SQLite/DuckDB，也不修改任何运行数据。预算定义在
+`contracts/maintainability_budget.json`，用于阻止大文件、散装脚本和直接数据库连接数量继续增长；预算会随着迁移进展以独立提交下调。
 
 执行实际闭环前仍须使用当前批准的本地快照，并保留生成的数据库备份。`--resume-manifest` 只复用同一 DAG、同一参数和同一幂等键的已完成步骤；不允许跳过安全门禁，也不允许写入源系统。
 
@@ -32,6 +36,14 @@ python -m pytest backend\tests system\tests -q
 4. 把 `semantic_registry` 和 `namespace.json` 接入标准 CI；任何未注册关系、未契约化 IRI 或不安全标志直接失败。
 5. 为脚本补齐三类固定测试：正常执行、幂等重跑、脏数据隔离。按批次迁移，不一次性重写全部脚本。
 6. 在数据规模和查询指标达到触发条件前，继续使用 SQLite + DuckDB + Parquet；如需外部三元组库，另行进行容量和迁移评估。
+
+## 长期维护原则
+
+- 新业务步骤必须先成为可测试的函数或 pipeline handler，再提供 CLI 入口；不得继续复制一个新的顶层脚本作为唯一实现。
+- 任务应保持幂等、可重试、可恢复，并通过 manifest 记录输入快照、版本、输出和失败原因。
+- API 采用域内 `APIRouter → service → core` 依赖方向；`main.py` 只负责应用生命周期、中间件和路由挂载。
+- 后端、system 和前端都必须有 CI 门禁；构建失败、预算超限或测试失败不得进入发布分支。
+- 所有维护性改造都不得改变源系统只读边界、Canonical RDF 来源追溯和审批发布门禁。
 
 ## 不在本轮做的事情
 

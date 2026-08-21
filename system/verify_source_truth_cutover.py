@@ -11,7 +11,6 @@ import pathlib
 import sqlite3
 import sys
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 DATA_DIR = ROOT / "data"

@@ -13,7 +13,6 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 

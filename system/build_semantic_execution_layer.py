@@ -8,11 +8,9 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
-import sqlite3
 from datetime import datetime, timezone
 
 from pipeline.contracts import connect_local
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -83,6 +81,28 @@ def build(target_path: pathlib.Path) -> dict[str, object]:
           ON semantic_execution_ledger(status,updated_at);
         CREATE INDEX IF NOT EXISTS ix_semantic_execution_ledger_plan
           ON semantic_execution_ledger(action_plan_id,created_at);
+          CREATE TABLE IF NOT EXISTS semantic_action_execution (
+            execution_id TEXT PRIMARY KEY,
+            action_plan_id TEXT,
+            action_id TEXT,
+            action_key TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL UNIQUE,
+            status TEXT NOT NULL CHECK(status IN ('requested','executing','succeeded','failed')),
+            request_json TEXT NOT NULL DEFAULT '{}',
+            response_json TEXT NOT NULL DEFAULT '{}',
+            error_code TEXT,
+            error_message TEXT,
+            source_write INTEGER NOT NULL CHECK(source_write=0),
+            formal_publication INTEGER NOT NULL CHECK(formal_publication=0),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            completed_at TEXT
+          );
+          CREATE INDEX IF NOT EXISTS ix_semantic_action_execution_status
+            ON semantic_action_execution(status,updated_at);
+          CREATE INDEX IF NOT EXISTS ix_semantic_action_execution_plan
+            ON semantic_action_execution(action_plan_id,created_at);
+
         """
     )
     created = now()
@@ -95,6 +115,37 @@ def build(target_path: pathlib.Path) -> dict[str, object]:
           mode=excluded.mode,status=excluded.status,config_json=excluded.config_json,updated_at=excluded.updated_at""",
         (json.dumps({"source_write": False, "formal_publication": False, "note": "仅生成执行台账，不调用外部系统"}, ensure_ascii=False), created, created),
     )
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_action_definition'").fetchone():
+        for action in db.execute("SELECT * FROM semantic_action_definition ORDER BY action_id").fetchall():
+            try:
+                mappings = json.loads(action["adapter_mappings_json"] or "[]")
+            except json.JSONDecodeError:
+                mappings = []
+            for mapping in mappings:
+                adapter_id = f"catalog-{action['action_id']}-{mapping.get('name', 'adapter')}"
+                db.execute(
+                    """INSERT INTO semantic_execution_adapter(
+                      adapter_id,adapter_version,action_type,target_system,endpoint_name,mode,
+                      status,source_write,formal_publication,config_json,created_at,updated_at
+                    ) VALUES (?,?,?,?,?,'approval_required','disabled',0,0,?,?,?)
+                    ON CONFLICT(adapter_id) DO UPDATE SET adapter_version=excluded.adapter_version,
+                      action_type=excluded.action_type,target_system=excluded.target_system,
+                      endpoint_name=excluded.endpoint_name,mode=excluded.mode,
+                      config_json=excluded.config_json,updated_at=excluded.updated_at""",
+                    (
+                        adapter_id, "execution-adapter-v1", action["action_key"],
+                        mapping.get("system", "EXTERNAL"), mapping.get("name", "adapter"),
+                        json.dumps({
+                            "source_write": False,
+                            "formal_publication": False,
+                            "enabled": False,
+                            "action_id": action["action_id"],
+                            "action_name": action["action_name"],
+                        }, ensure_ascii=False),
+                        created, created,
+                    ),
+                )
+
     db.commit()
     action_run_count = int(db.execute("SELECT count(*) FROM semantic_action_run").fetchone()[0])
     adapter_count = int(db.execute("SELECT count(*) FROM semantic_execution_adapter WHERE status='active'").fetchone()[0])

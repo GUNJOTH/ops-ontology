@@ -4,10 +4,8 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"

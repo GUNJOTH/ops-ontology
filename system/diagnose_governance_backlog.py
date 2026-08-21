@@ -4,9 +4,7 @@ from __future__ import annotations
 import json
 import pathlib
 import sqlite3
-from collections import defaultdict
 from datetime import datetime, timezone
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 WORKFLOW_DB = ROOT / "data" / "semantic_workflow.sqlite3"

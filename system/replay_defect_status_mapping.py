@@ -2,24 +2,14 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import pathlib
 import sqlite3
-from datetime import datetime, timezone
 
+from common import DEFAULT_TARGET, sid
+from common import utc_now as now
 
 ROOT = pathlib.Path(__file__).resolve().parent
-DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sid(prefix: str, *parts: object) -> str:
-    raw = "|".join("" if part is None else str(part) for part in parts)
-    return f"{prefix}-{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:24]}"
 
 
 def ensure_schema(db: sqlite3.Connection) -> None:

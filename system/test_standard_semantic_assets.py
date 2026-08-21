@@ -1,11 +1,9 @@
 """Small regression checks for the local SHACL/Core asset implementation."""
 from __future__ import annotations
 
+from build_canonical_semantic_model import validate_shapes
 from rdflib import Dataset, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, XSD
-
-from build_canonical_semantic_model import validate_shapes
-
 
 EX = Namespace("https://semantic.local/ontology/")
 

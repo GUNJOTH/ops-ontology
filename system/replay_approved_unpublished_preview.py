@@ -4,11 +4,10 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
 from pipeline.contracts import connect_readonly
-
 
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -17,9 +16,6 @@ PREVIEW = PREVIEW_DIR / "publication_preview.csv"
 REPLAY = PREVIEW_DIR / "replay_results.csv"
 MANIFEST = PREVIEW_DIR / "replay_manifest.json"
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def sha256(path: Path) -> str:
@@ -60,16 +56,26 @@ def main() -> None:
         if candidate is None:
             failures.append("candidate_missing")
         else:
-            if candidate["review_state"] != "approved": failures.append("review_state_changed")
-            if candidate["publication_state"] != "unpublished": failures.append("publication_state_changed")
-            if candidate["decision"] not in {"approved", "modified"}: failures.append("approval_decision_invalid")
-            if not (candidate["approval_receipt"] or "").strip(): failures.append("approval_receipt_missing")
-            if candidate["original_description"] != item["ORIGINAL_DESCRIPTION"]: failures.append("original_description_changed")
-            if candidate["candidate_description"] != item["CANDIDATE_DESCRIPTION"]: failures.append("candidate_description_changed")
-            if (candidate["reviewed_description"] or "") != item["FINAL_DESCRIPTION"]: failures.append("final_description_changed")
-            if (candidate["source_schema"], candidate["site_id"], candidate["asset_number"]) != (item["SOURCE_SCHEMA"], item["SITE_ID"], item["ASSET_NUMBER"]): failures.append("identity_changed")
-            if connection.execute("SELECT 1 FROM published_description WHERE candidate_id=?", (item["CANDIDATE_ID"],)).fetchone() is not None: failures.append("already_published")
-            if connection.execute("SELECT 1 FROM published_description WHERE source_schema=? AND site_id=? AND asset_number=?", (item["SOURCE_SCHEMA"], item["SITE_ID"], item["ASSET_NUMBER"])).fetchone() is not None: failures.append("identity_already_published")
+            if candidate["review_state"] != "approved":
+                failures.append("review_state_changed")
+            if candidate["publication_state"] != "unpublished":
+                failures.append("publication_state_changed")
+            if candidate["decision"] not in {"approved", "modified"}:
+                failures.append("approval_decision_invalid")
+            if not (candidate["approval_receipt"] or "").strip():
+                failures.append("approval_receipt_missing")
+            if candidate["original_description"] != item["ORIGINAL_DESCRIPTION"]:
+                failures.append("original_description_changed")
+            if candidate["candidate_description"] != item["CANDIDATE_DESCRIPTION"]:
+                failures.append("candidate_description_changed")
+            if (candidate["reviewed_description"] or "") != item["FINAL_DESCRIPTION"]:
+                failures.append("final_description_changed")
+            if (candidate["source_schema"], candidate["site_id"], candidate["asset_number"]) != (item["SOURCE_SCHEMA"], item["SITE_ID"], item["ASSET_NUMBER"]):
+                failures.append("identity_changed")
+            if connection.execute("SELECT 1 FROM published_description WHERE candidate_id=?", (item["CANDIDATE_ID"],)).fetchone() is not None:
+                failures.append("already_published")
+            if connection.execute("SELECT 1 FROM published_description WHERE source_schema=? AND site_id=? AND asset_number=?", (item["SOURCE_SCHEMA"], item["SITE_ID"], item["ASSET_NUMBER"])).fetchone() is not None:
+                failures.append("identity_already_published")
         results.append({"CANDIDATE_ID": item["CANDIDATE_ID"], "SITE_ID": item["SITE_ID"], "ASSETNUM": item["ASSET_NUMBER"], "OUTCOME": "pass" if not failures else "fail", "FAILURES": json.dumps(failures, ensure_ascii=False)})
     connection.close()
 

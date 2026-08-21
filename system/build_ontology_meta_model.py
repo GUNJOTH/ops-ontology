@@ -16,15 +16,13 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from semantic_namespaces import ONTOLOGY_NAMESPACE
 from semantic_registry import (
     RELATION_REGISTRY,
     canonical_relation_key,
     object_class_local_name,
-    relation_domain_range,
     relation_predicate_local_name,
 )
-from semantic_namespaces import ONTOLOGY_NAMESPACE
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -68,6 +66,9 @@ CORE_OBJECT_TYPES = (
     ("risk", "风险", "风险知识资产", "business_knowledge", "knowledge", 1),
     ("rule_decision", "规则判断", "规则对业务事实的可解释判断结果", "business_knowledge", "knowledge", 1),
     ("semantic_fact", "语义事实", "来源或规则推导出的可追溯事实", "business_knowledge", "knowledge", 1),
+    ("action", "行动", "统一业务 Action 资产：业务含义、前置条件、输入事实、权限、适配器映射和效果", "business_knowledge", "knowledge", 1),
+    ("action_execution", "行动执行", "Action 从 requested 到 executing/succeeded/failed 的本地执行记录", None, "entity", 1),
+    ("action_adapter", "行动适配器", "Action 到 MCP/Workflow/API 的系统能力映射", None, "entity", 1),
 )
 
 PROPERTY_TYPES = (
@@ -82,6 +83,14 @@ PROPERTY_TYPES = (
     ("event_time", "business_event", "datetime", None, 1, 1, 1, "源事件时间字段", "iso_datetime"),
     ("defect_status", "defect", "code", None, 0, 0, 1, "TICKET/SR 状态字段", "registered_status_only"),
     ("risk_score", "risk", "decimal", "risk", 0, 1, 1, "risk_assessment Fact", "0<=x<=5"),
+    ("action_name", "action", "string", None, 1, 1, 1, "semantic_action_definition.action_name", "non_empty"),
+    ("business_meaning", "action", "string", None, 1, 1, 1, "semantic_action_definition.business_meaning", "non_empty"),
+    ("allowed_when", "action", "json", None, 0, 0, 1, "semantic_action_definition.allowed_when_json", "json"),
+    ("required_input_facts", "action", "json", None, 0, 0, 1, "semantic_action_definition.required_facts_json", "json"),
+    ("permission_scope", "action", "json", None, 0, 0, 1, "semantic_action_definition.permission_scope_json", "json"),
+    ("adapter_mappings", "action", "json", None, 0, 0, 1, "semantic_action_definition.adapter_mappings_json", "json"),
+    ("effects", "action", "json", None, 0, 0, 1, "semantic_action_definition.effects_json", "json"),
+    ("execution_states", "action", "json", None, 0, 0, 1, "semantic_action_definition.execution_states_json", "json"),
 )
 
 RELATION_TYPES = (

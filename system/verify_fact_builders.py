@@ -6,7 +6,6 @@ import pathlib
 import shutil
 import sqlite3
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 SOURCE_DB = ROOT / "data" / "unified_semantics.sqlite3"
 VERIFY_DIR = ROOT / "data" / ".verification"

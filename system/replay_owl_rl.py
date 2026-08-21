@@ -14,25 +14,20 @@ import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
 
+from common import DEFAULT_TARGET
+from common import utc_now as now
+from pipeline.contracts import connect_local, resolve_artifact_path
 from rdflib import Dataset, Graph, Literal, URIRef
-from rdflib.namespace import OWL, RDF, RDFS, XSD
-from pipeline.contracts import connect_local
+from rdflib.namespace import OWL, RDF, RDFS
 from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE
-
 
 ROOT = Path(__file__).resolve().parent
 STANDARD_ROOT = ROOT.parent / "standards"
-DEFAULT_TARGET = ROOT / "data" / "canonical_semantic.sqlite3"
 RUN_ROOT = ROOT / "canonical-runs"
 INFERENCE_RULESET_VERSION = "owl2rl-replay-subset-v1"
 INFERENCE_BASE = f"{GRAPH_NAMESPACE}inference/"
 EX_BASE = ONTOLOGY_NAMESPACE
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def load_jsonld_context() -> dict[str, object]:
@@ -200,10 +195,11 @@ def persist_inference(target: Path = DEFAULT_TARGET) -> dict[str, object]:
         # behind after the project context contract changes.
         existing_manifest = json.loads(existing["manifest_json"])
         jsonld_value = existing_manifest.get("artifacts", {}).get("jsonld")
-        existing_jsonld = Path(str(jsonld_value)) if jsonld_value else None
+        existing_run_dir = ROOT / "canonical-runs" / str(existing_manifest.get("inputProjectionRunId") or "")
+        existing_jsonld = resolve_artifact_path(jsonld_value or "", existing_run_dir) if jsonld_value else None
         if existing_jsonld and existing_jsonld.is_file():
             refreshed = Dataset()
-            refreshed.parse(str(existing_jsonld), format="json-ld")
+            refreshed.parse(existing_jsonld, format="json-ld")
             refreshed.serialize(
                 destination=str(existing_jsonld),
                 format="json-ld",
@@ -218,12 +214,13 @@ def persist_inference(target: Path = DEFAULT_TARGET) -> dict[str, object]:
     # relation/state evidence; replay the bounded semantic reasoning graph so
     # OWL 2 RL does not materialise millions of meaningless superclass triples.
     trig_value = manifest["artifacts"].get("reasoningTrig") or manifest["artifacts"]["trig"]
-    trig_path = Path(str(trig_value))
+    run_dir = ROOT / "canonical-runs" / str(projection["run_id"])
+    trig_path = resolve_artifact_path(trig_value, run_dir)
     if not trig_path.exists():
         raise FileNotFoundError(trig_path)
 
     dataset = Dataset()
-    dataset.parse(str(trig_path), format="trig")
+    dataset.parse(trig_path, format="trig")
     base = union_graph(dataset)
     inferred, support, iterations = apply_rules(base)
     run_id = f"owl-rl-replay-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{digest(projection['run_id'], created)[:10]}"
@@ -272,7 +269,7 @@ def persist_inference(target: Path = DEFAULT_TARGET) -> dict[str, object]:
         "reasoningScope": "bounded semantic graph; streamed source-identity seed graph excluded from materialisation",
         "sourceWrite": False,
         "formalPublication": False,
-        "artifacts": {"trig": str(trig_out), "jsonld": str(jsonld_out)},
+        "artifacts": {"trig": trig_out.name, "jsonld": jsonld_out.name},
     }
     db.execute(
         """INSERT INTO canonical_inference_run(

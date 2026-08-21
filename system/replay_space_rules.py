@@ -5,9 +5,9 @@ import json
 import re
 import sqlite3
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
 
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -16,9 +16,6 @@ RULE_VERSION = "space-normalization-proposed-20260812-v1"
 VALIDATOR_VERSION = "hd-semantic-validator-0.2.0"
 ACTOR = "replay_space_rules.py"
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def transform(value: str) -> str:

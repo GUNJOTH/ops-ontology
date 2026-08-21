@@ -10,7 +10,6 @@ import sqlite3
 from collections.abc import Callable
 from datetime import datetime, timezone
 
-
 SchemaStep = Callable[[sqlite3.Connection], None]
 MigrationInput = SchemaStep | tuple[str, SchemaStep]
 

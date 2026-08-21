@@ -55,7 +55,8 @@ def main() -> None:
             row.setdefault(column, "")
     with OUTPUT_CSV.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns)
-        writer.writeheader(); writer.writerows(rows)
+        writer.writeheader()
+        writer.writerows(rows)
     manifest = {
         "preview_id": f"combined-108-preview-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(), "preview_rows": 108,

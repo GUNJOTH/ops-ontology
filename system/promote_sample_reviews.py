@@ -7,7 +7,6 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 SQLITE_DB = ROOT / "data" / "semantic_workflow.sqlite3"
 RULE_VERSION = "sample-learned-20260812-v1"

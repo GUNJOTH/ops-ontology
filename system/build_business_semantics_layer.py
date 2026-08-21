@@ -11,11 +11,11 @@ import hashlib
 import json
 import pathlib
 import sqlite3
-from collections import Counter, defaultdict
+from collections import defaultdict
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_readonly
 from semantic_registry import canonical_relation_key, object_class_local_name
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -253,11 +253,10 @@ def add_source(target: sqlite3.Connection, asset_id: str, source_kind: str, sour
 
 def build(workflow_db: pathlib.Path, identity_db: pathlib.Path, target_db: pathlib.Path) -> dict[str, object]:
     target_db.parent.mkdir(parents=True, exist_ok=True)
-    workflow = sqlite3.connect(f"file:{workflow_db.resolve()}?mode=ro", uri=True, timeout=30)
-    workflow.row_factory = sqlite3.Row
-    identity = sqlite3.connect(f"file:{identity_db.resolve()}?mode=ro", uri=True, timeout=30)
-    identity.row_factory = sqlite3.Row
+    workflow = connect_readonly(workflow_db, timeout=30)
+    identity = connect_readonly(identity_db, timeout=30)
     target = sqlite3.connect(str(target_db), timeout=30)
+    target.row_factory = sqlite3.Row
     target.execute("PRAGMA foreign_keys=ON")
     init_layer(target)
     now = utc_now()

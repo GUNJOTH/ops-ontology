@@ -8,7 +8,6 @@ different predicates or object classes.
 """
 from __future__ import annotations
 
-
 OBJECT_CLASS_LOCAL_NAMES: dict[str, str] = {
     "business_object": "BusinessObject",
     "organization": "Organization",
@@ -43,6 +42,9 @@ OBJECT_CLASS_LOCAL_NAMES: dict[str, str] = {
     "semantic_fact": "Fact",
     "fact": "Fact",
     "action_plan": "ActionPlan",
+    "action": "Action",
+    "action_execution": "ActionExecution",
+    "action_adapter": "ActionAdapter",
     "repeated_defect": "RepeatedDefect",
     "severe_defect": "SevereDefect",
 }

@@ -9,6 +9,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import sqlite3
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path

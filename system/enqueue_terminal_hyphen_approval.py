@@ -8,7 +8,6 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"

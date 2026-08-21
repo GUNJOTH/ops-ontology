@@ -4,7 +4,6 @@ from __future__ import annotations
 import sqlite3
 
 import pytest
-
 from app.domains.metadata.service import metadata_filters, metadata_row_payload
 
 pytestmark = pytest.mark.unit

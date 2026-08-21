@@ -13,7 +13,6 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 SQLITE_DB = ROOT / "data" / "semantic_workflow.sqlite3"
 VALIDATOR_VERSION = "hd-semantic-validator-0.3.1"

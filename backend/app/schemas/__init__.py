@@ -32,6 +32,35 @@ from .semantic import (
     SemanticIdentityRevokeRequest,
     SemanticStateReplayRequest,
 )
+from .system import SemanticReleaseApprovalRequest
 
-__all__ = [name for name in globals() if not name.startswith("_")]
+__all__ = [
+    "AgentCandidateReviewRequest",
+    "AiBulkDecisionRequest",
+    "AiClusterDecisionRequest",
+    "AiDecisionRequest",
+    "AutoApprovalRequest",
+    "CleaningBatchApprovalRequest",
+    "CleaningBatchPublishRequest",
+    "CleaningRuleRegistrationRequest",
+    "CleaningTaskActionRequest",
+    "CleaningTaskAdvanceRequest",
+    "CleaningTaskPreviewRequest",
+    "FormalBatchApprovalRequest",
+    "ReviewRequest",
+    "ReviewResponse",
+    "RuleAgentProposalActionRequest",
+    "RuleAgentReviewRequest",
+    "RuleAgentRunRequest",
+    "SemanticReasoningRequest",
+    "CanonicalSparqlRequest",
+    "DefectStatusReviewRequest",
+    "SemanticActionApprovalRequest",
+    "SemanticExecutionDispatchRequest",
+    "SemanticExecutionPreviewRequest",
+    "SemanticIdentityReviewRequest",
+    "SemanticIdentityRevokeRequest",
+    "SemanticStateReplayRequest",
+    "SemanticReleaseApprovalRequest",
+]
 

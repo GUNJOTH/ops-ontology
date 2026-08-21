@@ -4,7 +4,6 @@ from __future__ import annotations
 import os
 
 import pytest
-
 from app.core.config import load_local_env
 
 pytestmark = pytest.mark.unit

@@ -69,7 +69,8 @@ def main() -> None:
         raise SystemExit(f"Expected 42 terminal question rows, found {len(preview)}")
     with PREVIEW_CSV.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(preview[0].keys()))
-        writer.writeheader(); writer.writerows(preview)
+        writer.writeheader()
+        writer.writerows(preview)
     manifest = {
         "preview_id": f"terminal-question-preview-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(), "preview_rows": len(preview),

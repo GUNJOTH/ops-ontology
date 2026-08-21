@@ -8,8 +8,6 @@ from __future__ import annotations
 import json
 import pathlib
 import sqlite3
-from datetime import datetime, timezone
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"

@@ -2,21 +2,27 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import re
-import shutil
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from common import (
+    DEFAULT_DUCKDB,
+    DEFAULT_WORKFLOW,
+    backup_before_publish,
+    sha256_bytes,
+    sha256_file,
+    utc_now,
+)
+
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
-DATA_DIR = ROOT / "data"
-DB = DATA_DIR / "semantic_workflow.sqlite3"
-DUCKDB = DATA_DIR / "semantic_analytics_v155.duckdb"
-DUCKDB_WAL = DATA_DIR / "semantic_analytics_v155.duckdb.wal"
+DB = DEFAULT_WORKFLOW
+DUCKDB = DEFAULT_DUCKDB
+DUCKDB_WAL = Path(str(DEFAULT_DUCKDB) + ".wal")
 PREVIEW_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "ai_cluster_preview"
 PREVIEW_CSV = PREVIEW_DIR / "rewrite_preview.csv"
 PREVIEW_MANIFEST = PREVIEW_DIR / "manifest.json"
@@ -31,22 +37,6 @@ RULE_KEYS = (
     "format.confirmed_terminal_punctuation_trim",
 )
 ACTOR = "local-user-confirmed-ai-cluster-batch"
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
 
 
 def width_transform(value: str) -> str:
@@ -74,32 +64,6 @@ def replay_transform(value: str) -> str:
     value = value.replace("\uff0f", "/").replace("\uff0d", "-")
     value = new_rules_transform(value)
     return value
-
-
-def backup(connection: sqlite3.Connection, stamp: str) -> tuple[Path, list[Path]]:
-    backup_dir = ROOT / "backups" / f"ai-cluster-publication-pre-{stamp}"
-    backup_dir.mkdir(parents=True, exist_ok=False)
-    sqlite_backup = backup_dir / DB.name
-    target = sqlite3.connect(str(sqlite_backup))
-    connection.backup(target)
-    target.close()
-    files = [sqlite_backup]
-    if DUCKDB.exists():
-        duckdb_backup = backup_dir / DUCKDB.name
-        shutil.copy2(DUCKDB, duckdb_backup)
-        files.append(duckdb_backup)
-    if DUCKDB_WAL.exists():
-        wal_backup = backup_dir / DUCKDB_WAL.name
-        shutil.copy2(DUCKDB_WAL, wal_backup)
-        files.append(wal_backup)
-    (backup_dir / "manifest.json").write_text(json.dumps({
-        "status": "pre_publication_backup",
-        "created_at_utc": utc_now(),
-        "files": [{"path": str(path), "size": path.stat().st_size} for path in files],
-        "source_write": False,
-        "formal_publication": False,
-    }, ensure_ascii=False, indent=2), encoding="utf-8")
-    return backup_dir, files
 
 
 def main() -> None:
@@ -164,7 +128,12 @@ def main() -> None:
             raise SystemExit(f"Existing review blocks batch: {candidate_id}")
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_dir, backup_files = backup(connection, stamp)
+    backup_dir, backup_files = backup_before_publish(
+        connection,
+        "ai-cluster-publication",
+        stamp,
+        (DUCKDB, DUCKDB_WAL),
+    )
     now = utc_now()
     replay_id = f"replay-ai-cluster-{uuid.uuid4().hex}"
     activation_id = f"ai-cluster-activation-{uuid.uuid4().hex}"

@@ -96,6 +96,9 @@
 | `semantic_fact_derivation` | 记录派生事实使用的规则资产、规则版本、输入事实、解释和约束结果 |
 | `semantic_rule_decision` | 记录规则对设备或事件作出的判断、置信度、输入事实、解释和是否需要行动 |
 | `semantic_escalation_action` | 记录升级、通知、创建工单或消缺事件的本地行动计划；默认 `source_write=0` 且需要审批 |
+| `semantic_action_definition` | 统一业务 Action 资产：业务含义、何时允许、输入 Fact、权限范围、适配器映射、效果和执行状态机 |
+| `semantic_action_execution` | Action 本地执行状态记录：requested -> executing -> succeeded/failed |
+
 | `semantic_fact_layer_run` | 记录事实层构建批次及各层数量，便于回放和交付核对 |
 
 当前事实层先登记 89 条已有 `business_object_relation` 证据的观测、缺陷和工单事件，并从只读身份快照带入事件类型、状态、描述、位置和时间等原始字段。最近一次闭环已形成 105 条可追溯的派生事实/规则判断，但由于正式快照没有明确测量值、风险证据和已确认缺陷状态，Fact Builder 未生成风险事实，行动计划仍为 0。这是安全门槛，不代表流程缺失：必须先补充真实的观测字段和规则输入，才能产生温度、缺陷等级、风险判断或行动，不得把示例文本当作生产事实。当前已有规则资产 176 条、机器契约就绪 176 条，但“规则已登记”与“规则已对事实执行”严格分开。

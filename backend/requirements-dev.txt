@@ -2,3 +2,7 @@
 #   uv pip install --target .deps -r requirements-dev.txt
 pytest>=8,<10
 pytest-cov>=6,<8
+# Starlette 1.x 的 TestClient 首选 httpx2；缺少时才回退 httpx 并发出弃用警告。
+httpx2>=0.28
+# 静态检查（S1 门禁）：CI 与本地均要求 0 error。
+ruff>=0.9,<1

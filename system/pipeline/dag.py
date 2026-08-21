@@ -14,7 +14,6 @@ from .contracts import (
     utc_now,
 )
 
-
 Handler = Callable[[PipelineContext, Mapping[str, Any]], Mapping[str, Any]]
 
 

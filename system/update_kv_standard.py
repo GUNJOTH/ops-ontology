@@ -7,7 +7,6 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
 RULE_KEY = "format.unit.uppercase_kv_to_kv"

@@ -6,7 +6,7 @@ import shutil
 import uuid
 from pathlib import Path
 
-from pipeline.contracts import PipelineContext, connect_readonly, content_hash
+from pipeline.contracts import PipelineContext, connect_readonly, content_hash, manifest_path, resolve_artifact_path
 from pipeline.dag import PipelineRunner, load_spec
 
 
@@ -64,6 +64,36 @@ def test_content_hash_ignores_run_metadata() -> None:
     left = {"run_id": "one", "created_at": "2026-01-01", "count": 3}
     right = {"run_id": "two", "created_at": "2026-01-02", "count": 3}
     assert content_hash(left) == content_hash(right)
+
+
+def test_resolve_artifact_path_falls_back_to_run_dir() -> None:
+    tmp_path = _test_root()
+    try:
+        run_dir = tmp_path / "run-1"
+        run_dir.mkdir()
+        artifact = run_dir / "canonical.reasoning.trig"
+        artifact.write_text("{}", encoding="utf-8")
+        stale = tmp_path / "elsewhere" / "canonical.reasoning.trig"
+        assert resolve_artifact_path(str(stale), run_dir) == artifact
+        assert resolve_artifact_path("canonical.reasoning.trig", run_dir) == artifact
+        assert resolve_artifact_path(artifact, run_dir) == artifact
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
+def test_manifest_path_is_relative_to_run_dir() -> None:
+    tmp_path = _test_root()
+    try:
+        run_dir = tmp_path / "canonical-runs" / "run-1"
+        run_dir.mkdir(parents=True)
+        artifact = run_dir / "canonical.trig"
+        assert manifest_path(artifact, run_dir) == "canonical.trig"
+        standard = tmp_path / "standards" / "rdf-dataset.json"
+        assert manifest_path(standard, run_dir) == "../../standards/rdf-dataset.json"
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
 
 
 def test_readonly_connection_cannot_write() -> None:

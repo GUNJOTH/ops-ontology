@@ -24,9 +24,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from pipeline.contracts import connect_local
-
 from semantic_predicates import event_predicate, relation_predicate
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"

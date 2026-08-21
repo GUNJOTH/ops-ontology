@@ -11,7 +11,6 @@ import json
 import pathlib
 import sqlite3
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 CANONICAL_TARGET = ROOT / "data" / "canonical_semantic.sqlite3"

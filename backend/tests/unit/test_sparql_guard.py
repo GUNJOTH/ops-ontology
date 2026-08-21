@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-
 from app.core.sparql_guard import guard_text
 
 pytestmark = pytest.mark.unit

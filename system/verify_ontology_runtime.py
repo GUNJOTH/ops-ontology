@@ -14,12 +14,12 @@ import sqlite3
 
 from semantic_registry import canonical_relation_key, object_class_local_name, relation_predicate_local_name
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 CORE_OBJECTS = {
     "device", "site", "center", "specialty", "team", "inspection", "abnormal_inspection",
     "defect", "repeated_defect", "severe_defect", "defect_resolution", "work_order", "work_permit", "human_review",
+    "action", "action_execution", "action_adapter",
 }
 
 
@@ -79,13 +79,21 @@ def verify(target_path: pathlib.Path) -> dict[str, object]:
            LEFT JOIN ontology_event_type t ON t.event_type=e.event_type
            WHERE e.status IN ('observed','accepted') AND (t.event_type IS NULL OR t.review_status='needs_review')"""
     ).fetchall()]
+    fact_count = int(db.execute(
+        "SELECT count(*) FROM semantic_fact WHERE status IN ('observed','accepted','derived')"
+    ).fetchone()[0])
+    derivation_count = int(db.execute("SELECT count(*) FROM semantic_fact_derivation").fetchone()[0])
     checks = {
         "core_object_coverage": CORE_OBJECTS.issubset(registered_core),
         "meta_model_run_exists": latest is not None,
         "source_write_boundary": not source_flags,
+        # A bounded test snapshot may legitimately contain no accepted
+        # inspection/defect/work-order facts.  In that case there is no
+        # derivation to explain; once facts exist, every run must retain a
+        # derivation ledger.
         "explainable_derivation_table": (
             "semantic_fact_derivation" in tables
-            and int(db.execute("SELECT count(*) FROM semantic_fact_derivation").fetchone()[0]) > 0
+            and (fact_count == 0 or derivation_count > 0)
         ),
         "relation_vocabulary_reconciled": not unregistered_relations and all(
             row[0] not in {"" , "None"} for row in db.execute(
@@ -111,6 +119,13 @@ def verify(target_path: pathlib.Path) -> dict[str, object]:
         "required_core_object_count": len(CORE_OBJECTS),
         "unregistered_relation_types": unregistered_relations,
         "unregistered_event_types": unregistered_events,
+        "fact_count": fact_count,
+        "derivation_count": derivation_count,
+        "derivation_check_note": (
+            "无已接受事实，派生链不适用"
+            if fact_count == 0
+            else "已有事实且存在派生证据"
+        ),
         "source_flagged_runs": source_flags,
         "latest_meta_model_run": dict(latest) if latest else None,
         "source_write": False,

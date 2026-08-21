@@ -7,21 +7,26 @@ passed replay gates.
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
-import shutil
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from common import (
+    DEFAULT_DUCKDB,
+    DEFAULT_WORKFLOW,
+    backup_before_publish,
+    sha256_bytes,
+    sha256_file,
+    utc_now,
+)
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
-DATA_DIR = ROOT / "data"
-DB = DATA_DIR / "semantic_workflow.sqlite3"
-DUCKDB = DATA_DIR / "semantic_analytics_v155.duckdb"
-DUCKDB_WAL = DATA_DIR / "semantic_analytics_v155.duckdb.wal"
+DB = DEFAULT_WORKFLOW
+DUCKDB = DEFAULT_DUCKDB
+DUCKDB_WAL = Path(str(DEFAULT_DUCKDB) + ".wal")
 PREVIEW_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "combined_108_preview"
 PREVIEW_CSV = PREVIEW_DIR / "rewrite_preview.csv"
 PREVIEW_MANIFEST = PREVIEW_DIR / "manifest.json"
@@ -36,22 +41,6 @@ RULE_VERSIONS = {
     "safe_punctuation_shape": "ai-confirmed-format-preview-20260812-v1",
     "terminal_question_mark": "terminal-question-proposed-20260812-v1",
 }
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
 
 
 def load_preview() -> tuple[dict[str, object], list[dict[str, str]]]:
@@ -81,32 +70,6 @@ def load_preview() -> tuple[dict[str, object], list[dict[str, str]]]:
     if sum("terminal_question_mark" in row["DIFF_CATEGORY"] for row in rows) != 42:
         raise SystemExit("Combined preview terminal-question count mismatch.")
     return manifest, rows
-
-
-def backup_before_publish(connection: sqlite3.Connection, stamp: str) -> tuple[Path, list[Path]]:
-    backup_dir = ROOT / "backups" / f"combined-108-publication-pre-{stamp}"
-    backup_dir.mkdir(parents=True, exist_ok=False)
-    sqlite_backup = backup_dir / DB.name
-    backup_connection = sqlite3.connect(str(sqlite_backup))
-    connection.backup(backup_connection)
-    backup_connection.close()
-    files = [sqlite_backup]
-    for source in (DUCKDB, DUCKDB_WAL):
-        if source.exists():
-            destination = backup_dir / source.name
-            shutil.copy2(source, destination)
-            files.append(destination)
-    manifest = {
-        "status": "pre_publication_backup",
-        "created_at_utc": utc_now(),
-        "files": [{"path": str(path), "size": path.stat().st_size} for path in files],
-        "source_write": False,
-        "formal_publication": False,
-    }
-    (backup_dir / "manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    return backup_dir, files
 
 
 def main() -> None:
@@ -183,7 +146,12 @@ def main() -> None:
         raise SystemExit(f"Preview spans multiple batches: {batch_ids}")
     batch_id = next(iter(batch_ids))
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_dir, backup_files = backup_before_publish(connection, stamp)
+    backup_dir, backup_files = backup_before_publish(
+        connection,
+        "combined-108-publication",
+        stamp,
+        (DUCKDB, DUCKDB_WAL),
+    )
     now = utc_now()
     publication_run_id = f"combined-108-publication-{uuid.uuid4().hex}"
     approval_batch_id = f"combined-108-approval-{uuid.uuid4().hex}"

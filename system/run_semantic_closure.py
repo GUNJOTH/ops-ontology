@@ -20,7 +20,6 @@ from typing import Any
 from pipeline.contracts import PipelineContext, connect_local
 from pipeline.dag import PipelineRunner, load_spec
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 DEFAULT_WORKFLOW = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -84,28 +83,45 @@ def run(
         db.close()
 
     sys.path.insert(0, str(ROOT))
-    from build_unified_semantics_layer import build as build_unified, latest_identity_db
+    from build_business_semantics_layer import build as build_business_semantics
+    from build_canonical_semantic_model import CanonicalBuilder
+    from build_decision_action_layer import build as build_decisions
+    from build_defect_status_dictionary import build as build_defect_status_dictionary
+    from build_ontology_meta_model import build as build_ontology_meta_model
+    from build_semantic_action_catalog import build as build_action_catalog
     from build_semantic_coverage import build as build_coverage
     from build_semantic_event_layer import build as build_events
     from build_semantic_execution_layer import build as build_execution
     from build_semantic_fact_builders import build as build_facts
-    from build_decision_action_layer import build as build_decisions
+    from build_semantic_fact_layer import build as build_fact_layer
     from build_semantic_governance_contract import build as build_governance
     from build_semantic_runtime_contract import build as build_runtime_contract
-    from build_canonical_semantic_model import CanonicalBuilder
-    from replay_owl_rl import persist_inference
+    from build_unified_semantics_layer import build as build_unified
+    from build_unified_semantics_layer import latest_identity_db
+    from execute_semantic_reasoning import execute as execute_reasoning
     from execute_state_transitions import execute as replay_states
+    from replay_owl_rl import persist_inference
 
     handlers = {
         "unified_semantics_layer": lambda _context, _dependencies: build_unified(latest_identity_db(), target),
+        "business_semantics_layer": lambda _context, _dependencies: build_business_semantics(workflow, latest_identity_db(), target),
+        "fact_layer": lambda _context, _dependencies: build_fact_layer(target),
         "event_projection": lambda _context, _dependencies: build_events(target),
+        "semantic_reasoning": lambda _context, _dependencies: execute_reasoning(target),
+        "defect_status_dictionary": lambda _context, _dependencies: build_defect_status_dictionary(target, latest_identity_db()),
+        "ontology_meta_model": lambda _context, _dependencies: build_ontology_meta_model(target),
         "runtime_contract": lambda _context, _dependencies: build_runtime_contract(target),
         "governance_contract": lambda _context, _dependencies: build_governance(target),
         "state_replay": lambda _context, _dependencies: replay_states(target),
         "fact_builders": lambda _context, _dependencies: build_facts(target),
+        "action_catalog": lambda _context, _dependencies: build_action_catalog(target),
         "decision_action": lambda _context, _dependencies: build_decisions(target),
         "execution_ledger": lambda _context, _dependencies: build_execution(target),
-        "canonical_projection": lambda _context, _dependencies: CanonicalBuilder(target, ROOT / "data" / "canonical_semantic.sqlite3").run(),
+        "canonical_projection": lambda _context, _dependencies: CanonicalBuilder(
+            target,
+            ROOT / "data" / "canonical_semantic.sqlite3",
+            identity_source=latest_identity_db(),
+        ).run(),
         "owl_rl_replay": lambda _context, _dependencies: persist_inference(ROOT / "data" / "canonical_semantic.sqlite3"),
         "coverage": lambda _context, _dependencies: build_coverage(target, workflow, metadata),
     }

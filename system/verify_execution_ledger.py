@@ -1,27 +1,19 @@
 """Verify the local execution adapter and idempotent execution ledger."""
 from __future__ import annotations
 
-import hashlib
 import json
 import pathlib
 import shutil
 import sqlite3
 import sys
 
+from common import sha256_file as digest
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 SOURCE_DB = ROOT / "data" / "unified_semantics.sqlite3"
 VERIFY_DIR = ROOT / "data" / ".verification"
 TARGET_DB = VERIFY_DIR / "execution_ledger.test.sqlite3"
-
-
-def digest(path: pathlib.Path) -> str:
-    hasher = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
 
 
 def verify() -> dict[str, object]:

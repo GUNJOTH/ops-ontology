@@ -14,7 +14,7 @@ INPUT = SEMANTIC_ROOT / "pilots" / "HD_SAAS" / "semantic_candidates" / "hd_seman
 MANIFEST = SEMANTIC_ROOT / "pilots" / "HD_SAAS" / "semantic_candidates" / "manifest.json"
 DATA_DIR = ROOT / "data"
 DUCKDB_DB = DATA_DIR / "semantic_analytics.duckdb"
-DEPENDENCY_DIR = ROOT / ".deps_latest"
+DEPENDENCY_DIR = SEMANTIC_ROOT / "backend" / ".deps"
 CHUNK_SIZE = 10000
 
 

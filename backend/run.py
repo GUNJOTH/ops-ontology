@@ -7,11 +7,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 DEPS = ROOT / ".deps"
+SYSTEM_ROOT = ROOT.parent / "system"
 if DEPS.exists():
     sys.path.insert(0, str(DEPS))
+sys.path.insert(0, str(SYSTEM_ROOT))
 sys.path.insert(0, str(ROOT))
 
-import uvicorn  # type: ignore
+import uvicorn  # type: ignore  # noqa: E402 - 先引导 .deps/ROOT 到 sys.path 后再导入第三方包
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

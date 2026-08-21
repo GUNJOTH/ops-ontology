@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
 PREVIEW_DIR = ROOT.parent / "pilots" / "HD_SAAS" / "space_rule_preview"

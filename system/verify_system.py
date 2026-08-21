@@ -1,13 +1,15 @@
 """Read-only release-boundary verification for the local dual-database system."""
 from __future__ import annotations
 
-import json
 import argparse
+import json
 import sqlite3
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = ROOT.parent
+BACKEND_ROOT = PROJECT_ROOT / "backend"
 DATA_DIR = ROOT / "data"
 SQLITE_DB = DATA_DIR / "semantic_workflow.sqlite3"
 DUCKDB_DB = DATA_DIR / "semantic_analytics_v155.duckdb"
@@ -22,7 +24,7 @@ def load_duckdb():
     matching directory before importing DuckDB.
     """
     abi = f"cp{sys.version_info.major}{sys.version_info.minor}"
-    candidates = [ROOT / ".deps_latest", ROOT / ".deps_121", ROOT / ".deps"]
+    candidates = [BACKEND_ROOT / ".deps"]
     for dependency_dir in candidates:
         duckdb_dir = dependency_dir / "duckdb"
         native_extensions = list(duckdb_dir.glob(f"*{abi}-win_amd64.pyd")) if duckdb_dir.exists() else []
