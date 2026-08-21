@@ -14,6 +14,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEPENDENCY_DIR = PROJECT_ROOT / "backend" / ".deps"
@@ -98,6 +99,73 @@ def _print_available(prefix: str) -> None:
         click.echo(f"  {name}")
 
 
+def _doctor_report() -> dict[str, Any]:
+    """Run dependency, database, manifest and maintainability health checks."""
+    from pipeline.contracts import connect_readonly
+    from verify_maintainability import audit_repository
+
+    report: dict[str, Any] = {}
+
+    report["dependencies"] = {
+        "ok": DEPENDENCY_DIR.exists(),
+        "path": str(DEPENDENCY_DIR),
+    }
+
+    databases: dict[str, Any] = {}
+    candidates = {
+        "workflow_sqlite": ROOT / "data" / "semantic_workflow.sqlite3",
+        "unified_semantics_sqlite": ROOT / "data" / "unified_semantics.sqlite3",
+        "metadata_semantics_sqlite": PROJECT_ROOT / "pilots" / "metadata" / "results" / "metadata-semantic-v1-20260815T-v2" / "metadata_semantics.sqlite3",
+        "duckdb_analytics": ROOT / "data" / "semantic_analytics_v155.duckdb",
+    }
+    for name, path in candidates.items():
+        if not path.exists():
+            if name == "metadata_semantics_sqlite":
+                databases[name] = {"ok": True, "optional": True, "reason": "missing_optional", "path": str(path)}
+            else:
+                databases[name] = {"ok": False, "reason": "missing", "path": str(path)}
+            continue
+        try:
+            if path.suffix == ".duckdb":
+                databases[name] = {"ok": True, "path": str(path)}
+                continue
+            connection = connect_readonly(path, timeout=5)
+            try:
+                connection.execute("SELECT 1").fetchone()
+            finally:
+                connection.close()
+            databases[name] = {"ok": True, "path": str(path)}
+        except Exception as exc:  # pragma: no cover - depends on local filesystem
+            databases[name] = {"ok": False, "reason": str(exc), "path": str(path)}
+    report["databases"] = databases
+
+    manifests = {
+        "sparql": PROJECT_ROOT / "sparql" / "manifest.json",
+        "semantic_asset": PROJECT_ROOT / "standards" / "semantic-asset-manifest.json",
+        "ontology_version": PROJECT_ROOT / "standards" / "ontology-version.json",
+        "semantic_closure": ROOT / "pipelines" / "semantic_closure.json",
+    }
+    report["manifests"] = {
+        name: {"ok": path.exists(), "path": str(path)}
+        for name, path in manifests.items()
+    }
+
+    budget = audit_repository()
+    report["maintainability"] = {
+        "ok": budget["status"] == "PASS",
+        "status": budget["status"],
+        "violations": budget["violations"],
+    }
+
+    report["ok"] = (
+        report["dependencies"]["ok"]
+        and all(item["ok"] for item in report["databases"].values())
+        and all(item["ok"] for item in report["manifests"].values())
+        and report["maintainability"]["ok"]
+    )
+    return report
+
+
 @click.group()
 def cli() -> None:
     """Semantic engineering system command line."""
@@ -140,6 +208,23 @@ def list_scripts() -> None:
     """List all registered top-level system scripts."""
     for script in _all_scripts():
         click.echo(script)
+
+
+@cli.command(name="doctor")
+def doctor() -> None:
+    """Run local environment and repository health checks."""
+    report = _doctor_report()
+    click.echo(f"doctor: {'PASS' if report['ok'] else 'FAIL'}")
+    for group in ("dependencies", "databases", "manifests", "maintainability"):
+        value = report[group]
+        if isinstance(value, dict) and "ok" in value:
+            click.echo(f"  {group}: {'ok' if value['ok'] else 'FAIL'}")
+        elif isinstance(value, dict):
+            for name, item in value.items():
+                ok = item.get("ok", False)
+                click.echo(f"  {group}.{name}: {'ok' if ok else 'FAIL'}")
+    if not report["ok"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

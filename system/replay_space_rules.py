@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -34,7 +35,7 @@ def main() -> None:
     if confirmation.get("source_write") is not False or confirmation.get("formal_publication") is not False:
         raise SystemExit("Confirmation manifest is not read-only.")
 
-    connection = sqlite3.connect(DB, timeout=60)
+    connection = connect_local(DB, timeout=60)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     cases = connection.execute("SELECT * FROM evaluation_case WHERE active=1 ORDER BY case_id").fetchall()

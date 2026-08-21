@@ -16,6 +16,8 @@ import sqlite3
 import sys
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_readonly
+
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 DATA_DIR = ROOT / "data"
@@ -72,7 +74,7 @@ def latest_identity_db(root: pathlib.Path) -> pathlib.Path:
 
 
 def read_identity(path: pathlib.Path) -> list[dict[str, object]]:
-    connection = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True, timeout=30)
+    connection = connect_readonly(path.resolve(), timeout=30)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA query_only=ON")
     try:

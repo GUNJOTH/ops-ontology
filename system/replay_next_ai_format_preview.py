@@ -9,6 +9,7 @@ import uuid
 from pathlib import Path
 
 from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -48,7 +49,7 @@ def main() -> None:
     if len(preview_rows) != 66 or len(preserve_rows) != 65:
         raise SystemExit(f"Preview count mismatch: {len(preview_rows)}/{len(preserve_rows)}")
 
-    connection = sqlite3.connect(str(DB))
+    connection = connect_local(str(DB))
     connection.row_factory = sqlite3.Row
     ids = [row["CANDIDATE_ID"] for row in preview_rows + preserve_rows]
     marks = ",".join("?" for _ in ids)

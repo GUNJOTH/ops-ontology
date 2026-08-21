@@ -16,6 +16,7 @@ from common import (
     sha256_file,
     utc_now,
 )
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -45,7 +46,7 @@ def main() -> None:
     if len(preview_rows) != 66 or len({row["CANDIDATE_ID"] for row in preview_rows}) != 66:
         raise SystemExit("Preview must contain 66 unique rows.")
 
-    connection = sqlite3.connect(str(DB), timeout=120)
+    connection = connect_local(str(DB), timeout=120)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA busy_timeout=120000")
     connection.execute("PRAGMA foreign_keys=ON")

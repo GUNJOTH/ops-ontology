@@ -8,6 +8,9 @@ from pathlib import Path
 
 from pipeline.contracts import PipelineContext, connect_readonly, content_hash, manifest_path, resolve_artifact_path
 from pipeline.dag import PipelineRunner, load_spec
+from pipeline.entrypoint import run_single_step
+from pipeline.legacy import run_legacy_main
+from pipeline.run_assets import default_asset_index, load_asset_index, register_run
 
 
 def _test_root() -> Path:
@@ -94,6 +97,57 @@ def test_manifest_path_is_relative_to_run_dir() -> None:
         shutil.rmtree(tmp_path, ignore_errors=True)
 
 
+def test_single_step_entrypoint_records_local_publication_capability() -> None:
+    tmp_path = _test_root()
+    try:
+        result = run_single_step(
+            pipeline_id="test-publication",
+            pipeline_version="v1",
+            step_id="publish",
+            root=tmp_path,
+            parameters={"targetDb": str(tmp_path / "workflow.sqlite3")},
+            handler=lambda _context, _dependencies: {
+                "status": "published",
+                "source_write": False,
+                "formal_publication": True,
+            },
+            allow_formal_publication=True,
+        )
+        assert result["status"] == "completed"
+        assert result["formalPublication"] is True
+        manifest = Path(result["manifestPath"])
+        assert manifest.is_file()
+        stored = json.loads(manifest.read_text(encoding="utf-8"))
+        assert stored["formalPublication"] is True
+        assert stored["sourceWrite"] is False
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
+def test_single_step_entrypoint_rejects_publication_without_capability() -> None:
+    tmp_path = _test_root()
+    try:
+        try:
+            run_single_step(
+                pipeline_id="test-publication-blocked",
+                pipeline_version="v1",
+                step_id="publish",
+                root=tmp_path,
+                parameters={},
+                handler=lambda _context, _dependencies: {
+                    "status": "published",
+                    "source_write": False,
+                    "formal_publication": True,
+                },
+            )
+        except RuntimeError as exc:
+            assert "formal_publication" in str(exc)
+        else:
+            raise AssertionError("formal publication bypassed the pipeline gate")
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
 
 
 def test_readonly_connection_cannot_write() -> None:
@@ -116,5 +170,85 @@ def test_readonly_connection_cannot_write() -> None:
                 raise AssertionError("read-only source accepted a write")
         finally:
             connection.close()
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
+def test_register_run_writes_shared_asset_index() -> None:
+    tmp_path = _test_root()
+    try:
+        record = register_run(
+            tmp_path,
+            run_id="run-1",
+            asset_type="canonical-rdf-build",
+            manifest_path=tmp_path / "canonical-runs" / "run-1" / "manifest.json",
+            idempotency_key="pipeline:v1:step:hash",
+            inputs={"sourceSnapshotId": "snap-1"},
+            outputs={"status": "passed", "sourceWrite": False, "formalPublication": False},
+            source_snapshot_id="snap-1",
+            replayable=True,
+        )
+        assert record["runId"] == "run-1"
+        index = load_asset_index(default_asset_index(tmp_path))
+        assert index["run-1"]["assetType"] == "canonical-rdf-build"
+        assert index["run-1"]["safeBoundary"] is True
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
+def test_register_run_rejects_unsafe_output() -> None:
+    tmp_path = _test_root()
+    try:
+        try:
+            register_run(
+                tmp_path,
+                run_id="run-unsafe",
+                asset_type="test",
+                manifest_path=tmp_path / "manifest.json",
+                idempotency_key="k",
+                inputs={},
+                outputs={"sourceWrite": True},
+            )
+        except ValueError as exc:
+            assert "sourceWrite" in str(exc)
+        else:
+            raise AssertionError("unsafe run was registered")
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
+def test_legacy_adapter_preserves_arguments_and_manifest() -> None:
+    tmp_path = _test_root()
+    seen: list[str] = []
+    try:
+        result = run_legacy_main(
+            pipeline_id="legacy-test",
+            pipeline_version="v1",
+            root=tmp_path,
+            legacy_main=lambda: seen.extend(__import__("sys").argv[1:]) or {"status": "checked"},
+            argv=["--pipeline-manifest", str(tmp_path / "manifest.json"), "--sample"],
+        )
+        assert result == 0
+        assert seen == ["--sample"]
+        payload = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+        assert payload["status"] == "completed"
+        assert payload["outputs"]["legacy_command"]["status"] == "checked"
+        assert payload["sourceWrite"] is False
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
+def test_legacy_adapter_fails_on_nonzero_return() -> None:
+    tmp_path = _test_root()
+    try:
+        assert run_legacy_main(
+            pipeline_id="legacy-failure-test",
+            pipeline_version="v1",
+            root=tmp_path,
+            legacy_main=lambda: 1,
+        ) == 1
+        manifests = list((tmp_path / "reports" / "pipeline-runs").glob("*.json"))
+        assert manifests
+        assert json.loads(manifests[0].read_text(encoding="utf-8"))["status"] == "failed"
     finally:
         shutil.rmtree(tmp_path, ignore_errors=True)

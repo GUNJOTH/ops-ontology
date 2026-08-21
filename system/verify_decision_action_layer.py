@@ -15,6 +15,7 @@ import sys
 from common import sha256_file as digest
 from common import sid
 from common import utc_now as now
+from pipeline.contracts import connect_local, connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -26,8 +27,8 @@ TARGET_DB = VERIFY_ROOT / "decision_action.test.sqlite3"
 def clone_source() -> None:
     VERIFY_ROOT.mkdir(parents=True, exist_ok=True)
     TARGET_DB.unlink(missing_ok=True)
-    source = sqlite3.connect(f"file:{SOURCE_DB.resolve()}?mode=ro", uri=True)
-    target = sqlite3.connect(str(TARGET_DB))
+    source = connect_readonly(SOURCE_DB.resolve())
+    target = connect_local(TARGET_DB)
     try:
         source.backup(target)
     finally:
@@ -119,14 +120,14 @@ def verify() -> dict[str, object]:
     from build_decision_action_layer import build
 
     try:
-        db = sqlite3.connect(str(TARGET_DB))
+        db = connect_local(TARGET_DB)
         db.row_factory = sqlite3.Row
         db.execute("PRAGMA foreign_keys=ON")
         fixture = add_fixture(db)
         db.close()
 
         first = build(TARGET_DB)
-        db = sqlite3.connect(str(TARGET_DB))
+        db = connect_local(TARGET_DB)
         db.row_factory = sqlite3.Row
         plan = db.execute(
             "SELECT * FROM semantic_action_plan WHERE target_key=?",
@@ -154,7 +155,7 @@ def verify() -> dict[str, object]:
         )
         second = build(TARGET_DB)
 
-        db = sqlite3.connect(str(TARGET_DB))
+        db = connect_local(TARGET_DB)
         db.row_factory = sqlite3.Row
         try:
             final_plan = db.execute(

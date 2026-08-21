@@ -16,6 +16,7 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local
 from semantic_namespaces import ONTOLOGY_NAMESPACE
 from semantic_registry import (
     RELATION_REGISTRY,
@@ -209,7 +210,7 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 
 def build(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys=ON")
     db.execute("PRAGMA busy_timeout=30000")

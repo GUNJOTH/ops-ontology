@@ -42,6 +42,12 @@ __all__ = [
 
 @dataclass(frozen=True)
 class PipelineContext:
+    """Immutable run identity plus explicit capabilities for one pipeline.
+
+    ``allow_formal_publication`` is only for the local formal result layer;
+    source-system writes remain forbidden by the shared safety assertion.
+    """
+
     pipeline_id: str
     pipeline_version: str
     run_id: str
@@ -49,6 +55,7 @@ class PipelineContext:
     parameters: Mapping[str, Any] = field(default_factory=dict)
     manifest_path: Path | None = None
     resume_manifest: Mapping[str, Any] | None = None
+    allow_formal_publication: bool = False
 
     def with_manifest(self, payload: Mapping[str, Any]) -> None:
         if self.manifest_path is not None:

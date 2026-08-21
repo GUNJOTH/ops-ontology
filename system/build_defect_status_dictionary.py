@@ -8,7 +8,7 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
-from pipeline.contracts import connect_readonly
+from pipeline.contracts import connect_local, connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -169,7 +169,7 @@ def build(target_path: pathlib.Path, identity_path: pathlib.Path | None = None) 
     finally:
         source.close()
 
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

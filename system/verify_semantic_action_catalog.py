@@ -12,6 +12,8 @@ import json
 import pathlib
 import sqlite3
 
+from pipeline.contracts import connect_readonly
+
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 
@@ -26,7 +28,7 @@ REQUIRED_EXECUTION_STATES = {"requested", "executing", "succeeded", "failed"}
 
 
 def verify(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(f"file:{target_path.resolve()}?mode=ro", uri=True)
+    db = connect_readonly(target_path.resolve())
     db.row_factory = sqlite3.Row
     try:
         tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}

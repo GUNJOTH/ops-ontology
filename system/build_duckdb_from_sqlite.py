@@ -15,6 +15,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pipeline.contracts import connect_readonly
+
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 SQLITE_DB = DATA_DIR / "semantic_workflow.sqlite3"
@@ -59,7 +61,7 @@ def load_duckdb():
 def sqlite_readonly() -> sqlite3.Connection:
     if not SQLITE_DB.exists():
         raise SystemExit(f"SQLite 不存在: {SQLITE_DB}")
-    connection = sqlite3.connect(f"file:{SQLITE_DB}?mode=ro", uri=True)
+    connection = connect_readonly(SQLITE_DB)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA query_only=ON")
     return connection

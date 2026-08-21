@@ -1,11 +1,14 @@
 """Small regression checks for the local SHACL/Core asset implementation."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from build_canonical_semantic_model import validate_shapes
 from rdflib import Dataset, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, XSD
 
 EX = Namespace("https://semantic.local/ontology/")
+ROOT = Path(__file__).resolve().parent
 
 
 def main() -> None:
@@ -27,4 +30,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="test-standard-semantic-assets",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=main,
+        )
+    )

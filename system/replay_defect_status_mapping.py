@@ -8,6 +8,7 @@ import sqlite3
 
 from common import DEFAULT_TARGET, sid
 from common import utc_now as now
+from pipeline.contracts import connect_local
 
 ROOT = pathlib.Path(__file__).resolve().parent
 
@@ -34,7 +35,7 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 
 def replay(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(str(target_path), timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

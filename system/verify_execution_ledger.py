@@ -4,10 +4,10 @@ from __future__ import annotations
 import json
 import pathlib
 import shutil
-import sqlite3
 import sys
 
 from common import sha256_file as digest
+from pipeline.contracts import connect_local
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -32,7 +32,7 @@ def verify() -> dict[str, object]:
     )
     first = backend.semantic_execution_dispatch(request)
     second = backend.semantic_execution_dispatch(request)
-    db = sqlite3.connect(str(TARGET_DB))
+    db = connect_local(TARGET_DB)
     try:
         count = int(db.execute("SELECT count(*) FROM semantic_execution_ledger").fetchone()[0])
         unsafe = int(db.execute("SELECT count(*) FROM semantic_execution_ledger WHERE source_write<>0 OR formal_publication<>0").fetchone()[0])

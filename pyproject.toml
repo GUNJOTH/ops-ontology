@@ -1,0 +1,32 @@
+# Repository-level Python tool configuration.
+# The historical ruff.toml has been folded into this file so there is one
+# obvious place for Python tool settings.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = [
+    ".deps*",
+    ".uv-cache",
+    ".venv",
+    "**/__pycache__",
+    "frontend",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+# Compatibility bridge rules are intentional while legacy app.main exports are
+# being retired.
+[tool.ruff.lint.per-file-ignores]
+"backend/app/main.py" = ["E402", "F811"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests", "system/tests"]
+addopts = "-ra -p no:cacheprovider"
+markers = [
+    "unit: 纯函数/无 IO 的快速单测",
+    "api: FastAPI 端点与应用壳层测试",
+    "integration: 全 HTTP 栈集成测试（TestClient + 真实只读数据/临时写库）",
+    "semantic: 标准语义资产一致性门禁（RDF/SHACL/SPARQL/OWL-RL）",
+]

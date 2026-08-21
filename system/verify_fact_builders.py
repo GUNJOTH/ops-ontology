@@ -6,6 +6,8 @@ import pathlib
 import shutil
 import sqlite3
 
+from pipeline.contracts import connect_local
+
 ROOT = pathlib.Path(__file__).resolve().parent
 SOURCE_DB = ROOT / "data" / "unified_semantics.sqlite3"
 VERIFY_DIR = ROOT / "data" / ".verification"
@@ -28,7 +30,7 @@ def verify() -> dict[str, object]:
     target = VERIFY_DIR / "fact_builders.test.sqlite3"
     target.unlink(missing_ok=True)
     shutil.copy2(SOURCE_DB, target)
-    db = sqlite3.connect(str(target))
+    db = connect_local(target)
     try:
         insert_event_fact(db, "FIXTURE-OBS-1", "observation_event", "FIXTURE-DEVICE-FB", {"event_type": "inspection", "event_time": "2024-01-01T00:00:00+00:00", "temperature": 91, "unit": "C"}, "2024-01-01T00:00:00+00:00")
         insert_event_fact(db, "FIXTURE-OBS-2", "observation_event", "FIXTURE-DEVICE-FB", {"event_type": "inspection", "event_time": "2024-01-02T00:00:00+00:00", "temperature": 95, "unit": "C"}, "2024-01-02T00:00:00+00:00")
@@ -40,7 +42,7 @@ def verify() -> dict[str, object]:
 
     import build_semantic_fact_builders as builder
     result = builder.build(target)
-    db = sqlite3.connect(str(target))
+    db = connect_local(target)
     try:
         counts = dict(db.execute("SELECT fact_type,count(*) FROM semantic_fact WHERE source_table='semantic_fact_builder' GROUP BY fact_type").fetchall())
         risk_values = [json.loads(row[0]) for row in db.execute("SELECT value_json FROM semantic_fact WHERE fact_type='risk_assessment' AND source_table='semantic_fact_builder'").fetchall()]

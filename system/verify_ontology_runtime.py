@@ -12,6 +12,7 @@ import json
 import pathlib
 import sqlite3
 
+from pipeline.contracts import connect_readonly
 from semantic_registry import canonical_relation_key, object_class_local_name, relation_predicate_local_name
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -24,7 +25,7 @@ CORE_OBJECTS = {
 
 
 def verify(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(f"file:{target_path.resolve()}?mode=ro", uri=True)
+    db = connect_readonly(target_path.resolve())
     db.row_factory = sqlite3.Row
     tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
     required = {

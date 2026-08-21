@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import json
 import re
-import sqlite3
 from pathlib import Path
 
 from build_canonical_semantic_model import STANDARD_ROOT
-from pipeline.contracts import resolve_artifact_path
+from pipeline.contracts import connect_readonly, resolve_artifact_path
 from rdflib import Dataset, Graph, URIRef
 from rdflib.namespace import OWL, RDF
 from replay_owl_rl import persist_inference
@@ -244,8 +243,7 @@ def run() -> dict[str, object]:
 
     sparql: dict[str, object] = {"status": "not_run", "deviceCount": 0, "queries": []}
     if TARGET.exists():
-        db = sqlite3.connect(f"file:{TARGET.resolve()}?mode=ro", uri=True)
-        db.row_factory = sqlite3.Row
+        db = connect_readonly(TARGET)
         run_row = db.execute("SELECT * FROM canonical_projection_run WHERE status='completed' ORDER BY created_at DESC LIMIT 1").fetchone()
         if run_row:
             manifest = json.loads(run_row["manifest_json"])

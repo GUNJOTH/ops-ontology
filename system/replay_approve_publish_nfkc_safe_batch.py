@@ -22,6 +22,7 @@ from common import (
     sha256_file,
     utc_now,
 )
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -90,7 +91,7 @@ def main() -> None:
     preview_by_id = {row["CANDIDATE_ID"]: row for row in preview_rows}
     candidate_ids = sorted(preview_by_id)
 
-    connection = sqlite3.connect(str(DB), timeout=120)
+    connection = connect_local(str(DB), timeout=120)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA busy_timeout=120000")
     connection.execute("PRAGMA foreign_keys=ON")

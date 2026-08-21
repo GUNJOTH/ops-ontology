@@ -14,7 +14,7 @@ import sqlite3
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from pipeline.contracts import connect_readonly
+from pipeline.contracts import connect_local, connect_readonly
 from semantic_registry import canonical_relation_key, object_class_local_name
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -255,7 +255,7 @@ def build(workflow_db: pathlib.Path, identity_db: pathlib.Path, target_db: pathl
     target_db.parent.mkdir(parents=True, exist_ok=True)
     workflow = connect_readonly(workflow_db, timeout=30)
     identity = connect_readonly(identity_db, timeout=30)
-    target = sqlite3.connect(str(target_db), timeout=30)
+    target = connect_local(target_db, timeout=30)
     target.row_factory = sqlite3.Row
     target.execute("PRAGMA foreign_keys=ON")
     init_layer(target)
@@ -522,7 +522,7 @@ def build(workflow_db: pathlib.Path, identity_db: pathlib.Path, target_db: pathl
     target.close()
     workflow.close()
     identity.close()
-    verify = sqlite3.connect(str(target_db))
+    verify = connect_local(target_db)
     asset_count = int(verify.execute("SELECT count(*) FROM knowledge_asset").fetchone()[0])
     version_total = int(verify.execute("SELECT count(*) FROM knowledge_asset_version").fetchone()[0])
     verify.close()

@@ -118,7 +118,7 @@ class PipelineRunner:
                 attempt += 1
                 try:
                     output = dict(handlers[step.handler](self.context, dependencies))
-                    assert_safe_result(output)
+                    assert_safe_result(output, allow_formal_publication=self.context.allow_formal_publication)
                     step_finished = utc_now()
                     record = {
                         "stepId": step.step_id,
@@ -165,7 +165,8 @@ class PipelineRunner:
             "startedAt": started,
             "updatedAt": utc_now(),
             "sourceWrite": False,
-            "formalPublication": False,
+            "formalPublication": status == "completed" and self.context.allow_formal_publication,
+            "manifestPath": str(self.context.manifest_path) if self.context.manifest_path is not None else None,
             "parameters": dict(self.context.parameters),
             "steps": records,
             "outputs": dict(outputs),

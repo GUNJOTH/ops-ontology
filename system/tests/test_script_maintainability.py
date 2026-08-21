@@ -155,3 +155,18 @@ def test_cli_exposes_all_script_families() -> None:
     assert all("__main__" in (cli.ROOT / name).read_text(encoding="utf-8", errors="replace") for name in cli._all_scripts())
 
 
+def test_verify_and_replay_scripts_no_longer_use_raw_sqlite_connect() -> None:
+    """Guard the migration order: read-only verify and replay layers are first."""
+    root = Path(__file__).resolve().parents[2]
+    families = {
+        "verify_*.py": "system/verify_*.py",
+        "replay_*.py": "system/replay_*.py",
+    }
+    for pattern, label in families.items():
+        scripts = sorted(root.glob(label))
+        assert scripts, f"no scripts matched {label}"
+        for script in scripts:
+            text = script.read_text(encoding="utf-8", errors="replace")
+            assert "sqlite3.connect" not in text, f"{script.name} should use pipeline.contracts instead of raw sqlite3.connect"
+
+

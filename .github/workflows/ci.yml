@@ -3,7 +3,7 @@ name: CI
 # S1 门禁：每次 push / PR 必跑 lint（ruff）+ 全量测试（pytest）。
 # 与本地 backend/run_tests.ps1 保持一致：Python 依赖统一从 backend/requirements.lock
 # 安装到 backend/.deps，后端和 system 脚本共用这一份依赖；不再单独安装 system/.deps。
-# ruff 检查 backend 与 system 两层；覆盖率报告统计 backend/app 与 system，并设置 30% 强制门槛。
+# ruff 检查 backend 与 system 两层；覆盖率报告统计 backend/app 与 system，并设置 40% 强制门槛。
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
         working-directory: backend
         env:
           PYTHONPATH: .deps:.:../system
-        run: python -m pytest -p no:cacheprovider -ra --tb=short --cov=app --cov=../system --cov-report=term --cov-report=xml:coverage.xml --cov-fail-under=30
+        run: python -m pytest -p no:cacheprovider -ra --tb=short --cov=app --cov=../system --cov-report=term --cov-report=xml:coverage.xml --cov-fail-under=40
 
       - name: Upload coverage report
         if: always()

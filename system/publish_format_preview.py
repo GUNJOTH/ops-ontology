@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 from common import DEFAULT_WORKFLOW, sha256_bytes, utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -51,7 +52,7 @@ def chunked(values: list[str], size: int = 800):
 
 def main() -> None:
     manifest, preview_rows = load_preview()
-    connection = sqlite3.connect(DB, timeout=60)
+    connection = connect_local(DB, timeout=60)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA busy_timeout=60000")
     connection.execute("PRAGMA foreign_keys=ON")

@@ -18,6 +18,7 @@ from pathlib import Path
 from common import DEFAULT_TARGET
 from common import utc_now as now
 from pipeline.contracts import connect_local, resolve_artifact_path
+from pipeline.entrypoint import PipelineStepError, add_pipeline_arguments, run_single_step
 from rdflib import Dataset, Graph, Literal, URIRef
 from rdflib.namespace import OWL, RDF, RDFS
 from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE
@@ -287,8 +288,30 @@ def persist_inference(target: Path = DEFAULT_TARGET) -> dict[str, object]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Replay the bounded OWL 2 RL subset over the latest Canonical RDF Dataset")
     parser.add_argument("--target-db", type=Path, default=DEFAULT_TARGET)
+    add_pipeline_arguments(parser)
     args = parser.parse_args()
-    print(json.dumps(persist_inference(args.target_db.resolve()), ensure_ascii=False, indent=2))
+    try:
+        pipeline = run_single_step(
+            pipeline_id="owl-rl-replay",
+            pipeline_version="owl-rl-replay-v1",
+            step_id="owl_rl_replay",
+            root=ROOT,
+            parameters={"targetDb": str(args.target_db.resolve()), "ruleSetVersion": INFERENCE_RULESET_VERSION},
+            handler=lambda _context, _dependencies: _replay_or_fail(args.target_db.resolve()),
+            manifest_path=args.pipeline_manifest,
+            resume_manifest_path=args.resume_manifest,
+        )
+    except PipelineStepError as exc:
+        print(json.dumps(exc.payload, ensure_ascii=False, indent=2))
+        raise SystemExit(1) from exc
+    print(json.dumps(pipeline["outputs"]["owl_rl_replay"], ensure_ascii=False, indent=2))
+
+
+def _replay_or_fail(target: Path) -> dict[str, object]:
+    manifest = persist_inference(target)
+    if manifest.get("status") != "completed":
+        raise PipelineStepError("OWL 2 RL replay did not complete", manifest)
+    return manifest
 
 
 if __name__ == "__main__":

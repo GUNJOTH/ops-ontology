@@ -8,6 +8,8 @@ import sqlite3
 import sys
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_readonly
+
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 DEFAULT_OUTPUT = ROOT / "reports" / "semantic-monitoring-5000.json"
@@ -22,7 +24,7 @@ def load_json(path: pathlib.Path) -> dict[str, object]:
 
 
 def readonly(path: pathlib.Path) -> sqlite3.Connection:
-    db = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True, timeout=30)
+    db = connect_readonly(path.resolve(), timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA query_only=ON")
     return db

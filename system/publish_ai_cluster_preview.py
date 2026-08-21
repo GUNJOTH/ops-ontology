@@ -17,6 +17,7 @@ from common import (
     sha256_file,
     utc_now,
 )
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -84,7 +85,7 @@ def main() -> None:
     # remain deferred for a separate context-aware review.
     if len(eligible_accepted_ids) != 9:
         raise SystemExit(f"Expected 9 eligible AI accepted sample rows, found {len(eligible_accepted_ids)}")
-    connection = sqlite3.connect(str(DB), timeout=120)
+    connection = connect_local(str(DB), timeout=120)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA busy_timeout=120000")
     connection.execute("PRAGMA foreign_keys=ON")

@@ -118,10 +118,12 @@ def idempotency_key(pipeline_id: str, pipeline_version: str, step_id: str, depen
     return f"{pipeline_id}:{pipeline_version}:{step_id}:{content_hash(dependencies, parameters)[:32]}"
 
 
-def assert_safe_result(result: Mapping[str, Any]) -> None:
-    """Enforce the pipeline-wide source-write/publication invariant."""
+def assert_safe_result(result: Mapping[str, Any], *, allow_formal_publication: bool = False) -> None:
+    """Enforce source read-only and explicit local-publication boundaries."""
     unsafe = []
     for key in ("sourceWrite", "source_write", "formalPublication", "formal_publication"):
+        if allow_formal_publication and key in {"formalPublication", "formal_publication"}:
+            continue
         if result.get(key) is True or result.get(key) == 1:
             unsafe.append(key)
     if unsafe:

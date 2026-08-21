@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 from pathlib import Path
 
-from pipeline.contracts import resolve_artifact_path
+from pipeline.contracts import connect_readonly, resolve_artifact_path
 
 try:
     from rdflib import Dataset, Graph
@@ -70,9 +69,7 @@ def verify_streamed_artifacts(manifest: dict[str, object], run_dir: Path | None 
 def source_quality(source: Path) -> dict[str, object]:
     if not source.exists():
         return {"status": "missing", "failures": ["SEMANTIC_RUNTIME_MISSING"]}
-    db = sqlite3.connect(f"file:{source.resolve()}?mode=ro", uri=True)
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA query_only=ON")
+    db = connect_readonly(source)
 
     def exists(name: str) -> bool:
         return db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone() is not None
@@ -97,8 +94,7 @@ def verify(target: Path = TARGET) -> dict[str, object]:
         OUTPUT.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         return result
 
-    db = sqlite3.connect(f"file:{target.resolve()}?mode=ro", uri=True)
-    db.row_factory = sqlite3.Row
+    db = connect_readonly(target)
     run = db.execute("SELECT * FROM canonical_projection_run ORDER BY created_at DESC LIMIT 1").fetchone()
     if run is None:
         failures.append("CANONICAL_RUN_MISSING")

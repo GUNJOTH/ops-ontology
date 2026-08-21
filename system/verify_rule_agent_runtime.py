@@ -55,4 +55,13 @@ def verify() -> dict[str, object]:
 
 
 if __name__ == "__main__":
-    print(json.dumps(verify(), ensure_ascii=False, indent=2))
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="verify-rule-agent-runtime",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=verify,
+        )
+    )

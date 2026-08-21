@@ -13,7 +13,7 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
-from pipeline.contracts import connect_readonly
+from pipeline.contracts import connect_local, connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -61,7 +61,7 @@ def load_source_events() -> dict[tuple[str, str, str], dict[str, object]]:
 
 
 def build(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.executescript(
         """

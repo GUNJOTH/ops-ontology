@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import json
 import pathlib
-import sqlite3
+
+from pipeline.contracts import connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -18,8 +19,7 @@ OUTPUT = ROOT / "data" / "semantic_closure_verification.json"
 
 
 def verify(target: pathlib.Path = TARGET) -> dict[str, object]:
-    db = sqlite3.connect(f"file:{target.resolve()}?mode=ro", uri=True)
-    db.row_factory = sqlite3.Row
+    db = connect_readonly(target)
     failures: list[str] = []
     latest_closure = db.execute("SELECT * FROM semantic_closure_run ORDER BY created_at DESC LIMIT 1").fetchone()
     latest_coverage = db.execute("SELECT * FROM semantic_coverage_run ORDER BY created_at DESC LIMIT 1").fetchone()
@@ -61,8 +61,7 @@ def verify(target: pathlib.Path = TARGET) -> dict[str, object]:
     canonical_run = None
     canonical_inference = None
     if CANONICAL_TARGET.exists():
-        canonical = sqlite3.connect(f"file:{CANONICAL_TARGET.resolve()}?mode=ro", uri=True)
-        canonical.row_factory = sqlite3.Row
+        canonical = connect_readonly(CANONICAL_TARGET)
         canonical_run = canonical.execute("SELECT * FROM canonical_projection_run ORDER BY created_at DESC LIMIT 1").fetchone()
         if canonical.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='canonical_inference_run'").fetchone():
             canonical_inference = canonical.execute("SELECT * FROM canonical_inference_run ORDER BY created_at DESC LIMIT 1").fetchone()

@@ -7,6 +7,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+from pipeline.contracts import connect_readonly
+
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 BACKEND_ROOT = PROJECT_ROOT / "backend"
@@ -56,7 +58,7 @@ def main() -> None:
     args = parser.parse_args()
     duckdb, dependency_dir = load_duckdb()
 
-    sqlite_connection = sqlite3.connect(f"file:{SQLITE_DB}?mode=ro", uri=True)
+    sqlite_connection = connect_readonly(SQLITE_DB)
     sqlite_connection.row_factory = sqlite3.Row
     batch = sqlite_connection.execute("SELECT * FROM batch_run ORDER BY started_at DESC LIMIT 1").fetchone()
     if not batch:

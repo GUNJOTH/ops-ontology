@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -37,7 +38,7 @@ def main() -> None:
     if not DB.exists():
         raise SystemExit(f"SQLite database not found: {DB}")
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(str(DB), timeout=30)
+    connection = connect_local(str(DB), timeout=30)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     try:

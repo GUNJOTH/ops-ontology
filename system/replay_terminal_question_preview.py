@@ -9,6 +9,7 @@ from pathlib import Path
 
 from common import DEFAULT_WORKFLOW, utc_now
 from common import sha256_file as sha256
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -25,7 +26,7 @@ def main() -> None:
         raise SystemExit("Terminal question preview manifest/hash gate failed.")
     with PREVIEW_CSV.open(encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
-    connection = sqlite3.connect(str(DB))
+    connection = connect_local(str(DB))
     connection.row_factory = sqlite3.Row
     ids = [row["CANDIDATE_ID"] for row in rows]
     marks = ",".join("?" for _ in ids)
