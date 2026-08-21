@@ -34,4 +34,4 @@ npm run build
 - `/`：批次总览，突出下一步审核动作。
 - `/candidates?review=1`：候选审核工作台，支持服务端查询参数、筛选、选择、详情抽屉和审核动作。
 
-默认只使用 FastAPI 返回的 SQLite / DuckDB 数据。只有显式设置 `VITE_ENABLE_MOCK=true` 时才启用本地 mock，用于完全离线的视觉评审；API 请求失败不会再静默伪造数据。
+默认只使用 FastAPI 返回的 SQLite / DuckDB 数据。项目不再提供 Mock 数据模式；API 请求失败时页面显示错误，不会静默伪造数据。

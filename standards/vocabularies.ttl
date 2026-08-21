@@ -1,0 +1,116 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:DeviceClassificationScheme a skos:ConceptScheme ;
+  skos:prefLabel "设备分类词表"@zh ;
+  skos:notation "device-classification-v1" .
+
+ex:DefectStateScheme a skos:ConceptScheme ;
+  skos:prefLabel "缺陷状态词表"@zh ;
+  skos:notation "defect-state-v1" .
+
+ex:UnitScheme a skos:ConceptScheme ;
+  skos:prefLabel "计量单位词表"@zh ;
+  skos:notation "unit-v1" .
+
+ex:TerminologyScheme a skos:ConceptScheme ;
+  skos:prefLabel "运维术语词表"@zh ;
+  skos:notation "operations-terminology-v1" .
+
+ex:concept-device a skos:Concept ;
+  skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "设备"@zh ;
+  skos:notation "device" .
+
+ex:concept-location a skos:Concept ;
+  skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "位置"@zh ;
+  skos:notation "location" .
+
+ex:concept-inspection a skos:Concept ;
+  skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "巡检"@zh ;
+  skos:notation "inspection" .
+
+ex:concept-defect a skos:Concept ;
+  skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "缺陷"@zh ;
+  skos:notation "defect" .
+
+ex:concept-work-order a skos:Concept ;
+  skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "工单"@zh ;
+  skos:notation "work_order" .
+
+ex:unit-C a skos:Concept ;
+  skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "摄氏度"@zh ;
+  skos:altLabel "°C"@en ;
+  skos:notation "C" .
+
+ex:unit-kV a skos:Concept ;
+  skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "千伏"@zh ;
+  skos:notation "kV" .
+
+ex:unit-A a skos:Concept ;
+  skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "安培"@zh ;
+  skos:notation "A" .
+
+ex:unit-bar a skos:Concept ;
+  skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "巴"@zh ;
+  skos:notation "bar" .
+
+ex:unit-percent a skos:Concept ;
+  skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "百分比"@zh ;
+  skos:notation "%" .
+
+# Canonical defect states are static vocabulary assets, not only runtime rows.
+<https://semantic.local/ontology/state/DEFECT/NEW> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "新建"@zh ; skos:notation "NEW" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/PENDING> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "待处理"@zh ; skos:notation "PENDING" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/PROCESSING> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "处理中"@zh ; skos:notation "PROCESSING" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/RESOLVED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已解决"@zh ; skos:notation "RESOLVED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/CLOSED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已关闭"@zh ; skos:notation "CLOSED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal true ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/CANCELLED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已取消"@zh ; skos:notation "CANCELLED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal true ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/SUSPENDED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已挂起"@zh ; skos:notation "SUSPENDED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/UNKNOWN> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "未知"@zh ; skos:notation "UNKNOWN" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+
+# Enabled deterministic Fact Builder rules are also stable terminology assets.
+<https://semantic.local/ontology/term/rule/defect.repeated> a skos:Concept ;
+  skos:inScheme ex:TerminologyScheme ; skos:prefLabel "重复缺陷事实"@zh ; skos:notation "defect.repeated" ;
+  skos:definition "repeated_defect"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+<https://semantic.local/ontology/term/rule/defect.severe> a skos:Concept ;
+  skos:inScheme ex:TerminologyScheme ; skos:prefLabel "严重缺陷事实"@zh ; skos:notation "defect.severe" ;
+  skos:definition "severe_defect"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+<https://semantic.local/ontology/term/rule/history.statistic> a skos:Concept ;
+  skos:inScheme ex:TerminologyScheme ; skos:prefLabel "缺陷历史统计事实"@zh ; skos:notation "history.statistic" ;
+  skos:definition "history_stat"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+<https://semantic.local/ontology/term/rule/measurement.temperature> a skos:Concept ;
+  skos:inScheme ex:TerminologyScheme ; skos:prefLabel "温度测量事实"@zh ; skos:notation "measurement.temperature" ;
+  skos:definition "measurement"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+<https://semantic.local/ontology/term/rule/risk.assessment> a skos:Concept ;
+  skos:inScheme ex:TerminologyScheme ; skos:prefLabel "风险评估事实"@zh ; skos:notation "risk.assessment" ;
+  skos:definition "risk_assessment"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+<https://semantic.local/ontology/term/rule/trend.measurement> a skos:Concept ;
+  skos:inScheme ex:TerminologyScheme ; skos:prefLabel "测量趋势事实"@zh ; skos:notation "trend.measurement" ;
+  skos:definition "trend"@en ; ex:vocabularyVersion "operations-terminology-v1" .

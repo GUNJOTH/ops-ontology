@@ -1,0 +1,107 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Canonical SHACL asset. These are portable SHACL Core constraints; the local
+# validator implements the same constructs and records severity/message.
+
+ex:DeviceShape a sh:NodeShape ;
+  sh:targetClass ex:Device ; sh:severity sh:Violation ; sh:message "设备必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:nodeKind sh:Literal ; sh:severity sh:Violation ; sh:message "设备 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "设备 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "设备来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "设备来源快照必填"@zh ] ;
+  sh:property [ sh:path ex:hasCurrentState ; sh:class ex:CanonicalState ; sh:nodeKind sh:IRI ; sh:severity sh:Warning ; sh:message "当前状态应引用 CanonicalState"@zh ] .
+
+ex:LocationShape a sh:NodeShape ;
+  sh:targetClass ex:Location ; sh:severity sh:Violation ; sh:message "位置必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置来源快照必填"@zh ] .
+
+ex:IdentityAssertionShape a sh:NodeShape ;
+  sh:targetClass ex:IdentityAssertion ; sh:severity sh:Violation ; sh:message "身份断言必须具备完整来源证据"@zh ;
+  sh:property [ sh:path ex:assertsIdentity ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ex:BusinessObject ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "身份断言必须唯一指向业务对象"@zh ] ;
+  sh:property [ sh:path ex:sourceSystem ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "身份断言 sourceSystem 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSchema ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "身份断言 sourceSchema 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceTable ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "身份断言 sourceTable 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceRecordId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "身份断言 sourceRecordId 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "身份断言来源快照必填"@zh ] ;
+  sh:property [ sh:path ex:confidence ; sh:minCount 1 ; sh:datatype xsd:decimal ; sh:severity sh:Violation ; sh:message "身份断言置信度必填"@zh ] .
+
+ex:BusinessEventShape a sh:NodeShape ;
+  sh:targetClass ex:BusinessEvent ; sh:severity sh:Violation ; sh:message "业务事件必须具备主体、来源和时间证据"@zh ;
+  sh:property [ sh:path ex:hasSubject ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ex:BusinessObject ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "事件必须唯一指向业务主体"@zh ] ;
+  sh:property [ sh:path ex:sourceSchema ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事件 sourceSchema 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceTable ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事件 sourceTable 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceRecordId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事件 sourceRecordId 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事件来源快照必填"@zh ] .
+
+ex:DefectShape a sh:NodeShape ;
+  sh:targetClass ex:Defect ; sh:severity sh:Violation ; sh:message "缺陷对象必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷来源快照必填"@zh ] .
+
+ex:WorkOrderShape a sh:NodeShape ;
+  sh:targetClass ex:WorkOrder ; sh:severity sh:Violation ; sh:message "工单对象必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单来源快照必填"@zh ] .
+
+ex:RuleShape a sh:NodeShape ;
+  sh:targetClass ex:Rule ; sh:severity sh:Violation ; sh:message "规则必须具备版本、目标和生命周期"@zh ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则标题必填"@zh ] ;
+  sh:property [ sh:path ex:ruleVersion ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则版本必填"@zh ] ;
+  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则目标对象必填"@zh ] ;
+  sh:property [ sh:path ex:status ; sh:minCount 1 ; sh:in ( "draft" "replayed" "approved" "enabled" "retired" "blocked" ) ; sh:severity sh:Violation ; sh:message "规则状态不在允许值内"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则来源版本必填"@zh ] .
+
+ex:FactShape a sh:NodeShape ;
+  sh:targetClass ex:Fact ; sh:severity sh:Violation ; sh:message "事实必须具备可计算输入"@zh ;
+  sh:property [ sh:path ex:factType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事实类型必填"@zh ] ;
+  sh:property [ sh:path ex:predicate ; sh:minCount 1 ; sh:maxCount 1 ; sh:class rdf:Property ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "事实 predicate 必须是 RDF Property IRI"@zh ] ;
+  sh:property [ sh:path ex:predicateLabel ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事实 predicateLabel 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSchema ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事实 sourceSchema 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceTable ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事实 sourceTable 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceRecordId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "事实 sourceRecordId 必填"@zh ] .
+
+ex:SourceFactShape a sh:NodeShape ;
+  sh:targetClass ex:SourceFact ; sh:severity sh:Violation ; sh:message "源事实必须具备完整来源快照证据"@zh ;
+  sh:property [ sh:path ex:sourceSchema ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "源事实 sourceSchema 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceTable ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "源事实 sourceTable 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceRecordId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "源事实 sourceRecordId 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "源事实来源快照必填"@zh ] .
+
+ex:DerivedFactShape a sh:NodeShape ;
+  sh:targetClass ex:DerivedFact ; sh:severity sh:Violation ; sh:message "派生事实必须保留可回放的推导证据"@zh ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "派生事实必须保留输入快照集合"@zh ] ;
+  sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:class prov:Activity ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "派生事实必须关联推导活动"@zh ] ;
+  sh:property [ sh:path ex:derivedFromFact ; sh:minCount 1 ; sh:class ex:Fact ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "派生事实必须关联输入事实"@zh ] .
+
+ex:ActionPlanShape a sh:NodeShape ;
+  sh:targetClass ex:ActionPlan ; sh:severity sh:Violation ; sh:message "行动计划必须可审批且禁止写源"@zh ;
+  sh:property [ sh:path ex:actionKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动键必填"@zh ] ;
+  sh:property [ sh:path ex:actionType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动类型必填"@zh ] ;
+  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动目标对象必填"@zh ] ;
+  sh:property [ sh:path ex:reason ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动理由必填"@zh ] ;
+  sh:property [ sh:path ex:riskLevel ; sh:minCount 1 ; sh:in ( "low" "medium" "high" ) ; sh:severity sh:Violation ; sh:message "风险等级不在允许值内"@zh ] ;
+  sh:property [ sh:path ex:status ; sh:minCount 1 ; sh:in ( "DRAFT" "PENDING_APPROVAL" "APPROVED" "REJECTED" "CANCELLED" ) ; sh:severity sh:Violation ; sh:message "行动状态不在允许值内"@zh ] ;
+  sh:property [ sh:path ex:requiresApproval ; sh:minCount 1 ; sh:datatype xsd:boolean ; sh:severity sh:Violation ; sh:message "行动审批门禁必填"@zh ] ;
+  sh:property [ sh:path ex:sourceWrite ; sh:minCount 1 ; sh:in ( false ) ; sh:datatype xsd:boolean ; sh:severity sh:Violation ; sh:message "行动计划不得写源系统"@zh ] ;
+  sh:property [ sh:path ex:formalPublication ; sh:minCount 1 ; sh:in ( false ) ; sh:datatype xsd:boolean ; sh:severity sh:Violation ; sh:message "行动计划不得直接正式发布"@zh ] .
+
+ex:LocationAssignmentShape a sh:NodeShape ;
+  sh:targetClass ex:LocationAssignment ; sh:closed true ;
+  sh:ignoredProperties ( rdf:type prov:wasDerivedFrom prov:wasGeneratedBy ) ;
+  sh:severity sh:Violation ; sh:message "位置关系必须可追溯且保留有效期"@zh ;
+  sh:property [ sh:path ex:assignmentDevice ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ex:Device ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "位置关系必须指向设备"@zh ] ;
+  sh:property [ sh:path ex:assignmentLocation ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ex:Location ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "位置关系必须指向位置"@zh ] ;
+  sh:property [ sh:path ex:relationPredicate ; sh:minCount 1 ; sh:maxCount 1 ; sh:class rdf:Property ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "位置关系 predicate 必须类型化"@zh ] ;
+  sh:property [ sh:path ex:validFrom ; sh:datatype xsd:dateTime ; sh:maxCount 1 ; sh:severity sh:Warning ; sh:message "位置关系 validFrom 应为日期时间"@zh ] ;
+  sh:property [ sh:path ex:validTo ; sh:datatype xsd:dateTime ; sh:maxCount 1 ; sh:severity sh:Warning ; sh:message "位置关系 validTo 应为日期时间"@zh ] .

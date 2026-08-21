@@ -1,0 +1,47 @@
+version: "1.0.0"
+status: "proposed"
+scope: "HD_SAAS and XNY_SAAS independent source domains"
+identity_key: ["source_schema", "SITEID", "ASSETNUM"]
+source_write: false
+formal_publication: false
+
+rules:
+  - rule_id: "safe-whitespace-trim-collapse-v1"
+    status: "proposed"
+    source_scopes: ["HD_SAAS", "XNY_SAAS"]
+    source_field: "ASSET.DESCRIPTION"
+    action: "trim + collapse whitespace only; exclude non-whitespace NFKC changes"
+    evidence_required: ["original_description", "source_row_hash", "identity_key"]
+    changes_equipment_identity: false
+    kks_decode: false
+    activation_gate: "full impact partition + representative review + full replay"
+
+  - rule_id: "nfkc-non-whitespace-change-v1"
+    status: "disabled"
+    source_scopes: ["HD_SAAS", "XNY_SAAS"]
+    source_field: "ASSET.DESCRIPTION"
+    action: "queue NFKC changes that alter non-whitespace characters for semantic review"
+    evidence_required: ["original_description", "proposed_normalized_description", "source_row_hash", "identity_key"]
+    changes_equipment_identity: "unknown"
+    kks_decode: false
+    rewrite_allowed: false
+    activation_gate: "source-scoped terminology or symbol rule confirmation + full replay"
+
+  - rule_id: "kks-like-location-observation-v1"
+    status: "proposed_observation_only"
+    source_scopes: ["HD_SAAS", "XNY_SAAS"]
+    source_fields: ["ASSET.LOCATION", "LOCATIONS.LOCATION", "LOCHIERARCHY.LOCATION"]
+    action: "record candidate shape and parent context only"
+    evidence_required: ["location_code", "site_id", "parent_location", "classification_description"]
+    changes_equipment_identity: false
+    kks_decode: false
+    rewrite_allowed: false
+    activation_gate: "plant-specific KKS segment catalogue"
+
+  - rule_id: "approved-terminology-replacement-v1"
+    status: "disabled"
+    source_scopes: ["HD_SAAS", "XNY_SAAS"]
+    action: "replace only terms present in an approved, source-scoped terminology dictionary"
+    evidence_required: ["approved_term_mapping", "source_row_hash", "replay_manifest"]
+    changes_equipment_identity: false
+    activation_gate: "business confirmation + full active evaluation replay"

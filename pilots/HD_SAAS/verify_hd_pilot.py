@@ -15,6 +15,13 @@ LOCATION_EXCLUSION_MANIFEST = ROOT / "candidates" / "location_exclusion_manifest
 OUTPUT = ROOT / "candidates" / "verification.json"
 
 
+def to_int(value: object, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def main() -> None:
     snapshot = json.loads(SNAPSHOT_MANIFEST.read_text(encoding="utf-8"))
     candidate_manifest = json.loads(CANDIDATE_MANIFEST.read_text(encoding="utf-8"))
@@ -53,11 +60,11 @@ def main() -> None:
             except json.JSONDecodeError:
                 failures.append("INVALID_EVIDENCE_JSON")
 
-    excluded_rows = (int(exclusion["excluded_rows"]) if exclusion else 0) + (int(location_exclusion["excluded_rows"]) if location_exclusion else 0)
-    expected_rows = int(snapshot["source_row_count"]) - excluded_rows
+    excluded_rows = (to_int(exclusion["excluded_rows"]) if exclusion else 0) + (to_int(location_exclusion["excluded_rows"]) if location_exclusion else 0)
+    expected_rows = to_int(snapshot["source_row_count"]) - excluded_rows
     if rows != expected_rows:
         failures.append(f"ROW_COUNT_MISMATCH:{rows}!={expected_rows}")
-    if len(identities) != int(snapshot["distinct_identity_count"]) - excluded_rows:
+    if len(identities) != to_int(snapshot["distinct_identity_count"]) - excluded_rows:
         failures.append("IDENTITY_COUNT_MISMATCH")
     if counts.get("blocked", 0):
         failures.append("BLOCKED_RESULTS_PRESENT")

@@ -48,6 +48,8 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     kept_rows = 0
     excluded_written = 0
+    input_rows = 0
+    source_snapshot_ids: set[str] = set()
     seen_candidate_ids: set[str] = set()
     seen_identity: set[tuple[str, str]] = set()
     base_fields: list[str] = []
@@ -66,6 +68,8 @@ def main() -> None:
         excluded_writer = csv.DictWriter(excluded, fieldnames=excluded_fields)
         excluded_writer.writeheader()
         for row in reader:
+            input_rows += 1
+            source_snapshot_ids.add(clean(row.get("SOURCE_SNAPSHOT_ID")))
             candidate_id = clean(row.get("CANDIDATE_ID"))
             identity = (clean(row.get("SITEID")), clean(row.get("ASSETNUM")))
             if candidate_id in excluded_ids:
@@ -99,13 +103,17 @@ def main() -> None:
 
     if excluded_written != len(excluded_ids):
         raise SystemExit(f"exclusion mismatch: expected {len(excluded_ids)}, wrote {excluded_written}")
+    source_snapshot_ids.discard("")
+    if len(source_snapshot_ids) != 1:
+        raise SystemExit(f"input quality batch must have exactly one SOURCE_SNAPSHOT_ID, got {sorted(source_snapshot_ids)}")
+    source_snapshot_id = next(iter(source_snapshot_ids))
 
     manifest = {
         "run_id": "hd-quality-scope-exclude-low-overlap-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "source_snapshot_id": "8ec77ed1bfd07a2be029f9600a28f210631c6dfabc0e05ae382f494d6d35b538",
+        "source_snapshot_id": source_snapshot_id,
         "input_quality_file": str(QUALITY),
         "input_quality_file_sha256": sha256(QUALITY),
-        "input_quality_rows": 385582,
+        "input_quality_rows": input_rows,
         "excluded_classification_file": str(LOW_OVERLAP),
         "excluded_classification_rows": len(excluded_ids),
         "exclusion_rule": "DIFFERENCE_CLASS=LOW_TEXT_OVERLAP",
@@ -124,11 +132,11 @@ def main() -> None:
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     verification = {
-        "status": "PASS" if kept_rows + excluded_written == 385582 and len(seen_candidate_ids) == kept_rows else "FAIL",
-        "input_rows": 385582,
+        "status": "PASS" if kept_rows + excluded_written == input_rows and len(seen_candidate_ids) == kept_rows else "FAIL",
+        "input_rows": input_rows,
         "kept_rows": kept_rows,
         "excluded_rows": excluded_written,
-        "reconciled": kept_rows + excluded_written == 385582,
+        "reconciled": kept_rows + excluded_written == input_rows,
         "kept_distinct_candidate_ids": len(seen_candidate_ids),
         "kept_distinct_identities": len(seen_identity),
         "source_write": False,
@@ -143,11 +151,11 @@ def main() -> None:
         "",
         "## 批次结果",
         "",
-        f"- 原高质量冻结批次：385,582条",
+        f"- 原高质量冻结批次：{input_rows:,}条",
         f"- 排除低文本重合：{excluded_written}条",
         f"- 新统一语义处理批次：{kept_rows}条",
         "- 原始数据库：未修改",
-        "- 原385,582条质量批次：保留",
+        f"- 原{input_rows:,}条质量批次：保留",
         "- 被排除数据：单独留档，后续可恢复",
         "",
         f"新处理批次：[hd_quality_candidates_for_unification.csv](../quality_scope/hd_quality_candidates_for_unification.csv)",

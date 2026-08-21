@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS source_connection (
   port INTEGER NOT NULL,
   access_mode TEXT NOT NULL CHECK (access_mode = 'read_only'),
   secret_reference TEXT,
-  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0,1)),
+  enabled INTEGER NOT NULL DEFAULT 0 CHECK (enabled IN (0,1)),
   created_at TEXT NOT NULL,
   UNIQUE (source_system, source_schema, host, port)
 );
@@ -112,6 +112,113 @@ CREATE TABLE IF NOT EXISTS terminology_rule (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS cleaning_rule_registry (
+  rule_key TEXT PRIMARY KEY,
+  cleaning_type TEXT NOT NULL,
+  rule_label TEXT NOT NULL,
+  action_label TEXT NOT NULL,
+  is_cleaning INTEGER NOT NULL CHECK (is_cleaning IN (0,1)),
+  replay_id TEXT NOT NULL UNIQUE,
+  rule_version TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0,1)),
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cleaning_run (
+  cleaning_run_id TEXT PRIMARY KEY,
+  rule_key TEXT NOT NULL REFERENCES cleaning_rule_registry(rule_key),
+  replay_id TEXT NOT NULL,
+  batch_id TEXT,
+  source_type TEXT NOT NULL DEFAULT 'formal_queue',
+  status TEXT NOT NULL CHECK (status IN ('draft','pending_approval','approved','published','failed')),
+  candidate_count INTEGER NOT NULL DEFAULT 0,
+  pending_count INTEGER NOT NULL DEFAULT 0,
+  approved_count INTEGER NOT NULL DEFAULT 0,
+  published_count INTEGER NOT NULL DEFAULT 0,
+  preview_path TEXT,
+  sample_path TEXT,
+  stage TEXT NOT NULL DEFAULT 'task',
+  preview_id TEXT,
+  preview_sha256 TEXT,
+  approval_idempotency_key TEXT,
+  publication_run_id TEXT,
+  backup_path TEXT,
+  last_error TEXT,
+  source_write INTEGER NOT NULL DEFAULT 0,
+  formal_publication INTEGER NOT NULL DEFAULT 0,
+  archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0,1)),
+  archived_at TEXT,
+  archive_reason TEXT,
+  preview_rows INTEGER NOT NULL DEFAULT 0,
+  replay_rows INTEGER NOT NULL DEFAULT 0,
+  approval_key TEXT,
+  publication_key TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (rule_key, replay_id)
+);
+
+CREATE TABLE IF NOT EXISTS rule_agent_run (
+  run_id TEXT PRIMARY KEY,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  batch_id TEXT NOT NULL REFERENCES batch_run(batch_id),
+  source_snapshot_id TEXT NOT NULL REFERENCES source_snapshot(source_snapshot_id),
+  eligible_count INTEGER NOT NULL DEFAULT 0,
+  sampled_count INTEGER NOT NULL DEFAULT 0,
+  model TEXT NOT NULL,
+  provider_base_url TEXT NOT NULL,
+  profile_json TEXT NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL CHECK (status IN ('running','completed','failed')),
+  error_message TEXT,
+  created_at TEXT NOT NULL,
+  finished_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS rule_agent_proposal (
+  proposal_id TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL REFERENCES rule_agent_run(run_id),
+  rule_key TEXT NOT NULL,
+  rule_version TEXT NOT NULL,
+  title TEXT NOT NULL,
+  objective TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  condition_json TEXT NOT NULL DEFAULT '{}',
+  parameters_json TEXT NOT NULL DEFAULT '{}',
+  scope_json TEXT NOT NULL DEFAULT '{}',
+  evidence_json TEXT NOT NULL DEFAULT '{}',
+  examples_json TEXT NOT NULL DEFAULT '[]',
+  expected_count INTEGER NOT NULL DEFAULT 0,
+  confidence REAL NOT NULL DEFAULT 0,
+  risk_level TEXT NOT NULL CHECK (risk_level IN ('low','medium','high')),
+  status TEXT NOT NULL CHECK (status IN ('draft','previewed','replayed','confirmed','enabled','rejected','failed')),
+  discovery_filter_status TEXT NOT NULL DEFAULT 'eligible' CHECK (discovery_filter_status IN ('eligible','filtered')),
+  discovery_filter_reason TEXT,
+  discovery_filtered_at TEXT,
+  preview_path TEXT,
+  sample_path TEXT,
+  preview_sha256 TEXT,
+  preview_count INTEGER NOT NULL DEFAULT 0,
+  replay_count INTEGER NOT NULL DEFAULT 0,
+  replay_pass_count INTEGER NOT NULL DEFAULT 0,
+  replay_fail_count INTEGER NOT NULL DEFAULT 0,
+  evaluation_replay_id TEXT,
+  evaluation_count INTEGER NOT NULL DEFAULT 0,
+  evaluation_pass_count INTEGER NOT NULL DEFAULT 0,
+  evaluation_fail_count INTEGER NOT NULL DEFAULT 0,
+  agent_review_decision TEXT,
+  agent_review_confidence REAL NOT NULL DEFAULT 0,
+  agent_review_reason TEXT,
+  agent_review_version TEXT,
+  agent_reviewed_at TEXT,
+  replay_message TEXT,
+  enabled_rule_key TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (run_id, rule_key)
+);
+
 CREATE TABLE IF NOT EXISTS semantic_candidate (
   candidate_id TEXT PRIMARY KEY,
   batch_id TEXT NOT NULL REFERENCES batch_run(batch_id),
@@ -200,6 +307,21 @@ CREATE TABLE IF NOT EXISTS replay_result (
   PRIMARY KEY (replay_id, case_id)
 );
 
+CREATE TABLE IF NOT EXISTS formal_approval_queue (
+  queue_id TEXT PRIMARY KEY,
+  candidate_id TEXT NOT NULL UNIQUE REFERENCES semantic_candidate(candidate_id),
+  cluster_id TEXT NOT NULL,
+  replay_id TEXT NOT NULL REFERENCES replay_run(replay_id),
+  proposed_decision TEXT NOT NULL CHECK (proposed_decision IN ('approved','modified','rejected','deferred')),
+  proposed_description TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending','approved','modified','rejected','deferred')),
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  source_write INTEGER NOT NULL DEFAULT 0 CHECK (source_write = 0),
+  formal_publication INTEGER NOT NULL DEFAULT 0 CHECK (formal_publication = 0)
+);
+
 CREATE TABLE IF NOT EXISTS published_description (
   publication_id TEXT PRIMARY KEY,
   candidate_id TEXT NOT NULL UNIQUE REFERENCES semantic_candidate(candidate_id),
@@ -258,10 +380,18 @@ CREATE INDEX IF NOT EXISTS ix_device_location ON device_identity(site_id, locati
 CREATE INDEX IF NOT EXISTS ix_candidate_batch_status ON semantic_candidate(batch_id, validator_status, review_state);
 CREATE INDEX IF NOT EXISTS ix_candidate_device ON semantic_candidate(device_id);
 CREATE INDEX IF NOT EXISTS ix_rule_status_scope ON terminology_rule(status, site_scope, classification_scope);
+CREATE INDEX IF NOT EXISTS ix_cleaning_rule_enabled ON cleaning_rule_registry(enabled, is_cleaning);
+CREATE INDEX IF NOT EXISTS ix_cleaning_run_status ON cleaning_run(status, updated_at);
+CREATE INDEX IF NOT EXISTS ix_cleaning_run_archived ON cleaning_run(archived, status, updated_at);
+CREATE INDEX IF NOT EXISTS ix_rule_agent_run_batch ON rule_agent_run(batch_id, created_at);
+CREATE INDEX IF NOT EXISTS ix_rule_agent_proposal_status ON rule_agent_proposal(status, updated_at);
 CREATE INDEX IF NOT EXISTS ix_validation_candidate_outcome ON validation_result(candidate_id, outcome, severity);
 CREATE INDEX IF NOT EXISTS ix_audit_entity ON audit_event(entity_type, entity_id, event_at);
 CREATE INDEX IF NOT EXISTS ix_review_sample_batch ON review_sample(batch_id, status);
 CREATE INDEX IF NOT EXISTS ix_review_sample_item_candidate ON review_sample_item(candidate_id);
+CREATE INDEX IF NOT EXISTS ix_formal_approval_queue_status ON formal_approval_queue(status, created_at);
+CREATE INDEX IF NOT EXISTS ix_published_site_asset ON published_description(site_id, asset_number, publication_id);
+CREATE INDEX IF NOT EXISTS ix_published_candidate ON published_description(candidate_id);
 
 CREATE VIEW IF NOT EXISTS v_review_queue AS
 SELECT

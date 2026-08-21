@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "sparql-contract-manifest-v1",
+  "language": "SPARQL 1.1",
+  "endpointPolicy": "read_only",
+  "queries": [
+    {
+      "id": "device-count",
+      "file": "device-count.sparql",
+      "operation": "SELECT",
+      "purpose": "Count canonical Device resources"
+    },
+    {
+      "id": "device-context",
+      "file": "device-context.sparql",
+      "operation": "SELECT",
+      "purpose": "Return a device name and optional location context"
+    },
+    {
+      "id": "inferred-subclass-count",
+      "file": "inferred-subclass-count.sparql",
+      "operation": "SELECT",
+      "purpose": "Check the OWL 2 RL-compatible subclass closure"
+    }
+  ]
+}

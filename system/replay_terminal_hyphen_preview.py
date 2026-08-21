@@ -1,0 +1,194 @@
+"""Replay the proposed terminal-hyphen rule without publication."""
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+import sqlite3
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = ROOT.parent
+DB = ROOT / "data" / "semantic_workflow.sqlite3"
+PREVIEW_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "terminal_hyphen_preview"
+PREVIEW_CSV = PREVIEW_DIR / "rewrite_preview.csv"
+MANIFEST_JSON = PREVIEW_DIR / "manifest.json"
+REPLAY_MANIFEST = PREVIEW_DIR / "replay_manifest.json"
+SUMMARY_JSON = PREVIEW_DIR / "replay_summary.json"
+
+RULE_VERSION = "terminal-hyphen-proposed-20260813-v1"
+RULE_KEY = "format.terminal_hyphen_trim"
+VALIDATOR_VERSION = "terminal-hyphen-replay-validator-v1"
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def stable_replay_id(candidate_ids: list[str]) -> str:
+    scope = "|".join(candidate_ids) + "|" + RULE_VERSION
+    return f"replay-terminal-hyphen-{hashlib.sha256(scope.encode('utf-8')).hexdigest()[:20]}"
+
+
+def main() -> None:
+    if not PREVIEW_CSV.exists() or not MANIFEST_JSON.exists():
+        raise SystemExit("Terminal hyphen preview is missing; generate it first.")
+    manifest = json.loads(MANIFEST_JSON.read_text(encoding="utf-8"))
+    if manifest.get("rule_version") != RULE_VERSION or manifest.get("rule_key") != RULE_KEY:
+        raise SystemExit("Preview rule version or key does not match replay rule.")
+    with PREVIEW_CSV.open(encoding="utf-8-sig", newline="") as handle:
+        preview_rows = list(csv.DictReader(handle))
+    if len(preview_rows) != 48 or len({row["CANDIDATE_ID"] for row in preview_rows}) != 48:
+        raise SystemExit("Terminal hyphen preview must contain 48 unique rows.")
+
+    candidate_ids = [row["CANDIDATE_ID"] for row in preview_rows]
+    connection = sqlite3.connect(str(DB), timeout=60)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys=ON")
+    connection.execute("PRAGMA busy_timeout=60000")
+    try:
+        placeholders = ",".join("?" for _ in candidate_ids)
+        db_rows = connection.execute(
+            f"""
+            SELECT c.candidate_id,c.original_description,c.candidate_description,
+              c.confidence,c.validator_status,c.review_state,c.publication_state,
+              d.source_snapshot_id,d.source_schema,d.site_id,d.asset_number,
+              d.location_code,d.location_description,d.location_parent,
+              d.classification_description,d.class_structure_description
+            FROM semantic_candidate c
+            JOIN device_identity d ON d.device_id=c.device_id
+            WHERE c.candidate_id IN ({placeholders})
+            """,
+            candidate_ids,
+        ).fetchall()
+        db_by_id = {row["candidate_id"]: row for row in db_rows}
+        failures: list[dict[str, str]] = []
+        replay_rows: list[dict[str, object]] = []
+        by_site: Counter[str] = Counter()
+        for preview in preview_rows:
+            candidate_id = preview["CANDIDATE_ID"]
+            row = db_by_id.get(candidate_id)
+            if row is None:
+                failures.append({"candidate_id": candidate_id, "check": "candidate_exists"})
+                continue
+            original = row["original_description"] or ""
+            proposed = original[:-1] if original.endswith("-") else original
+            checks = {
+                "preview_original_matches_db": preview["ORIGINAL_DESCRIPTION"] == original,
+                "preview_candidate_matches_db": preview["EXISTING_CANDIDATE_DESCRIPTION"] == (row["candidate_description"] or ""),
+                "pending_unpublished": row["review_state"] == "pending" and row["publication_state"] == "unpublished",
+                "high_quality_candidate": row["confidence"] == "high" and row["validator_status"] == "candidate",
+                "terminal_hyphen_exists": original.endswith("-"),
+                "proposed_matches_rule": preview["PROPOSED_DESCRIPTION"] == proposed,
+                "only_terminal_hyphen_changed": preview["PROPOSED_DESCRIPTION"] == original[:-1],
+                "candidate_equals_proposed": (row["candidate_description"] or "") == proposed,
+                "no_terminal_hyphen_remains": not preview["PROPOSED_DESCRIPTION"].endswith("-"),
+            }
+            for check, passed in checks.items():
+                if not passed:
+                    failures.append({"candidate_id": candidate_id, "check": check})
+            replay_rows.append({
+                "candidate_id": candidate_id,
+                "case_id": f"case-terminal-hyphen-{candidate_id}",
+                "actual_description": proposed,
+                "passed": all(checks.values()),
+            })
+            by_site[row["site_id"] or "(空)"] += 1
+
+        if len(db_rows) != len(preview_rows):
+            failures.append({"candidate_id": "(scope)", "check": "preview_db_row_count_matches"})
+        if len(replay_rows) != 48:
+            raise SystemExit(f"Replay rows must be 48, found {len(replay_rows)}")
+
+        replay_id = stable_replay_id(candidate_ids)
+        now = utc_now()
+        connection.execute("BEGIN IMMEDIATE")
+        for preview, replay_row in zip(preview_rows, replay_rows):
+            row = db_by_id[preview["CANDIDATE_ID"]]
+            context = {
+                "rule_key": RULE_KEY,
+                "candidate_description_before_rule": row["candidate_description"] or "",
+                "location_code": row["location_code"] or "",
+                "location_description": row["location_description"] or "",
+                "location_parent": row["location_parent"] or "",
+                "classification_description": row["classification_description"] or "",
+                "source_write": False,
+                "formal_approval": False,
+                "formal_publication": False,
+            }
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO evaluation_case
+                  (case_id,source_review_id,source_snapshot_id,source_schema,site_id,asset_number,
+                   input_description,context_json,expected_decision,expected_description,failure_type,
+                   active,introduced_rule_version,created_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,
+                (
+                    replay_row["case_id"], None, row["source_snapshot_id"], row["source_schema"],
+                    row["site_id"], row["asset_number"], row["original_description"],
+                    json.dumps(context, ensure_ascii=False, sort_keys=True), "modified",
+                    preview["PROPOSED_DESCRIPTION"], "terminal_hyphen_normalization",
+                    1, RULE_VERSION, now,
+                ),
+            )
+
+        existing = connection.execute("SELECT * FROM replay_run WHERE replay_id=?", (replay_id,)).fetchone()
+        if existing is None:
+            passed = sum(1 for item in replay_rows if item["passed"])
+            failed = len(replay_rows) - passed
+            status = "passed" if not failures else "failed"
+            connection.execute(
+                """
+                INSERT INTO replay_run
+                  (replay_id,rule_version,validator_version,evaluation_count,pass_count,fail_count,status,started_at,finished_at)
+                VALUES (?,?,?,?,?,?,?,?,?)
+                """,
+                (replay_id, RULE_VERSION, VALIDATOR_VERSION, len(replay_rows), passed, failed, status, now, utc_now()),
+            )
+            for item in replay_rows:
+                connection.execute(
+                    "INSERT INTO replay_result(replay_id,case_id,actual_decision,actual_description,outcome,message) VALUES (?,?,?,?,?,?)",
+                    (replay_id, item["case_id"], "modified", item["actual_description"], "pass" if item["passed"] else "fail", None if item["passed"] else "terminal hyphen replay validation failed"),
+                )
+            connection.execute(
+                "INSERT INTO audit_event(entity_type,entity_id,event_type,actor,payload_json,event_at) VALUES (?,?,?,?,?,?)",
+                (
+                    "replay_run", replay_id, "terminal_hyphen_replay_completed", "terminal-hyphen-replay",
+                    json.dumps({"candidate_count": len(replay_rows), "pass_count": passed, "fail_count": failed, "source_write": False, "formal_publication": False}, ensure_ascii=False), now,
+                ),
+            )
+        else:
+            passed = int(existing["pass_count"])
+            failed = int(existing["fail_count"])
+            status = existing["status"]
+
+        connection.commit()
+        payload = {
+            "status": status,
+            "replay_id": replay_id,
+            "rule_key": RULE_KEY,
+            "rule_version": RULE_VERSION,
+            "validator_version": VALIDATOR_VERSION,
+            "evaluation_count": len(replay_rows),
+            "pass_count": passed,
+            "fail_count": failed,
+            "sample_rows": len(preview_rows),
+            "by_site": dict(sorted(by_site.items())),
+            "source_write": False,
+            "formal_approval_created": False,
+            "formal_publication": False,
+            "failures": failures,
+        }
+        SUMMARY_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        REPLAY_MANIFEST.write_text(json.dumps({**payload, "generated_at_utc": utc_now(), "scope": "terminal hyphen preview only", "summary_file": str(SUMMARY_JSON)}, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(json.dumps(payload, ensure_ascii=False))
+    finally:
+        connection.close()
+
+
+if __name__ == "__main__":
+    main()

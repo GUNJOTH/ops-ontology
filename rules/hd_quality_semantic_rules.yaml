@@ -10,7 +10,7 @@ input:
   source_write: false
 
 identity:
-  stable_key: ["SOURCE_SCHEMA", "SITEID", "ASSETNUM"]
+  stable_key: ["source_schema", "SITEID", "ASSETNUM"]
   source_surrogate: "ASSETID"
   description_is_not_unique: true
 

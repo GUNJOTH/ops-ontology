@@ -3,16 +3,33 @@ __pycache__/
 *.py[cod]
 .venv/
 .deps/
+.uv-cache/
+/.uv-cache-semantic/
 
 # Node build and dependency output
 node_modules/
 dist/
 .vite/
 
+# Test runtime artifacts
+.pytest_cache/
+.pytest-tmp/
+.pytest_tmp/
+.test_tmp/
+pytest-cache-files-*
+
+# 沙箱调试探针遗留（0o700/0o600 权限位导致当前环境无法删除）
+backend/_m700
+backend/_probe3
+backend/_mkdtemp_*
+
 # Local databases, caches, logs, and runtime state
 system/data/
 system/.deps*/
 system/.uv-cache/
+system/backups/
+system/canonical-runs/
+system/releases/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
@@ -25,6 +42,8 @@ system/.uv-cache/
 .env
 .env.*
 !.env.example
+backend/.env
+!backend/.env.example
 
 # Generated pilot data and source snapshots
 reports/
@@ -46,6 +65,18 @@ pilots/**/kks_dictionary/*.csv
 pilots/**/kks_observed_patterns/*.csv
 pilots/**/kks_observed_patterns/
 pilots/**/reports/
+pilots/**/*_preview/
+pilots/**/*_replay/
+pilots/**/*_review/
+pilots/**/ai_judgment/
+pilots/**/release_baselines/
+pilots/**/rule_agent/
+pilots/**/results/
+pilots/**/snapshots/
+pilots/**/inventory/
+pilots/**/catalog/
+pilots/**/grp_metadata_snapshots/
+pilots/**/__pycache__/
 
 # Editor and OS files
 .idea/

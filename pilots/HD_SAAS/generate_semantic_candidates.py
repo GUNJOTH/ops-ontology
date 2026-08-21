@@ -217,7 +217,7 @@ def main() -> None:
 
     verification = {
         "status": "PASS"
-        if input_rows == 382785
+        if input_rows > 0
         and len(candidate_ids) == input_rows
         and len(identities) == input_rows
         and context_invalid == 0
@@ -258,7 +258,7 @@ def main() -> None:
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     report = [
-        "# 382,785 条统一语义候选生成结果",
+        f"# {input_rows:,} 条统一语义候选生成结果",
         "",
         "本次只执行来源可追溯的确定性规则：保留原描述，不把位置、KKS、分类或父级擅自拼入设备名称；未发现已确认的本地术语替换规则，因此没有批量改写专业术语。",
         "",

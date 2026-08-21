@@ -1,0 +1,18 @@
+{
+  "pipelineId": "semantic-closure",
+  "version": "semantic-closure-v2",
+  "description": "Local semantic closure with ordered, replayable stages.",
+  "steps": [
+    {"id": "unified_semantics_layer", "handler": "unified_semantics_layer"},
+    {"id": "event_projection", "handler": "event_projection", "dependsOn": ["unified_semantics_layer"]},
+    {"id": "runtime_contract", "handler": "runtime_contract", "dependsOn": ["event_projection"]},
+    {"id": "governance_contract", "handler": "governance_contract", "dependsOn": ["runtime_contract"]},
+    {"id": "state_replay", "handler": "state_replay", "dependsOn": ["governance_contract"]},
+    {"id": "fact_builders", "handler": "fact_builders", "dependsOn": ["state_replay"]},
+    {"id": "decision_action", "handler": "decision_action", "dependsOn": ["fact_builders"]},
+    {"id": "execution_ledger", "handler": "execution_ledger", "dependsOn": ["decision_action"]},
+    {"id": "canonical_projection", "handler": "canonical_projection", "dependsOn": ["execution_ledger"]},
+    {"id": "owl_rl_replay", "handler": "owl_rl_replay", "dependsOn": ["canonical_projection"]},
+    {"id": "coverage", "handler": "coverage", "dependsOn": ["owl_rl_replay"]}
+  ]
+}

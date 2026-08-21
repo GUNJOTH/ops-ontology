@@ -14,7 +14,6 @@ scope:
     - "source table updates"
     - "silent cross-schema merges"
     - "backup tables as current truth"
-    - "ontology, graph, TTL, RDF, or ontology-governance artifacts"
 
 table_roles:
   current_metadata:

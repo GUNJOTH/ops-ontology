@@ -1,0 +1,30 @@
+{
+  "baseline_id": "grp-metadata-baseline-v1-20260815",
+  "status": "candidate_local_result_layer",
+  "source_domains": [
+    {
+      "source_schema": "HD_SAAS",
+      "snapshot_id": "hd_saas-grp-metadata-20260815T073716Z",
+      "relative_path": "semantic-engineering/pilots/metadata/grp_metadata_snapshots/hd_saas-grp-metadata-20260815T073716Z",
+      "read_only": true,
+      "source_write": false
+    },
+    {
+      "source_schema": "XNY_SAAS",
+      "snapshot_id": "xny_saas-grp-metadata-20260815T073739Z",
+      "relative_path": "semantic-engineering/pilots/metadata/grp_metadata_snapshots/xny_saas-grp-metadata-20260815T073739Z",
+      "read_only": true,
+      "source_write": false
+    }
+  ],
+  "dictionary_result": {
+    "relative_path": "semantic-engineering/pilots/metadata/results/metadata-semantic-v1-20260815T-v2",
+    "sqlite_count": 76286,
+    "duckdb_count": 76286,
+    "isolated_findings": 9391,
+    "formal_publication": false
+  },
+  "uncertain_policy": "exclude from formal dictionary and retain in isolated findings",
+  "source_write": false,
+  "formal_publication": false
+}

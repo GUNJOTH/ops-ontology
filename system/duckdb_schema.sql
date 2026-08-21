@@ -41,10 +41,10 @@ SELECT
   count(*) FILTER (WHERE LOCATION_PARENT IS NOT NULL AND trim(LOCATION_PARENT) <> '') AS location_parent_rows,
   count(*) FILTER (WHERE LOCATION_DESCRIPTION IS NOT NULL AND trim(LOCATION_DESCRIPTION) <> '') AS location_description_rows,
   count(*) FILTER (WHERE CLASSIFICATION_DESCRIPTION IS NOT NULL AND trim(CLASSIFICATION_DESCRIPTION) <> '') AS classification_rows,
-  count(*) FILTER (WHERE CAST(SPEC_COUNT AS BIGINT) > 0) AS specification_rows,
-  count(*) FILTER (WHERE CAST(FEATURE_COUNT AS BIGINT) > 0) AS feature_rows,
-  count(*) FILTER (WHERE CAST(PARENT_ASSET_COUNT AS BIGINT) > 0) AS parent_asset_rows,
-  count(*) FILTER (WHERE CAST(RELATION_COUNT AS BIGINT) > 0) AS relation_rows
+  count(*) FILTER (WHERE TRY_CAST(SPEC_COUNT AS BIGINT) > 0) AS specification_rows,
+  count(*) FILTER (WHERE TRY_CAST(FEATURE_COUNT AS BIGINT) > 0) AS feature_rows,
+  count(*) FILTER (WHERE TRY_CAST(PARENT_ASSET_COUNT AS BIGINT) > 0) AS parent_asset_rows,
+  count(*) FILTER (WHERE TRY_CAST(RELATION_COUNT AS BIGINT) > 0) AS relation_rows
 FROM semantic_candidate_fact;
 
 CREATE OR REPLACE VIEW v_description_frequency AS

@@ -23,6 +23,10 @@ def clean(value: object) -> str:
     return "" if value is None else str(value).strip()
 
 
+def quote_ident(value: object) -> str:
+    return '"' + str(value).replace('"', '""') + '"'
+
+
 def query_rows(cursor, sql: str) -> list[dict[str, str]]:
     cursor.execute(sql)
     names = [str(item[0]) for item in cursor.description]
@@ -73,8 +77,8 @@ def main() -> None:
             columns = {item["COLUMN_NAME"] for item in result["team_columns"].get("rows", []) if item["TABLE_NAME"] == table}  # type: ignore[union-attr]
             team_probe[table] = {
                 "columns": sorted(columns),
-                "row_count": safe_query(cursor, f'SELECT COUNT(*) AS TOTAL_ROWS FROM "{table}"'),
-                "sample": safe_query(cursor, f'SELECT * FROM "{table}" WHERE ROWNUM <= 10'),
+                "row_count": safe_query(cursor, f'SELECT COUNT(*) AS TOTAL_ROWS FROM {quote_ident(table)}'),
+                "sample": safe_query(cursor, f'SELECT * FROM {quote_ident(table)} WHERE ROWNUM <= 10'),
             }
         result["team_probe"] = team_probe
 

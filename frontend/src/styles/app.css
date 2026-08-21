@@ -38,6 +38,12 @@ button, input, textarea, select { font: inherit; }
 .funnel-list { display: flex; flex-direction: column; gap: 17px; }
 .funnel-item { display: grid; grid-template-columns: 100px 1fr 90px; align-items: center; gap: 12px; }
 .coverage-item .ant-progress { margin: 4px 0 0; }
+.world-next-action { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.world-flow { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px 0 4px; padding: 14px 18px; border: 1px solid #dbeafe; border-radius: 12px; background: #fff; overflow-x: auto; }
+.world-flow-node { display: flex; align-items: center; gap: 12px; color: #98a2b3; white-space: nowrap; }
+.world-flow-node span { min-width: 72px; padding: 8px 12px; border-radius: 999px; color: #1d4ed8; background: #eff6ff; text-align: center; font-weight: 600; }
+.world-core-card { min-height: 164px; cursor: pointer; }
+.world-core-card .ant-typography { margin: 8px 0; min-height: 40px; }
 .candidate-card { border: 1px solid #e4e8f0; }
 .candidate-toolbar { padding-bottom: 14px; border-bottom: 1px solid #f0f2f5; }
 .quick-filter-row { padding: 14px 0; }

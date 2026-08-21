@@ -1,0 +1,282 @@
+"""Generate a read-only preview for the next deterministic format candidates.
+
+This script deliberately does not activate rules, update candidates, or write
+the formal result layer. It only reads the governed SQLite candidate layer and
+writes a reviewable CSV/JSON package under the pilot directory.
+"""
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+import re
+import sqlite3
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = ROOT.parent
+DB = ROOT / "data" / "semantic_workflow.sqlite3"
+OUTPUT_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "next_deterministic_preview"
+PREVIEW_CSV = OUTPUT_DIR / "rewrite_preview.csv"
+SAMPLE_CSV = OUTPUT_DIR / "sample_200.csv"
+MANIFEST_JSON = OUTPUT_DIR / "manifest.json"
+SUMMARY_JSON = OUTPUT_DIR / "summary.json"
+OBSERVATION_JSON = OUTPUT_DIR / "deferred_observations.json"
+RULE_VERSION = "deterministic-format-proposed-20260812-v1"
+SAMPLE_TARGET = 200
+
+RULES = (
+    "format.trim_description_space",
+    "format.fullwidth_solidus_to_ascii",
+    "format.fullwidth_hyphen_minus_to_ascii",
+)
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def transform(description: str) -> tuple[str, list[str]]:
+    result = description
+    applied: list[str] = []
+    if result != result.strip():
+        result = result.strip()
+        applied.append("format.trim_description_space")
+    if "／" in result:
+        result = result.replace("／", "/")
+        applied.append("format.fullwidth_solidus_to_ascii")
+    if "－" in result:
+        result = result.replace("－", "-")
+        applied.append("format.fullwidth_hyphen_minus_to_ascii")
+    return result, applied
+
+
+def pattern(description: str) -> str:
+    parts: list[str] = []
+    if description != description.strip():
+        parts.append("leading_or_trailing_space")
+    if "／" in description:
+        parts.append("fullwidth_solidus")
+    if "－" in description:
+        parts.append("fullwidth_hyphen_minus")
+    return "+".join(parts) or "other"
+
+
+def select_sample(rows: list[dict[str, str]], target: int) -> list[dict[str, str]]:
+    strata: dict[str, list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        strata[f"{row['SITEID']} / {row['PREVIEW_PATTERN']}"] .append(row)
+    for bucket in strata.values():
+        bucket.sort(key=lambda row: (row["ASSETNUM"], row["CANDIDATE_ID"]))
+
+    selected: list[dict[str, str]] = []
+    for key in sorted(strata):
+        if strata[key] and len(selected) < target:
+            selected.append(strata[key].pop(0))
+    keys = sorted(strata)
+    while len(selected) < target:
+        progressed = False
+        for key in keys:
+            if strata[key]:
+                selected.append(strata[key].pop(0))
+                progressed = True
+                if len(selected) == target:
+                    break
+        if not progressed:
+            break
+    return selected
+
+
+def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(str(DB))
+    connection.row_factory = sqlite3.Row
+    rows = connection.execute(
+        """
+        SELECT c.candidate_id,c.batch_id,c.review_state,c.validator_status,c.confidence,
+          c.original_description,c.rule_version,c.validator_version,c.reason_codes_json,
+          d.source_snapshot_id,d.source_schema,d.source_asset_id,d.site_id,d.asset_number,
+          d.source_row_hash,d.context_hash,d.location_code,d.location_description,d.location_parent,
+          d.class_structure_description,d.classification_description
+        FROM semantic_candidate c
+        JOIN device_identity d ON d.device_id=c.device_id
+        WHERE c.publication_state='unpublished'
+          AND c.review_state='pending'
+          AND c.validator_status='candidate'
+          AND c.confidence='high'
+          AND trim(d.original_description)<>''
+        ORDER BY d.site_id,d.asset_number,c.candidate_id
+        """
+    ).fetchall()
+    connection.close()
+
+    columns = [
+        "SITEID", "ASSETNUM", "ASSETID", "CANDIDATE_ID", "BATCH_ID",
+        "SOURCE_SNAPSHOT_ID", "SOURCE_SCHEMA", "SOURCE_ROW_HASH", "CONTEXT_HASH",
+        "ORIGINAL_DESCRIPTION", "PROPOSED_DESCRIPTION", "APPLIED_RULE_KEYS",
+        "PREVIEW_PATTERN", "LOCATION_CODE", "LOCATION_DESCRIPTION", "LOCATION_PARENT",
+        "CLASSSTRUCTURE_DESCRIPTION", "CLASSIFICATION_DESCRIPTION", "REVIEW_STATE",
+        "VALIDATOR_STATUS", "CONFIDENCE", "PREVIEW_STATUS",
+    ]
+    preview_rows: list[dict[str, str]] = []
+    by_site: Counter[str] = Counter()
+    by_pattern: Counter[str] = Counter()
+    by_rule: Counter[str] = Counter()
+    invalid: list[str] = []
+    for row in rows:
+        original = row["original_description"] or ""
+        proposed, applied = transform(original)
+        if not applied:
+            continue
+        if proposed == original:
+            invalid.append(f"not_changed:{row['candidate_id']}")
+        if not proposed.strip():
+            invalid.append(f"empty_proposed:{row['candidate_id']}")
+        # The three proposed rules are formatting-only and must preserve all
+        # non-space characters exactly.
+        if re.sub(r"\s", "", original).replace("／", "/").replace("－", "-") != re.sub(r"\s", "", proposed):
+            invalid.append(f"non_format_change:{row['candidate_id']}")
+        item = {
+            "SITEID": row["site_id"] or "",
+            "ASSETNUM": row["asset_number"] or "",
+            "ASSETID": row["source_asset_id"] or "",
+            "CANDIDATE_ID": row["candidate_id"],
+            "BATCH_ID": row["batch_id"],
+            "SOURCE_SNAPSHOT_ID": row["source_snapshot_id"],
+            "SOURCE_SCHEMA": row["source_schema"] or "",
+            "SOURCE_ROW_HASH": row["source_row_hash"] or "",
+            "CONTEXT_HASH": row["context_hash"] or "",
+            "ORIGINAL_DESCRIPTION": original,
+            "PROPOSED_DESCRIPTION": proposed,
+            "APPLIED_RULE_KEYS": "|".join(applied),
+            "PREVIEW_PATTERN": pattern(original),
+            "LOCATION_CODE": row["location_code"] or "",
+            "LOCATION_DESCRIPTION": row["location_description"] or "",
+            "LOCATION_PARENT": row["location_parent"] or "",
+            "CLASSSTRUCTURE_DESCRIPTION": row["class_structure_description"] or "",
+            "CLASSIFICATION_DESCRIPTION": row["classification_description"] or "",
+            "REVIEW_STATE": row["review_state"],
+            "VALIDATOR_STATUS": row["validator_status"],
+            "CONFIDENCE": row["confidence"],
+            "PREVIEW_STATUS": "ready_for_confirmation",
+        }
+        preview_rows.append(item)
+        by_site[item["SITEID"]] += 1
+        by_pattern[item["PREVIEW_PATTERN"]] += 1
+        for rule_key in applied:
+            by_rule[rule_key] += 1
+
+    if invalid:
+        raise SystemExit(json.dumps({"status": "BLOCKED", "invalid": invalid[:20], "invalid_count": len(invalid)}, ensure_ascii=False))
+    if len({row["CANDIDATE_ID"] for row in preview_rows}) != len(preview_rows):
+        raise SystemExit("Duplicate candidate IDs in preview.")
+    if any(row["REVIEW_STATE"] != "pending" or row["VALIDATOR_STATUS"] != "candidate" for row in preview_rows):
+        raise SystemExit("Preview contains a non-pending or non-candidate record.")
+
+    with PREVIEW_CSV.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(preview_rows)
+    sample_rows = select_sample(preview_rows, min(SAMPLE_TARGET, len(preview_rows)))
+    with SAMPLE_CSV.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(sample_rows)
+
+    # Keep high-volume but semantically ambiguous observations visible without
+    # turning them into a rewrite rule.
+    observation_counts: Counter[str] = Counter()
+    observation_sites: dict[str, Counter[str]] = defaultdict(Counter)
+    observation_examples: dict[str, list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        description = row["original_description"] or ""
+        observations: list[tuple[str, str]] = []
+        if "？" in description:
+            observations.append(("fullwidth_question_mark", "possible_unknown_or_placeholder"))
+        if any(ch in description for ch in "ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ"):
+            observations.append(("roman_numeral_marker", "section_or_phase_marker_requires_context"))
+        if "＃" in description:
+            observations.append(("fullwidth_number_sign", "unit_or_area_marker_requires_context"))
+        for key, reason in observations:
+            observation_counts[key] += 1
+            observation_sites[key][row["site_id"]] += 1
+            if len(observation_examples[key]) < 10:
+                observation_examples[key].append({
+                    "site": row["site_id"], "asset": row["asset_number"],
+                    "description": description, "reason": reason,
+                })
+    observations = {
+        key: {
+            "count": observation_counts[key],
+            "by_site": dict(sorted(observation_sites[key].items())),
+            "status": "deferred_no_auto_rewrite",
+            "examples": observation_examples[key],
+        }
+        for key in sorted(observation_counts)
+    }
+
+    generated_at = utc_now()
+    summary = {
+        "candidate_scope_rows": len(rows),
+        "preview_rows": len(preview_rows),
+        "sample_rows": len(sample_rows),
+        "by_site": dict(sorted(by_site.items())),
+        "by_pattern": dict(sorted(by_pattern.items())),
+        "by_rule": dict(sorted(by_rule.items())),
+        "sample_by_site": dict(sorted(Counter(row["SITEID"] for row in sample_rows).items())),
+        "sample_by_pattern": dict(sorted(Counter(row["PREVIEW_PATTERN"] for row in sample_rows).items())),
+        "source_write": False,
+        "formal_publication": False,
+    }
+    manifest = {
+        "preview_id": f"next-deterministic-preview-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        "generated_at_utc": generated_at,
+        "source_database": str(DB),
+        "source_scope": "unpublished + pending + candidate + high confidence + non-empty description",
+        "source_write": False,
+        "formal_publication": False,
+        "rule_version": RULE_VERSION,
+        "rule_status": "proposed_not_active",
+        "rule_keys": list(RULES),
+        "preview_file": str(PREVIEW_CSV),
+        "sample_file": str(SAMPLE_CSV),
+        "preview_rows": len(preview_rows),
+        "sample_rows": len(sample_rows),
+        "preview_sha256": sha256(PREVIEW_CSV),
+        "sample_sha256": sha256(SAMPLE_CSV),
+        "summary": summary,
+        "approval_gate": "review sample and replay before activation or publication",
+    }
+    sample_manifest = {
+        "sample_id": f"next-deterministic-sample-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        "sample_name": "next-deterministic-format-200-v1",
+        "target_count": SAMPLE_TARGET,
+        "selected_count": len(sample_rows),
+        "strategy": "round_robin_by_SITEID_and_PREVIEW_PATTERN_then_ASSETNUM",
+        "source_preview_id": manifest["preview_id"],
+        "status": "open_for_confirmation",
+        "source_write": False,
+        "formal_publication": False,
+        "sample_file": str(SAMPLE_CSV),
+        "sample_sha256": manifest["sample_sha256"],
+    }
+    MANIFEST_JSON.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    SUMMARY_JSON.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    OBSERVATION_JSON.write_text(json.dumps(observations, ensure_ascii=False, indent=2), encoding="utf-8")
+    (OUTPUT_DIR / "sample_manifest.json").write_text(json.dumps(sample_manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps({"manifest": str(MANIFEST_JSON), "sample_manifest": str(OUTPUT_DIR / 'sample_manifest.json'), "observations": str(OBSERVATION_JSON), **summary}, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()

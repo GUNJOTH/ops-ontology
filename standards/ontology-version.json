@@ -1,0 +1,17 @@
+{
+  "version": "enterprise-operations-ontology/v1",
+  "versionIri": "https://semantic.local/ontology/enterprise-operations-ontology/v1",
+  "namespaceFile": "namespace.json",
+  "ontologyFile": "ontology.ttl",
+  "vocabularyFile": "vocabularies.ttl",
+  "shaclFile": "enterprise-operations.shacl.ttl",
+  "contextFile": "context.jsonld",
+  "rdfDatasetManifest": "rdf-dataset.json",
+  "assetManifest": "semantic-asset-manifest.json",
+  "sparqlManifest": "../sparql/manifest.json",
+  "status": "active",
+  "parentVersion": null,
+  "migrationPolicy": "snapshot-before-apply-and-pointer-rollback",
+  "sourceWrite": false,
+  "formalPublication": false
+}

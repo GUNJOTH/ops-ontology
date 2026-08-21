@@ -23,6 +23,14 @@ def clean(value: object) -> str:
     return "" if value is None else str(value).strip()
 
 
+def quote_ident(value: object) -> str:
+    return '"' + str(value).replace('"', '""') + '"'
+
+
+def quote_literal(value: object) -> str:
+    return "'" + str(value).replace("'", "''") + "'"
+
+
 def rows(cursor, sql: str) -> list[dict[str, str]]:
     cursor.execute(sql)
     names = [str(item[0]) for item in cursor.description]
@@ -106,13 +114,13 @@ def main() -> None:
                 alias = f"{table}.{field}"
                 probes[alias] = safe_rows(
                     cursor,
-                    f'SELECT COUNT(*) AS TOTAL_ROWS, COUNT("{field}") AS NONEMPTY_ROWS, '
-                    f'COUNT(DISTINCT "{field}") AS DISTINCT_VALUES FROM {table}',
+                    f'SELECT COUNT(*) AS TOTAL_ROWS, COUNT({quote_ident(field)}) AS NONEMPTY_ROWS, '
+                    f'COUNT(DISTINCT {quote_ident(field)}) AS DISTINCT_VALUES FROM {quote_ident(table)}',
                 )
                 probes[alias + ".examples"] = safe_rows(
                     cursor,
-                    f'SELECT "{field}" AS VALUE FROM {table} '
-                    f'WHERE "{field}" IS NOT NULL AND ROWNUM <= 20',
+                    f'SELECT {quote_ident(field)} AS VALUE FROM {quote_ident(table)} '
+                    f'WHERE {quote_ident(field)} IS NOT NULL AND ROWNUM <= 20',
                 )
         result["field_value_probes"] = probes
 
@@ -123,7 +131,7 @@ def main() -> None:
         }
         table_counts: dict[str, object] = {}
         for table in sorted(candidate_table_names):
-            table_counts[table] = safe_rows(cursor, f'SELECT COUNT(*) AS TOTAL_ROWS FROM "{table}"')
+            table_counts[table] = safe_rows(cursor, f'SELECT COUNT(*) AS TOTAL_ROWS FROM {quote_ident(table)}')
         result["candidate_table_counts"] = table_counts
 
         sample_tables = [
@@ -148,11 +156,11 @@ def main() -> None:
             columns = safe_rows(
                 cursor,
                 f"SELECT COLUMN_ID, COLUMN_NAME, DATA_TYPE, DATA_LENGTH FROM USER_TAB_COLUMNS "
-                f"WHERE TABLE_NAME = '{table}' ORDER BY COLUMN_ID",
+                f"WHERE TABLE_NAME = {quote_literal(table)} ORDER BY COLUMN_ID",
             )
             candidate_samples[table] = {
                 "columns": columns,
-                "sample_rows": safe_rows(cursor, f'SELECT * FROM "{table}" WHERE ROWNUM <= 5'),
+                "sample_rows": safe_rows(cursor, f'SELECT * FROM {quote_ident(table)} WHERE ROWNUM <= 5'),
             }
         result["candidate_table_samples"] = candidate_samples
         cursor.close()

@@ -1,0 +1,124 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:enterprise-operations-ontology a owl:Ontology ;
+  owl:versionIRI <https://semantic.local/ontology/enterprise-operations-ontology/v1> ;
+  rdfs:label "企业运维本体"@zh .
+
+ex:BusinessObject a owl:Class .
+ex:Organization a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Company a owl:Class ; rdfs:subClassOf ex:Organization .
+ex:Center a owl:Class ; rdfs:subClassOf ex:Organization .
+ex:Team a owl:Class ; rdfs:subClassOf ex:Organization .
+ex:Specialty a owl:Class ; rdfs:subClassOf ex:Organization .
+ex:PhysicalObject a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Site a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Location a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Device a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Inspection a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Defect a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:WorkOrder a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:BusinessEvent a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Fact a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:SourceFact a owl:Class ; rdfs:subClassOf ex:Fact .
+ex:DerivedFact a owl:Class ; rdfs:subClassOf ex:Fact .
+ex:Rule a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:ActionPlan a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:AbnormalInspection a owl:Class ; rdfs:subClassOf ex:Inspection .
+ex:DefectResolution a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:WorkPermit a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:HumanReview a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:RepeatedDefect a owl:Class ; rdfs:subClassOf ex:Fact .
+ex:SevereDefect a owl:Class ; rdfs:subClassOf ex:Fact .
+ex:KnowledgeAsset a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:BusinessKnowledge a owl:Class ; rdfs:subClassOf ex:KnowledgeAsset .
+ex:Standard a owl:Class ; rdfs:subClassOf ex:BusinessKnowledge .
+ex:SOP a owl:Class ; rdfs:subClassOf ex:BusinessKnowledge .
+ex:Risk a owl:Class ; rdfs:subClassOf ex:BusinessKnowledge .
+ex:RuleDecision a owl:Class ; rdfs:subClassOf ex:BusinessKnowledge .
+ex:IdentityAssertion a owl:Class .
+ex:CanonicalState a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:RelationAssertion a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:LocationAssignment a owl:Class ; rdfs:subClassOf ex:RelationAssertion .
+
+ex:canonicalKey a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:displayName a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:sourceNamespace a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:sourceSnapshotId a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:sourceRecordId a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:sourceSystem a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:sourceSchema a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:sourceTable a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:confidence a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:decimal .
+ex:decisionMode a owl:DatatypeProperty ; rdfs:domain ex:IdentityAssertion ; rdfs:range xsd:string .
+ex:predicate a owl:ObjectProperty ; rdfs:domain ex:Fact ; rdfs:range rdf:Property .
+ex:predicateLabel a owl:DatatypeProperty ; rdfs:domain ex:Fact ; rdfs:range xsd:string .
+ex:correlationId a owl:DatatypeProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range xsd:string .
+ex:activityType a owl:DatatypeProperty ; rdfs:domain prov:Activity ; rdfs:range xsd:string .
+ex:evidenceJson a owl:DatatypeProperty ; rdfs:domain prov:Activity ; rdfs:range xsd:string .
+ex:derivationId a owl:DatatypeProperty ; rdfs:domain prov:Activity ; rdfs:range xsd:string .
+ex:targetObjectType a owl:DatatypeProperty ; rdfs:domain ex:Rule ; rdfs:range xsd:string .
+ex:occurredAt a owl:DatatypeProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range xsd:dateTime .
+ex:recordedAt a owl:DatatypeProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range xsd:dateTime .
+ex:rawStatus a owl:DatatypeProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range xsd:string .
+ex:description a owl:DatatypeProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range xsd:string .
+ex:factType a owl:DatatypeProperty ; rdfs:domain ex:Fact ; rdfs:range xsd:string .
+ex:valueJson a owl:DatatypeProperty ; rdfs:domain ex:Fact ; rdfs:range xsd:string .
+ex:ruleVersion a owl:DatatypeProperty ; rdfs:domain ex:Rule ; rdfs:range xsd:string .
+ex:status a owl:DatatypeProperty ; rdfs:domain ex:BusinessObject ; rdfs:range xsd:string .
+ex:validFrom a owl:DatatypeProperty ; rdfs:domain ex:RelationAssertion ; rdfs:range xsd:dateTime .
+ex:validTo a owl:DatatypeProperty ; rdfs:domain ex:RelationAssertion ; rdfs:range xsd:dateTime .
+ex:vocabularyVersion a owl:DatatypeProperty ; rdfs:domain skos:Concept ; rdfs:range xsd:string .
+ex:stateDomain a owl:DatatypeProperty ; rdfs:domain ex:CanonicalState ; rdfs:range xsd:string .
+ex:isTerminal a owl:DatatypeProperty ; rdfs:domain ex:CanonicalState ; rdfs:range xsd:boolean .
+ex:unit a owl:DatatypeProperty ; rdfs:domain ex:Fact ; rdfs:range xsd:string .
+ex:actionKey a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:string .
+ex:actionType a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:string .
+ex:targetKey a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:string .
+ex:reason a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:string .
+ex:riskLevel a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:string .
+ex:requiresApproval a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:boolean .
+ex:sourceWrite a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:boolean .
+ex:formalPublication a owl:DatatypeProperty ; rdfs:domain ex:ActionPlan ; rdfs:range xsd:boolean .
+
+ex:hasInspection a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Inspection .
+ex:hasDefect a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Defect .
+ex:hasWorkOrder a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:WorkOrder .
+ex:belongsToSite a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Site .
+ex:managedByTeam a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Team .
+ex:hasTreatmentWorkOrder a owl:ObjectProperty ; rdfs:domain ex:Defect ; rdfs:range ex:WorkOrder .
+ex:generatedFrom a owl:ObjectProperty ; rdfs:domain ex:Defect ; rdfs:range ex:AbnormalInspection .
+ex:resolvedBy a owl:ObjectProperty ; rdfs:domain ex:Defect ; rdfs:range ex:DefectResolution .
+ex:hasWorkPermit a owl:ObjectProperty ; rdfs:domain ex:WorkOrder ; rdfs:range ex:WorkPermit .
+ex:detectsDefect a owl:ObjectProperty ; rdfs:domain ex:Inspection ; rdfs:range ex:Defect .
+ex:locatedAt a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Location .
+ex:hasLocationAssignment a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:LocationAssignment .
+ex:assignmentDevice a owl:ObjectProperty ; rdfs:domain ex:LocationAssignment ; rdfs:range ex:Device .
+ex:assignmentLocation a owl:ObjectProperty ; rdfs:domain ex:LocationAssignment ; rdfs:range ex:Location .
+ex:relationSubject a owl:ObjectProperty ; rdfs:domain ex:RelationAssertion ; rdfs:range ex:BusinessObject .
+ex:relationObject a owl:ObjectProperty ; rdfs:domain ex:RelationAssertion ; rdfs:range ex:BusinessObject .
+ex:relationPredicate a owl:ObjectProperty ; rdfs:domain ex:RelationAssertion ; rdfs:range rdf:Property .
+ex:hasSubject a owl:ObjectProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range ex:BusinessObject .
+ex:causes a owl:ObjectProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range ex:BusinessEvent .
+ex:triggers a owl:ObjectProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range ex:BusinessEvent .
+ex:resolves a owl:ObjectProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range ex:BusinessEvent .
+ex:records a owl:ObjectProperty ; rdfs:domain ex:BusinessEvent ; rdfs:range ex:BusinessEvent .
+ex:hasEvent a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:BusinessEvent .
+ex:assertsIdentity a owl:ObjectProperty ; rdfs:domain ex:IdentityAssertion ; rdfs:range ex:BusinessObject .
+ex:hasFact a owl:ObjectProperty ; rdfs:domain ex:BusinessObject ; rdfs:range ex:Fact .
+ex:hasCurrentState a owl:ObjectProperty ; rdfs:domain ex:BusinessObject ; rdfs:range ex:CanonicalState .
+ex:matchedByRule a owl:ObjectProperty ; rdfs:domain ex:Fact ; rdfs:range ex:Rule .
+ex:governedBy a owl:ObjectProperty ; rdfs:domain ex:Fact ; rdfs:range ex:Rule .
+ex:responsibleFor a owl:ObjectProperty ; rdfs:domain ex:Team ; rdfs:range ex:Device .
+ex:parentOf a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device .
+ex:childDevice a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device .
+ex:sameFunctionLocation a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device ; a owl:SymmetricProperty .
+ex:governedByKnowledge a owl:ObjectProperty ; rdfs:domain ex:KnowledgeAsset ; rdfs:range ex:Device .
+ex:evaluatedByKnowledge a owl:ObjectProperty ; rdfs:domain ex:KnowledgeAsset ; rdfs:range ex:Device .
+ex:derivedFrom a owl:ObjectProperty ; rdfs:domain ex:Fact ; rdfs:range ex:Fact .
+ex:derivedFromFact a owl:ObjectProperty ; rdfs:domain ex:DerivedFact ; rdfs:range ex:Fact .

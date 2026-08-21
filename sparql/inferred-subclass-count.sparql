@@ -1,0 +1,9 @@
+PREFIX ex: <https://semantic.local/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT (COUNT(?resource) AS ?count)
+WHERE {
+  ?resource a ex:BusinessObject .
+  ?resource a ?inferredClass .
+  ?inferredClass rdfs:subClassOf ex:BusinessObject .
+}

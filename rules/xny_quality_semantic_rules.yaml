@@ -1,0 +1,74 @@
+version: "1.0.0"
+rule_set: "tonghai-xny-quality-semantic"
+status: "draft"
+purpose: "定义 XNY_SAAS 高质量设备记录的统一字段、命名边界和证据规则。"
+
+input:
+  profile: "../pilots/XNY_SAAS/source_profile.yaml"
+  frozen_quality_batch: "../pilots/identity/config/identity_baseline.json"
+  source_snapshot_required: true
+  source_write: false
+
+identity:
+  stable_key: ["source_schema", "SITEID", "ASSETNUM"]
+  source_surrogate: "ASSETID"
+  description_is_not_unique: true
+
+normalization:
+  unicode_form: "NFKC"
+  trim_whitespace: true
+  collapse_internal_whitespace: true
+  preserve_raw_description: true
+  preserve_business_value_case: true
+  forbidden_description_values: ["", "string", "none", "null", "设备", "未知"]
+
+canonical_fields:
+  unified_description:
+    source: "normalized DESCRIPTION"
+    policy: "以有效原描述为基础；术语替换只有在术语映射 status=approved 后执行。"
+    required: true
+  device_type:
+    evidence: ["CLASSSTRUCTURE.DESCRIPTION", "CLASSIFICATION.DESCRIPTION"]
+    policy: "作为设备类型证据；未经样本确认不强行拼入设备名称。"
+  specifications:
+    evidence: ["ASSETSPEC.ALNVALUE", "ASSETSPEC.NUMVALUE", "ASSETSPEC.TABLEVALUE", "ASSETSPEC.MEASUREUNITID"]
+    policy: "只有属性、域含义和单位均明确且术语已批准时才可写入统一描述。"
+  location_context:
+    evidence: ["ASSET.LOCATION", "LOCATIONS.DESCRIPTION", "LOCATIONS.STATUS", "LOCHIERARCHY.PARENT"]
+    policy: "作为位置上下文，不直接拼入设备名称。"
+  parent_context:
+    evidence: ["ASSET.PARENT", "ASSETHIERARCHY.PARENT"]
+    policy: "用于父子层级校验，不擅自改写设备名称。"
+
+precedence:
+  - "preserve_raw_source_evidence"
+  - "normalize_description"
+  - "apply_only_approved_terminology"
+  - "attach_classification_and_specification_evidence"
+  - "validate_location_and_parent_context"
+
+forbidden_inference:
+  - "不得从字段名推断制造商、型号、容量或设备类型"
+  - "不得把位置名称当作设备名称"
+  - "不得把 ES01-ES05 等扩展字段按字段名臆测为具体物理含义"
+  - "不得因为描述相同而合并不同设备身份"
+  - "不得把 HD_SAAS 的术语或 KKS 位段直接套用到 XNY_SAAS"
+
+output_contract:
+  fields:
+    - "UNIFIED_DESCRIPTION"
+    - "DEVICE_TYPE_EVIDENCE"
+    - "SPECIFICATION_EVIDENCE"
+    - "LOCATION_CONTEXT"
+    - "PARENT_CONTEXT"
+    - "SOURCE_ROW_HASH"
+    - "CONTEXT_HASH"
+    - "RULE_VERSION"
+  pre_approval_status: "ready_for_approval"
+  publication_requires: ["reviewer", "review_id", "approval_timestamp", "approval_receipt"]
+
+sample_gate:
+  target_rows: 300
+  allowed_range: [200, 500]
+  strata: ["SITEID", "CLASSSTRUCTUREID", "CLASSSTRUCTURE_DESCRIPTION", "CLASSIFICATION_DESCRIPTION"]
+  decision_fields: ["original_description", "proposed_unified_description", "device_type", "specifications", "location_context", "parent_context", "decision", "notes"]

@@ -32,3 +32,25 @@ $env:DMDBMS_BIN = '<local-dmdbms-bin>'
 - `candidates/`：设备描述候选及验证结果。
 - `review/`：人工复核和批准记录。
 - `reports/`：单库预检与发布门禁报告。
+
+## 运行产物约定
+
+每次规则处理使用一个独立的 `run_name` 目录，例如：
+
+```text
+pilots/HD_SAAS/<run_name>/
+  manifest.json                 # 输入、规则、版本和边界
+  sample_200.csv                # 人工抽查样本（如有）
+  rewrite_preview.csv           # 改写前后预览
+  replay_manifest.json          # 回放门禁结果
+  activation_manifest.json      # 规则启用凭据（如有）
+  publication_manifest.json     # 正式发布凭据（如有）
+```
+
+同一批次的预览、回放、审批和发布文件必须放在同一 run 目录，不覆盖历史目录。目录名使用小写英文、短横线或下划线；时间戳统一使用 UTC 的 `YYYYMMDDTHHMMSSZ`。
+
+`snapshot/`、`candidates/`、`quality/` 等大体量原始/中间数据默认不提交 Git；manifest、规则版本和验证报告用于追溯。正式数据库备份只保存在 `system/backups/`。
+
+## 本试点的处理边界
+
+HD 试点只处理设备描述 Harness。位置、分类、规格、KKS、父子关系是上下文证据，不直接变成设备名称；低置信度冲突继续隔离到待复核，不为了扩大处理量而自动猜测。

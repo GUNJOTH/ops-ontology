@@ -55,6 +55,17 @@ def clean(value: object) -> str:
     return "" if value is None else str(value).strip()
 
 
+def to_int(value: object, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def quote_ident(value: object) -> str:
+    return '"' + str(value).replace('"', '""') + '"'
+
+
 def pick(row: dict[str, str], aliases: list[str]) -> str:
     for alias in aliases:
         if clean(row.get(alias)):
@@ -190,7 +201,7 @@ def main() -> None:
     try:
         cursor = connection.cursor()
         for table in MAPPING_TABLES:
-            cursor.execute(f'SELECT * FROM "{table}"')
+            cursor.execute(f'SELECT * FROM {quote_ident(table)}')
             names = [str(item[0]) for item in cursor.description]
             while True:
                 batch = cursor.fetchmany(5000)
@@ -213,8 +224,9 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=summary_fields)
         writer.writeheader()
         for table, stat in sorted(source_stats.items()):
-            rows = int(stat["rows"])
-            prefix_matches = int(stat["parent_prefix_match"])
+            rows = to_int(stat["rows"])
+            prefix_matches = to_int(stat["parent_prefix_match"])
+            parent_nonempty = to_int(stat["parent_nonempty"])
             top_shapes = "; ".join(f"{shape} ({count})" for shape, count in stat["shape_counts"].most_common(5))
             top_tokens = "; ".join(f"{token} ({count})" for token, count in stat["token_counts"].most_common(10))
             writer.writerow(
@@ -224,7 +236,7 @@ def main() -> None:
                     "DISTINCT_CODES": len(stat["codes"]),
                     "PARENT_NONEMPTY_ROWS": stat["parent_nonempty"],
                     "PARENT_PREFIX_MATCH_ROWS": prefix_matches,
-                    "PARENT_PREFIX_MATCH_RATE": f"{prefix_matches / int(stat['parent_nonempty']):.4f}" if stat["parent_nonempty"] else "",
+                    "PARENT_PREFIX_MATCH_RATE": f"{prefix_matches / parent_nonempty:.4f}" if parent_nonempty else "",
                     "NAME_NONEMPTY_ROWS": stat["name_nonempty"],
                     "SYSTEM_NONEMPTY_ROWS": stat["system_nonempty"],
                     "NODE_TYPE_NONEMPTY_ROWS": stat["node_type_nonempty"],
@@ -243,8 +255,8 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=token_fields)
         writer.writeheader()
         for (token, offset, token_len), item in sorted(token_stats.items(), key=lambda pair: (-pair[1]["occurrence_count"], pair[0])):
-            count = int(item["occurrence_count"])
-            match_count = int(item["parent_prefix_match"])
+            count = to_int(item["occurrence_count"])
+            match_count = to_int(item["parent_prefix_match"])
             top_systems = "; ".join(f"{value} ({count_})" for value, count_ in item["systems"].most_common(5))
             top_names = "; ".join(f"{value} ({count_})" for value, count_ in item["names"].most_common(5))
             top_types = "; ".join(f"{value} ({count_})" for value, count_ in item["node_types"].most_common(5))

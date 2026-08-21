@@ -1,0 +1,9 @@
+PREFIX ex: <https://semantic.local/ontology/>
+
+SELECT ?device ?name ?location
+WHERE {
+  ?device a ex:Device ;
+          ex:displayName ?name .
+  OPTIONAL { ?device ex:locatedAt ?location . }
+}
+LIMIT 100

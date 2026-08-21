@@ -17,7 +17,7 @@ export function ReviewDrawer({ detail, onCompleted }: { detail: CandidateDetail;
     }
     setSubmitting(true); setMessage(undefined)
     try {
-      await submitReview({ candidateId: detail.candidateId, decision, reviewedDescription: description, note, idempotencyKey: `${detail.candidateId}-${Date.now()}` })
+      await submitReview({ candidateId: detail.candidateId, decision, reviewedDescription: description, note, idempotencyKey: `candidate-review-${detail.candidateId}-${decision}` })
       onCompleted()
     } catch {
       setMessage('审核接口暂不可用，当前未改变记录状态。请稍后重试。')

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import pathlib
@@ -58,9 +59,13 @@ def sql_literal(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def quote_ident(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
 def query_rows(cursor, table: str, fields: list[str], predicate: str) -> list[dict[str, str]]:
-    select_fields = ", ".join('"%s"' % field for field in fields)
-    cursor.execute("SELECT %s FROM %s WHERE %s" % (select_fields, table, predicate))
+    select_fields = ", ".join(quote_ident(field) for field in fields)
+    cursor.execute("SELECT %s FROM %s WHERE %s" % (select_fields, quote_ident(table), predicate))
     return [dict(zip(fields, (clean(value) for value in row))) for row in cursor.fetchall()]
 
 
@@ -73,8 +78,27 @@ def write_rows(table: str, rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
+def sha256_file(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def main() -> None:
     snapshot = json.loads(SNAPSHOT_MANIFEST.read_text(encoding="utf-8"))
+    captured_at = datetime.now(timezone.utc).isoformat()
+    candidate_file_sha256 = sha256_file(ACTIVE_CANDIDATES)
+    parent_source_snapshot_id = clean(snapshot.get("source_snapshot_id"))
+    if not parent_source_snapshot_id:
+        raise SystemExit("snapshot manifest is missing source_snapshot_id")
+    # ``captured_at`` is recorded separately in the manifest below; it must
+    # NOT be part of the snapshot id. It carries microseconds, so folding it
+    # into the hash makes the id non-reproducible for identical inputs.
+    context_snapshot_id = "hd-context-snapshot-" + hashlib.sha256(
+        f"{parent_source_snapshot_id}|{candidate_file_sha256}".encode("utf-8")
+    ).hexdigest()[:32]
     active_keys: set[tuple[str, str]] = set()
     active_sites: set[str] = set()
     location_keys: set[tuple[str, str]] = set()
@@ -183,7 +207,13 @@ def main() -> None:
 
     manifest = {
         "context_run_id": "hd-context-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "source_snapshot_id": snapshot["source_snapshot_id"],
+        # This is a distinct context capture point. The asset snapshot remains
+        # the parent provenance, but live LOCATIONS/KKS/classification reads
+        # must not masquerade as the older ASSET snapshot.
+        "source_snapshot_id": context_snapshot_id,
+        "parent_asset_source_snapshot_id": parent_source_snapshot_id,
+        "active_candidates_sha256": candidate_file_sha256,
+        "captured_at": captured_at,
         "source_schema": "HD_SAAS",
         "source_host": dsn,
         "active_candidate_rows": len(active_keys),

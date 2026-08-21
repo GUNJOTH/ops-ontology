@@ -1,0 +1,16 @@
+{
+  "fromVersion": "enterprise-operations-ontology/v1",
+  "toVersion": "enterprise-operations-ontology/v2",
+  "status": "template",
+  "changes": [],
+  "compatibility": "not_assessed",
+  "requiredEvidence": [
+    "new ontology.ttl",
+    "new vocabularies.ttl",
+    "new enterprise-operations.shacl.ttl",
+    "mapping and rollback test results"
+  ],
+  "applyPolicy": "prepare -> replay -> validate -> approve -> activate",
+  "sourceWrite": false,
+  "formalPublication": false
+}

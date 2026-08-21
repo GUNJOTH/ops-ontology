@@ -34,6 +34,17 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def parse_context(value: object) -> dict[str, object]:
+    """Parse optional source context without aborting a whole import batch."""
+    if not value:
+        return {}
+    try:
+        parsed = json.loads(str(value))
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
 def load_duckdb():
     if DEPENDENCY_DIR.exists():
         sys.path.insert(0, str(DEPENDENCY_DIR))
@@ -117,7 +128,7 @@ def initialize_sqlite(csv_path: Path, manifest: dict[str, object]) -> dict[str, 
     with csv_path.open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
-            context = json.loads(row.get("CONTEXT_JSON") or "{}")
+            context = parse_context(row.get("CONTEXT_JSON"))
             location_code = str((context.get("location") or {}).get("LOCATION") or "").strip()
             reason_codes = [item for item in (row.get("SEMANTIC_REASON_CODES") or "").split("|") if item]
             applied_rules = [item for item in (row.get("APPLIED_TERM_RULE_IDS") or "").split("|") if item]

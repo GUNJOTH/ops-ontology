@@ -13,6 +13,13 @@ MANIFEST = QUALITY_DIR / "manifest.json"
 OUTPUT = QUALITY_DIR / "verification.json"
 
 
+def to_int(value: object, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def hash_context(value: dict) -> str:
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
@@ -44,7 +51,7 @@ def main() -> None:
                 continue
             if hash_context(context) != row.get("CONTEXT_HASH"):
                 failures.append("CONTEXT_HASH_MISMATCH")
-    if rows != int(manifest["quality_rows"]):
+    if rows != to_int(manifest["quality_rows"]):
         failures.append("QUALITY_ROW_COUNT_MISMATCH")
     result = {
         "status": "PASS" if not failures else "FAIL",

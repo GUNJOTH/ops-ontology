@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "semantic-asset-manifest-v1",
+  "authority": "Canonical RDF Dataset",
+  "ontologyVersion": "enterprise-operations-ontology/v1",
+  "sourceBoundary": "read_only",
+  "assets": {
+    "ontology": {
+      "path": "ontology.ttl",
+      "format": "Turtle",
+      "role": "RDFS/OWL 2 ontology classes and properties"
+    },
+    "namespace": {
+      "path": "namespace.json",
+      "format": "JSON",
+      "role": "stable ontology, resource, source, graph and contract IRI rules"
+    },
+    "vocabularies": {
+      "path": "vocabularies.ttl",
+      "format": "Turtle",
+      "role": "SKOS device classifications, states, units and terms"
+    },
+    "shacl": {
+      "path": "enterprise-operations.shacl.ttl",
+      "format": "Turtle",
+      "role": "SHACL Core data constraints"
+    },
+    "jsonldContext": {
+      "path": "context.jsonld",
+      "format": "JSON-LD 1.1",
+      "role": "stable JSON-LD IRI context"
+    },
+    "rdfDataset": {
+      "path": "rdf-dataset.json",
+      "format": "JSON",
+      "role": "named graph and dataset contract"
+    },
+    "sparql": {
+      "path": "../sparql/manifest.json",
+      "format": "SPARQL 1.1",
+      "role": "read-only semantic query contracts"
+    }
+  },
+  "generatedArtifacts": {
+    "projectionTriG": "system/canonical-runs/{runId}/canonical.trig",
+    "projectionJsonLd": "system/canonical-runs/{runId}/canonical.jsonld",
+    "inferenceTriG": "system/canonical-runs/{runId}/owl_rl_closure.trig",
+    "validationReport": "system/canonical-runs/{runId}/shacl_validation_report.json"
+  },
+  "validation": {
+    "entrypoint": "system/verify_standard_semantic_ci.py",
+    "requiredChecks": [
+      "Turtle parse",
+      "SHACL Core validation",
+      "RDF Dataset TriG parse",
+      "JSON-LD parse",
+      "SPARQL SELECT/ASK replay",
+      "OWL 2 RL bounded replay",
+      "PROV-O coverage",
+      "source_write=0",
+      "formal_publication=0"
+    ]
+  }
+}

@@ -174,9 +174,19 @@ def main() -> None:
             if reasons:
                 review_writer.writerow(result)
 
+    context_manifest = json.loads((CONTEXT_DIR / "manifest.json").read_text(encoding="utf-8"))
+    # Rows carry SOURCE_SNAPSHOT_ID forward from the active ASSET candidates.
+    # The manifest must therefore point at that same asset snapshot, while the
+    # distinct context capture point is recorded separately. Reading
+    # context/manifest.json's ``source_snapshot_id`` (the context snapshot)
+    # here left the manifest inconsistent with the row-level asset snapshot id.
+    asset_source_snapshot_id = clean(
+        context_manifest.get("parent_asset_source_snapshot_id") or context_manifest.get("source_snapshot_id")
+    )
     manifest = {
         "context_candidate_run_id": "hd-context-candidates-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "source_snapshot_id": json.loads((CONTEXT_DIR / "manifest.json").read_text(encoding="utf-8"))["source_snapshot_id"],
+        "source_snapshot_id": asset_source_snapshot_id,
+        "context_snapshot_id": clean(context_manifest.get("source_snapshot_id")),
         "input_active_candidates": len(active_rows),
         "context_candidates": dict(counts),
         "context_reason_counts": dict(reason_counts),

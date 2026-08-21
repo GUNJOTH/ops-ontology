@@ -1,0 +1,56 @@
+version: "1.0.0"
+profile_id: "tonghai-xny-saas-device-pilot"
+status: "pilot"
+source:
+  host: "env:XNY_DM_DSN"
+  schema: "XNY_SAAS"
+  access: "read_only"
+  table: "ASSET"
+  filter: "none"
+  include_stopped_devices: true
+  active_candidate_filter: "exclude STATUS in 停止使用/停用/报废/注销, exclude empty/placeholder/insufficient descriptions, and exclude ASSET.LOCATION without matching LOCATIONS(SITEID, LOCATION)"
+  policy: "snapshot preserves all source rows; active semantic candidates exclude explicitly removed records"
+identity:
+  stable_key: ["source_schema", "SITEID", "ASSETNUM"]
+  source_surrogate: "ASSETID"
+  unique_index_evidence: "ASSET(SITEID, ASSETNUM) VALID UNIQUE index within XNY_SAAS"
+scope:
+  device_table: "ASSET"
+  supporting_objects:
+    - "LOCATIONS"
+    - "LOCHIERARCHY"
+    - "CLASSIFICATION"
+    - "CLASSSTRUCTURE"
+    - "ASSETATTRIBUTE"
+    - "ASSETSPEC"
+    - "ASSETFEATURE"
+    - "ASSETFEATURESPEC"
+    - "ASSETMETER"
+    - "ASSETHIERARCHY"
+    - "ASSETLOCRELATION"
+snapshot:
+  strategy: "batch_by_SITEID_using_ASSET_unique_index"
+  preserve_raw: true
+  output_directory: "snapshot"
+  required_fields:
+    - "ASSETID"
+    - "SITEID"
+    - "ORGID"
+    - "ASSETNUM"
+    - "DESCRIPTION"
+    - "PARENT"
+    - "LOCATION"
+    - "STATUS"
+    - "CLASSSTRUCTUREID"
+    - "CLASSIFICATIONID"
+    - "CHANGEDATE"
+rules:
+  rule_file: "../../rules/xny_quality_semantic_rules.yaml"
+  kks_rule_file: "../../rules/xny_kks_rules.yaml"
+  rule_version: "1.0.0"
+contract:
+  contract_file: "../../contracts/unified_device_semantics.yaml"
+  contract_version: "1.0.3"
+release:
+  formal_publication: false
+  source_write: false

@@ -1,1 +1,2 @@
 duckdb==1.5.5
+rdflib>=7,<8

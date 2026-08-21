@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.local/contracts/explain/v1",
+  "title": "Semantic Explanation Contract",
+  "type": "object",
+  "required": ["schemaVersion", "traceId", "sourceWrite", "formalPublication"],
+  "properties": {
+    "schemaVersion": { "const": "explain-v1" },
+    "fact": { "type": "object" },
+    "decision": { "type": "object" },
+    "rule": { "type": ["object", "null"] },
+    "inputFacts": { "type": "array", "items": { "type": "object" } },
+    "derivedFacts": { "type": "array", "items": { "type": "object" } },
+    "derivations": { "type": "array", "items": { "type": "object" } },
+    "evidenceLinks": { "type": "array", "items": { "type": "object" } },
+    "actions": { "type": "array", "items": { "type": "object" } },
+    "traceId": { "type": "string", "minLength": 1 },
+    "sourceWrite": { "const": false },
+    "formalPublication": { "const": false }
+  },
+  "additionalProperties": true
+}

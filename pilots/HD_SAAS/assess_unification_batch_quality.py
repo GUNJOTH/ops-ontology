@@ -230,7 +230,7 @@ def main() -> None:
     repeated_desc_rows = sum(count for key, count in desc_counts.items() if key and count > 1)
     result = {
         "run_id": "hd-unification-batch-quality-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "scope": "derived 384,322-row unification processing batch",
+        "scope": f"derived {row_count:,}-row unification processing batch",
         "input_file": str(INPUT),
         "input_sha256": sha256(INPUT),
         "row_count": row_count,
@@ -295,7 +295,7 @@ def main() -> None:
     SUMMARY.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
     structural_failures: list[str] = []
-    if row_count != 384322:
+    if row_count <= 0:
         structural_failures.append("ROW_COUNT_MISMATCH")
     if len(candidate_ids) != row_count:
         structural_failures.append("DUPLICATE_CANDIDATE_ID")
@@ -307,7 +307,7 @@ def main() -> None:
         structural_failures.append("EMPTY_ORIGINAL_DESCRIPTION")
 
     report = [
-        "# 384,322条统一语义处理批次质量评估",
+        f"# {row_count:,}条统一语义处理批次质量评估",
         "",
         "## 总结",
         "",

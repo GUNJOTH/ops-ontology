@@ -38,6 +38,10 @@ def sql_literal(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def quote_ident(value: str) -> str:
+    return '"' + value.replace('"', '""') + '"'
+
+
 def write_csv(path: pathlib.Path, fields: list[str], rows: list[dict[str, str]]) -> None:
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
@@ -68,7 +72,7 @@ def main() -> None:
     ]
     cursor.execute(
         "SELECT %s FROM GRPATTRIBUTE WHERE UPPER(OBJECTNAME) IN (%s) ORDER BY OBJECTNAME, ATTRIBUTENAME"
-        % (", ".join('"%s"' % field for field in attr_fields), object_literals)
+        % (", ".join(quote_ident(field) for field in attr_fields), object_literals)
     )
     attribute_rows = [dict(zip(attr_fields, (clean(value) for value in row))) for row in cursor.fetchall()]
     write_csv(OUTPUT_DIR / "grp_attribute_candidates.csv", attr_fields, attribute_rows)
@@ -85,7 +89,7 @@ def main() -> None:
                 continue
             cursor.execute(
                 "SELECT %s FROM %s WHERE DOMAINID IN (%s)"
-                % (", ".join('"%s"' % field for field in fields), table, ",".join(sql_literal(value) for value in chunk))
+                % (", ".join(quote_ident(field) for field in fields), quote_ident(table), ",".join(sql_literal(value) for value in chunk))
             )
             for row in cursor.fetchall():
                 domain_rows.append({"SOURCE_TABLE": table, **dict(zip(fields, (clean(value) for value in row)))})

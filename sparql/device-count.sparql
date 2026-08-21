@@ -1,0 +1,6 @@
+PREFIX ex: <https://semantic.local/ontology/>
+
+SELECT (COUNT(?device) AS ?count)
+WHERE {
+  ?device a ex:Device .
+}

@@ -1,0 +1,26 @@
+{
+  "policy_version": "source-scoped-v1",
+  "identity_key": "SITEID+ASSETNUM",
+  "source_domains": [
+    {
+      "source_schema": "HD_SAAS",
+      "semantic_governance_scope": "independent",
+      "cross_system_merge_required": false
+    },
+    {
+      "source_schema": "XNY_SAAS",
+      "semantic_governance_scope": "independent",
+      "cross_system_merge_required": false
+    }
+  ],
+  "cross_system_candidate_generation": "disabled_by_default",
+  "cross_schema_auto_merge": false,
+  "inspection_without_device_identity": {
+    "status": "excluded_uncertain",
+    "retain_in_source_domain": true,
+    "source_delete": false,
+    "formal_publication": false
+  },
+  "source_write": false,
+  "formal_publication": false
+}

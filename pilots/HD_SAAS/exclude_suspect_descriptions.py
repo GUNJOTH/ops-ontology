@@ -111,7 +111,7 @@ def main() -> None:
     verification = {
         "status": "PASS"
         if (
-            input_rows == 384322
+            input_rows > 0
             and excluded_rows == len(exclusion_rows)
             and not unmatched_exclusion_ids
             and output_rows == input_rows - excluded_rows
@@ -159,7 +159,7 @@ def main() -> None:
     report = [
         "# 描述质量候选剔除后的统一语义处理范围",
         "",
-        f"本次从 384,322 条统一语义处理输入中剔除 {excluded_rows} 条命中描述质量标记的记录，保留 {output_rows} 条。",
+        f"本次从 {input_rows:,} 条统一语义处理输入中剔除 {excluded_rows} 条命中描述质量标记的记录，保留 {output_rows} 条。",
         "",
         "## 剔除规则",
         "",

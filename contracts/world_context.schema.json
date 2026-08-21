@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.local/contracts/world-context/v1",
+  "title": "Enterprise Operations World Context",
+  "type": "object",
+  "required": ["schemaVersion", "object", "identity", "relations", "currentStates", "recentEvents", "observedFacts", "derivedFacts", "decisions", "pendingActions", "evidenceSummary", "traceId", "sourceWrite", "formalPublication"],
+  "properties": {
+    "schemaVersion": { "const": "world-context-v1" },
+    "object": { "type": "object" },
+    "identity": { "type": "object" },
+    "organization": { "type": "object" },
+    "relations": { "type": "array", "items": { "type": "object" } },
+    "currentStates": { "type": "array", "items": { "type": "object" } },
+    "recentEvents": { "type": "array", "items": { "type": "object" } },
+    "observedFacts": { "type": "array", "items": { "type": "object" } },
+    "derivedFacts": { "type": "array", "items": { "type": "object" } },
+    "applicableRules": { "type": "array", "items": { "type": "object" } },
+    "decisions": { "type": "array", "items": { "type": "object" } },
+    "pendingActions": { "type": "array", "items": { "type": "object" } },
+    "evidenceSummary": { "type": "object" },
+    "asOf": { "type": "string" },
+    "traceId": { "type": "string", "minLength": 1 },
+    "sourceWrite": { "const": false },
+    "formalPublication": { "const": false }
+  },
+  "additionalProperties": true
+}
