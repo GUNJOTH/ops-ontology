@@ -1,0 +1,418 @@
+{
+  "@context": {
+    "AbnormalInspection": "ex:AbnormalInspection",
+    "AbnormalInspectionEvent": "ex:AbnormalInspectionEvent",
+    "Action": "ex:Action",
+    "ActionAdapter": "ex:ActionAdapter",
+    "ActionCondition": "ex:ActionCondition",
+    "ActionEffect": "ex:ActionEffect",
+    "ActionExecution": "ex:ActionExecution",
+    "ActionPlan": "ex:ActionPlan",
+    "Assertion": "ex:Assertion",
+    "BusinessEvent": "ex:BusinessEvent",
+    "BusinessKnowledge": "ex:BusinessKnowledge",
+    "BusinessObject": "ex:BusinessObject",
+    "CanonicalState": "ex:CanonicalState",
+    "CaseKnowledge": "ex:CaseKnowledge",
+    "Center": "ex:Center",
+    "Company": "ex:Company",
+    "Defect": "ex:Defect",
+    "DefectAcceptanceEvent": "ex:DefectAcceptanceEvent",
+    "DefectAcceptedEvent": "ex:DefectAcceptedEvent",
+    "DefectCreatedEvent": "ex:DefectCreatedEvent",
+    "DefectEvent": "ex:DefectEvent",
+    "DefectProcessingEvent": "ex:DefectProcessingEvent",
+    "DefectResolution": "ex:DefectResolution",
+    "DerivedFact": "ex:DerivedFact",
+    "Device": "ex:Device",
+    "DocumentKnowledge": "ex:DocumentKnowledge",
+    "EscalationEvent": "ex:EscalationEvent",
+    "ExecutionState": "ex:ExecutionState",
+    "ExpertKnowledge": "ex:ExpertKnowledge",
+    "Fact": "ex:Fact",
+    "FactValue": "ex:FactValue",
+    "HumanReview": "ex:HumanReview",
+    "HumanReviewEvent": "ex:HumanReviewEvent",
+    "IdentityAssertion": "ex:IdentityAssertion",
+    "Inspection": "ex:Inspection",
+    "InspectionEvent": "ex:InspectionEvent",
+    "Knowledge": "ex:Knowledge",
+    "KnowledgeAsset": "ex:KnowledgeAsset",
+    "KnowledgeConflict": "ex:KnowledgeConflict",
+    "KnowledgeFragment": "ex:KnowledgeFragment",
+    "KnowledgeRelease": "ex:KnowledgeRelease",
+    "KnowledgeVersion": "ex:KnowledgeVersion",
+    "Location": "ex:Location",
+    "LocationAssignment": "ex:LocationAssignment",
+    "ObservationEvent": "ex:ObservationEvent",
+    "Organization": "ex:Organization",
+    "PhysicalObject": "ex:PhysicalObject",
+    "RelationAssertion": "ex:RelationAssertion",
+    "RepeatedDefect": "ex:RepeatedDefect",
+    "RequiredFact": "ex:RequiredFact",
+    "ResolutionEvent": "ex:ResolutionEvent",
+    "Risk": "ex:Risk",
+    "Rule": "ex:Rule",
+    "RuleDecision": "ex:RuleDecision",
+    "SOP": "ex:SOP",
+    "SevereDefect": "ex:SevereDefect",
+    "Site": "ex:Site",
+    "SourceFact": "ex:SourceFact",
+    "Specialty": "ex:Specialty",
+    "Standard": "ex:Standard",
+    "Team": "ex:Team",
+    "WorkOrder": "ex:WorkOrder",
+    "WorkOrderEvent": "ex:WorkOrderEvent",
+    "WorkPermit": "ex:WorkPermit",
+    "WorkPermitEvent": "ex:WorkPermitEvent",
+    "actionKey": "ex:actionKey",
+    "actionName": "ex:actionName",
+    "actionType": "ex:actionType",
+    "actionVersion": "ex:actionVersion",
+    "activityType": "ex:activityType",
+    "adapterMappingsJson": "ex:adapterMappingsJson",
+    "allowedWhenJson": "ex:allowedWhenJson",
+    "altLabel": "skos:altLabel",
+    "appliesToClass": {
+      "@id": "ex:appliesToClass",
+      "@type": "@id"
+    },
+    "appliesToObject": {
+      "@id": "ex:appliesToObject",
+      "@type": "@id"
+    },
+    "appliesToProperty": {
+      "@id": "ex:appliesToProperty",
+      "@type": "@id"
+    },
+    "approvedBy": {
+      "@id": "ex:approvedBy",
+      "@type": "@id"
+    },
+    "assertsIdentity": {
+      "@id": "ex:assertsIdentity",
+      "@type": "@id"
+    },
+    "assignmentDevice": {
+      "@id": "ex:assignmentDevice",
+      "@type": "@id"
+    },
+    "assignmentLocation": {
+      "@id": "ex:assignmentLocation",
+      "@type": "@id"
+    },
+    "belongsToSite": {
+      "@id": "ex:belongsToSite",
+      "@type": "@id"
+    },
+    "businessMeaning": "ex:businessMeaning",
+    "canonicalKey": "ex:canonicalKey",
+    "causes": {
+      "@id": "ex:causes",
+      "@type": "@id"
+    },
+    "childDevice": {
+      "@id": "ex:childDevice",
+      "@type": "@id"
+    },
+    "conditionKey": "ex:conditionKey",
+    "confidence": "ex:confidence",
+    "conflictStatus": "ex:conflictStatus",
+    "conflictType": "ex:conflictType",
+    "conflictsWith": {
+      "@id": "ex:conflictsWith",
+      "@type": "@id"
+    },
+    "contentHash": "ex:contentHash",
+    "correlationId": "ex:correlationId",
+    "decisionMode": "ex:decisionMode",
+    "definition": "skos:definition",
+    "deprecatedAt": "ex:deprecatedAt",
+    "derivationId": "ex:derivationId",
+    "derivedFrom": {
+      "@id": "ex:derivedFrom",
+      "@type": "@id"
+    },
+    "derivedFromFact": {
+      "@id": "ex:derivedFromFact",
+      "@type": "@id"
+    },
+    "derivedFromKnowledge": {
+      "@id": "ex:derivedFromKnowledge",
+      "@type": "@id"
+    },
+    "description": "ex:description",
+    "detectsDefect": {
+      "@id": "ex:detectsDefect",
+      "@type": "@id"
+    },
+    "displayName": "ex:displayName",
+    "effectTarget": "ex:effectTarget",
+    "effectType": "ex:effectType",
+    "effectValue": "ex:effectValue",
+    "effectsJson": "ex:effectsJson",
+    "evaluatedByKnowledge": {
+      "@id": "ex:evaluatedByKnowledge",
+      "@type": "@id"
+    },
+    "evidenceJson": "ex:evidenceJson",
+    "ex": "https://semantic.local/ontology/",
+    "exactMatch": {
+      "@id": "skos:exactMatch",
+      "@type": "@id"
+    },
+    "executionStatesJson": "ex:executionStatesJson",
+    "expectedValue": "ex:expectedValue",
+    "extractionModel": "ex:extractionModel",
+    "factType": "ex:factType",
+    "formalPublication": "ex:formalPublication",
+    "generatedFrom": {
+      "@id": "ex:generatedFrom",
+      "@type": "@id"
+    },
+    "governedBy": {
+      "@id": "ex:governedBy",
+      "@type": "@id"
+    },
+    "governedByKnowledge": {
+      "@id": "ex:governedByKnowledge",
+      "@type": "@id"
+    },
+    "hasCurrentState": {
+      "@id": "ex:hasCurrentState",
+      "@type": "@id"
+    },
+    "hasDefect": {
+      "@id": "ex:hasDefect",
+      "@type": "@id"
+    },
+    "hasEffect": {
+      "@id": "ex:hasEffect",
+      "@type": "@id"
+    },
+    "hasEvent": {
+      "@id": "ex:hasEvent",
+      "@type": "@id"
+    },
+    "hasExecutionState": {
+      "@id": "ex:hasExecutionState",
+      "@type": "@id"
+    },
+    "hasFact": {
+      "@id": "ex:hasFact",
+      "@type": "@id"
+    },
+    "hasFactValue": {
+      "@id": "ex:hasFactValue",
+      "@type": "@id"
+    },
+    "hasFragment": {
+      "@id": "ex:hasFragment",
+      "@type": "@id"
+    },
+    "hasInspection": {
+      "@id": "ex:hasInspection",
+      "@type": "@id"
+    },
+    "hasKnowledgeVersion": {
+      "@id": "ex:hasKnowledgeVersion",
+      "@type": "@id"
+    },
+    "hasLocationAssignment": {
+      "@id": "ex:hasLocationAssignment",
+      "@type": "@id"
+    },
+    "hasPrecondition": {
+      "@id": "ex:hasPrecondition",
+      "@type": "@id"
+    },
+    "hasSubject": {
+      "@id": "ex:hasSubject",
+      "@type": "@id"
+    },
+    "hasTreatmentWorkOrder": {
+      "@id": "ex:hasTreatmentWorkOrder",
+      "@type": "@id"
+    },
+    "hasWorkOrder": {
+      "@id": "ex:hasWorkOrder",
+      "@type": "@id"
+    },
+    "hasWorkPermit": {
+      "@id": "ex:hasWorkPermit",
+      "@type": "@id"
+    },
+    "id": "@id",
+    "inScheme": {
+      "@id": "skos:inScheme",
+      "@type": "@id"
+    },
+    "includedInRelease": {
+      "@id": "ex:includedInRelease",
+      "@type": "@id"
+    },
+    "isTerminal": "ex:isTerminal",
+    "knowledgeDomain": "ex:knowledgeDomain",
+    "knowledgeVersion": "ex:knowledgeVersion",
+    "lifecycleStatus": "ex:lifecycleStatus",
+    "locatedAt": {
+      "@id": "ex:locatedAt",
+      "@type": "@id"
+    },
+    "managedByTeam": {
+      "@id": "ex:managedByTeam",
+      "@type": "@id"
+    },
+    "matchedByRule": {
+      "@id": "ex:matchedByRule",
+      "@type": "@id"
+    },
+    "notation": "skos:notation",
+    "occurredAt": "ex:occurredAt",
+    "operator": "ex:operator",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "owner": "ex:owner",
+    "packageId": "ex:packageId",
+    "pageNumber": "ex:pageNumber",
+    "parentOf": {
+      "@id": "ex:parentOf",
+      "@type": "@id"
+    },
+    "payloadJson": "ex:payloadJson",
+    "permissionScopeJson": "ex:permissionScopeJson",
+    "predicate": {
+      "@id": "ex:predicate",
+      "@type": "@id"
+    },
+    "predicateLabel": "ex:predicateLabel",
+    "prefLabel": "skos:prefLabel",
+    "promptVersion": "ex:promptVersion",
+    "prov": "http://www.w3.org/ns/prov#",
+    "publishedAt": "ex:publishedAt",
+    "qualityScore": "ex:qualityScore",
+    "rawStatus": "ex:rawStatus",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "reason": "ex:reason",
+    "recordedAt": "ex:recordedAt",
+    "records": {
+      "@id": "ex:records",
+      "@type": "@id"
+    },
+    "relatedAction": {
+      "@id": "ex:relatedAction",
+      "@type": "@id"
+    },
+    "relatedEvent": {
+      "@id": "ex:relatedEvent",
+      "@type": "@id"
+    },
+    "relatedFact": {
+      "@id": "ex:relatedFact",
+      "@type": "@id"
+    },
+    "relatedRule": {
+      "@id": "ex:relatedRule",
+      "@type": "@id"
+    },
+    "relatedState": {
+      "@id": "ex:relatedState",
+      "@type": "@id"
+    },
+    "relatedTo": {
+      "@id": "ex:relatedTo",
+      "@type": "@id"
+    },
+    "relationObject": {
+      "@id": "ex:relationObject",
+      "@type": "@id"
+    },
+    "relationPredicate": {
+      "@id": "ex:relationPredicate",
+      "@type": "@id"
+    },
+    "relationSubject": {
+      "@id": "ex:relationSubject",
+      "@type": "@id"
+    },
+    "requiredFactType": "ex:requiredFactType",
+    "requiredInputFactsJson": "ex:requiredInputFactsJson",
+    "requiredPredicate": "ex:requiredPredicate",
+    "requiresApproval": "ex:requiresApproval",
+    "requiresFact": {
+      "@id": "ex:requiresFact",
+      "@type": "@id"
+    },
+    "resolvedBy": {
+      "@id": "ex:resolvedBy",
+      "@type": "@id"
+    },
+    "resolves": {
+      "@id": "ex:resolves",
+      "@type": "@id"
+    },
+    "responsibleFor": {
+      "@id": "ex:responsibleFor",
+      "@type": "@id"
+    },
+    "reviewer": "ex:reviewer",
+    "riskLevel": "ex:riskLevel",
+    "ruleVersion": "ex:ruleVersion",
+    "sameFunctionLocation": {
+      "@id": "ex:sameFunctionLocation",
+      "@type": "@id"
+    },
+    "sectionPath": "ex:sectionPath",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "sourceId": "ex:sourceId",
+    "sourceNamespace": "ex:sourceNamespace",
+    "sourceRecordId": "ex:sourceRecordId",
+    "sourceSchema": "ex:sourceSchema",
+    "sourceSnapshotId": "ex:sourceSnapshotId",
+    "sourceSystem": "ex:sourceSystem",
+    "sourceTable": "ex:sourceTable",
+    "sourceType": "ex:sourceType",
+    "sourceUri": "ex:sourceUri",
+    "sourceWrite": "ex:sourceWrite",
+    "stateCode": "ex:stateCode",
+    "stateDomain": "ex:stateDomain",
+    "stateOrder": "ex:stateOrder",
+    "status": "ex:status",
+    "supersedes": {
+      "@id": "ex:supersedes",
+      "@type": "@id"
+    },
+    "supportedBy": {
+      "@id": "ex:supportedBy",
+      "@type": "@id"
+    },
+    "targetKey": "ex:targetKey",
+    "targetObjectType": {
+      "@id": "ex:targetObjectType",
+      "@type": "@id"
+    },
+    "triggers": {
+      "@id": "ex:triggers",
+      "@type": "@id"
+    },
+    "type": "@type",
+    "unit": "ex:unit",
+    "validFrom": "ex:validFrom",
+    "validTo": "ex:validTo",
+    "valueBoolean": "ex:valueBoolean",
+    "valueDateTime": "ex:valueDateTime",
+    "valueJson": "ex:valueJson",
+    "valueNumber": "ex:valueNumber",
+    "valueText": "ex:valueText",
+    "vocabularyVersion": "ex:vocabularyVersion",
+    "wasDerivedFrom": {
+      "@id": "prov:wasDerivedFrom",
+      "@type": "@id"
+    },
+    "wasGeneratedBy": {
+      "@id": "prov:wasGeneratedBy",
+      "@type": "@id"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  }
+}

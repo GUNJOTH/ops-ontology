@@ -1,0 +1,770 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://semantic.local/ontology/AbnormalInspectionEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/ActionAdapter> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/ActionExecution> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/CaseKnowledge> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/Center> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Organization> .
+
+<https://semantic.local/ontology/Company> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Organization> .
+
+<https://semantic.local/ontology/DefectAcceptanceEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/DefectAcceptedEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/DefectCreatedEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/DefectEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/DefectProcessingEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/EscalationEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/ExpertKnowledge> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/HumanReviewEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/InspectionEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/ObservationEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/RepeatedDefect> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/ResolutionEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/Risk> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessKnowledge> .
+
+<https://semantic.local/ontology/RuleDecision> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessKnowledge> .
+
+<https://semantic.local/ontology/SOP> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessKnowledge> .
+
+<https://semantic.local/ontology/SevereDefect> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/SourceFact> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/Specialty> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Organization> .
+
+<https://semantic.local/ontology/Standard> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessKnowledge> .
+
+<https://semantic.local/ontology/WorkOrderEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/WorkPermitEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/actionKey> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/actionName> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/actionType> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/actionVersion> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/activityType> a owl:DatatypeProperty ;
+    rdfs:domain prov:Activity ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/adapterMappingsJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/allowedWhenJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/appliesToClass> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range owl:Class .
+
+<https://semantic.local/ontology/appliesToObject> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/appliesToProperty> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range rdf:Property .
+
+<https://semantic.local/ontology/approvedBy> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/HumanReview> .
+
+<https://semantic.local/ontology/assertsIdentity> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/IdentityAssertion> ;
+    rdfs:range <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/assignmentDevice> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/LocationAssignment> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/assignmentLocation> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/LocationAssignment> ;
+    rdfs:range <https://semantic.local/ontology/Location> .
+
+<https://semantic.local/ontology/belongsToSite> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Site> .
+
+<https://semantic.local/ontology/businessMeaning> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/canonicalKey> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/causes> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/childDevice> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/conditionKey> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionCondition> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/confidence> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:decimal .
+
+<https://semantic.local/ontology/conflictStatus> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeConflict> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/conflictType> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeConflict> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/conflictsWith> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/contentHash> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeVersion> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/correlationId> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/decisionMode> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/IdentityAssertion> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/deprecatedAt> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/derivationId> a owl:DatatypeProperty ;
+    rdfs:domain prov:Activity ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/derivedFrom> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/derivedFromFact> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/DerivedFact> ;
+    rdfs:range <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/derivedFromKnowledge> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/description> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/detectsDefect> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Inspection> ;
+    rdfs:range <https://semantic.local/ontology/Defect> .
+
+<https://semantic.local/ontology/displayName> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/effectTarget> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionEffect> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/effectType> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionEffect> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/effectValue> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionEffect> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/effectsJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/evaluatedByKnowledge> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/evidenceJson> a owl:DatatypeProperty ;
+    rdfs:domain prov:Activity ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/executionStatesJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/expectedValue> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionCondition> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/extractionModel> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeVersion> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/factType> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/formalPublication> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:boolean .
+
+<https://semantic.local/ontology/generatedFrom> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Defect> ;
+    rdfs:range <https://semantic.local/ontology/AbnormalInspection> .
+
+<https://semantic.local/ontology/governedBy> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range <https://semantic.local/ontology/Rule> .
+
+<https://semantic.local/ontology/governedByKnowledge> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/hasCurrentState> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range <https://semantic.local/ontology/CanonicalState> .
+
+<https://semantic.local/ontology/hasDefect> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Defect> .
+
+<https://semantic.local/ontology/hasEffect> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range <https://semantic.local/ontology/ActionEffect> .
+
+<https://semantic.local/ontology/hasEvent> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/hasExecutionState> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range <https://semantic.local/ontology/ExecutionState> .
+
+<https://semantic.local/ontology/hasFact> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/hasFactValue> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range <https://semantic.local/ontology/FactValue> .
+
+<https://semantic.local/ontology/hasFragment> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/DocumentKnowledge> ;
+    rdfs:range <https://semantic.local/ontology/KnowledgeFragment> .
+
+<https://semantic.local/ontology/hasInspection> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Inspection> .
+
+<https://semantic.local/ontology/hasKnowledgeVersion> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/KnowledgeVersion> .
+
+<https://semantic.local/ontology/hasLocationAssignment> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/LocationAssignment> .
+
+<https://semantic.local/ontology/hasPrecondition> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range <https://semantic.local/ontology/ActionCondition> .
+
+<https://semantic.local/ontology/hasSubject> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/hasTreatmentWorkOrder> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Defect> ;
+    rdfs:range <https://semantic.local/ontology/WorkOrder> .
+
+<https://semantic.local/ontology/hasWorkOrder> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/WorkOrder> .
+
+<https://semantic.local/ontology/hasWorkPermit> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/WorkOrder> ;
+    rdfs:range <https://semantic.local/ontology/WorkPermit> .
+
+<https://semantic.local/ontology/includedInRelease> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/KnowledgeRelease> .
+
+<https://semantic.local/ontology/isTerminal> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/CanonicalState> ;
+    rdfs:range xsd:boolean .
+
+<https://semantic.local/ontology/knowledgeDomain> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/knowledgeVersion> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeVersion> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/lifecycleStatus> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/locatedAt> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Location> .
+
+<https://semantic.local/ontology/managedByTeam> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Team> .
+
+<https://semantic.local/ontology/matchedByRule> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range <https://semantic.local/ontology/Rule> .
+
+<https://semantic.local/ontology/occurredAt> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/operator> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionCondition> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/owner> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/packageId> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/pageNumber> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeFragment> ;
+    rdfs:range xsd:integer .
+
+<https://semantic.local/ontology/parentOf> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/payloadJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/permissionScopeJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/predicate> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range rdf:Property .
+
+<https://semantic.local/ontology/predicateLabel> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/promptVersion> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeVersion> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/publishedAt> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/qualityScore> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:decimal .
+
+<https://semantic.local/ontology/rawStatus> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/reason> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/recordedAt> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/records> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/relatedAction> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/Action> .
+
+<https://semantic.local/ontology/relatedEvent> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/relatedFact> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/relatedRule> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/Rule> .
+
+<https://semantic.local/ontology/relatedState> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/CanonicalState> .
+
+<https://semantic.local/ontology/relatedTo> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/relationObject> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/RelationAssertion> ;
+    rdfs:range <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/relationPredicate> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/RelationAssertion> ;
+    rdfs:range rdf:Property .
+
+<https://semantic.local/ontology/relationSubject> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/RelationAssertion> ;
+    rdfs:range <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/requiredFactType> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/RequiredFact> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/requiredInputFactsJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/requiredPredicate> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/RequiredFact> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/requiresApproval> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:boolean .
+
+<https://semantic.local/ontology/requiresFact> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Action> ;
+    rdfs:range <https://semantic.local/ontology/RequiredFact> .
+
+<https://semantic.local/ontology/resolvedBy> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Defect> ;
+    rdfs:range <https://semantic.local/ontology/DefectResolution> .
+
+<https://semantic.local/ontology/resolves> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/responsibleFor> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/Team> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/reviewer> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/riskLevel> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/ruleVersion> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Rule> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sameFunctionLocation> a owl:ObjectProperty,
+        owl:SymmetricProperty ;
+    rdfs:domain <https://semantic.local/ontology/Device> ;
+    rdfs:range <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/sectionPath> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeFragment> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceId> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceNamespace> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceRecordId> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceSchema> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceSnapshotId> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceSystem> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceTable> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceType> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/sourceUri> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range xsd:anyURI .
+
+<https://semantic.local/ontology/sourceWrite> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:boolean .
+
+<https://semantic.local/ontology/stateCode> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ExecutionState> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/stateDomain> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/CanonicalState> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/stateOrder> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ExecutionState> ;
+    rdfs:range xsd:integer .
+
+<https://semantic.local/ontology/status> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/supersedes> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/supportedBy> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/KnowledgeAsset> ;
+    rdfs:range prov:Entity .
+
+<https://semantic.local/ontology/targetKey> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/ActionPlan> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/targetObjectType> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range owl:Class .
+
+<https://semantic.local/ontology/triggers> a owl:ObjectProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessEvent> ;
+    rdfs:range <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/unit> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/validFrom> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/validTo> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/BusinessObject> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/valueBoolean> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/FactValue> ;
+    rdfs:range xsd:boolean .
+
+<https://semantic.local/ontology/valueDateTime> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/FactValue> ;
+    rdfs:range xsd:dateTime .
+
+<https://semantic.local/ontology/valueJson> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/Fact> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/valueNumber> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/FactValue> ;
+    rdfs:range xsd:decimal .
+
+<https://semantic.local/ontology/valueText> a owl:DatatypeProperty ;
+    rdfs:domain <https://semantic.local/ontology/FactValue> ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/ontology/vocabularyVersion> a owl:DatatypeProperty ;
+    rdfs:domain skos:Concept ;
+    rdfs:range xsd:string .
+
+<https://semantic.local/package/thermal-operations> a owl:Ontology ;
+    owl:imports <https://semantic.local/package/platform-core> ;
+    owl:versionIRI <https://semantic.local/package/thermal-operations/v1.0.0> .
+
+<https://semantic.local/ontology/AbnormalInspection> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Inspection> .
+
+<https://semantic.local/ontology/DefectResolution> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/DerivedFact> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/DocumentKnowledge> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/HumanReview> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/KnowledgeRelease> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/PhysicalObject> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/Site> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/WorkPermit> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/enterprise-operations-ontology/v2> a owl:Ontology ;
+    rdfs:label "Enterprise Semantic Ontology" ;
+    owl:versionIRI <https://semantic.local/ontology/enterprise-operations-ontology/v2> .
+
+<https://semantic.local/ontology/Assertion> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/IdentityAssertion> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Assertion> .
+
+<https://semantic.local/ontology/KnowledgeConflict> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/Location> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/Team> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Organization> .
+
+<https://semantic.local/ontology/ExecutionState> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/Inspection> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/KnowledgeFragment> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/LocationAssignment> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/RelationAssertion> .
+
+<https://semantic.local/ontology/RequiredFact> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/WorkOrder> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/ActionCondition> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/ActionEffect> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/BusinessKnowledge> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/CanonicalState> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/Organization> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/RelationAssertion> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Assertion> .
+
+<https://semantic.local/ontology/Rule> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/Defect> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/FactValue> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/KnowledgeVersion> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/Knowledge> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/ActionPlan> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/Action> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/Fact> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/Device> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/PhysicalObject> .
+
+<https://semantic.local/ontology/BusinessEvent> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/BusinessObject> .
+
+<https://semantic.local/ontology/KnowledgeAsset> a owl:Class ;
+    rdfs:subClassOf <https://semantic.local/ontology/Knowledge> .
+
+<https://semantic.local/ontology/BusinessObject> a owl:Class .
+

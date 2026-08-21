@@ -19,7 +19,9 @@ from .identity_review_service import (
     decide_semantic_identity_review,
     revoke_semantic_identity,
     semantic_identity_review_detail,
+    semantic_identity_review_isolate_non_device,
     semantic_identity_review_queue,
+    semantic_identity_review_triage,
 )
 
 
@@ -35,6 +37,8 @@ def build_router() -> APIRouter:
     router.add_api_route("/api/world-model/governance-contract", world_model_governance_contract, methods=["GET"])
     router.add_api_route("/api/world-model/identity/{assertion_id}/revoke", revoke_semantic_identity, methods=["POST"])
     router.add_api_route("/api/world-model/identity-review", semantic_identity_review_queue, methods=["GET"])
+    router.add_api_route("/api/world-model/identity-review/triage", semantic_identity_review_triage, methods=["GET"])
+    router.add_api_route("/api/world-model/identity-review/triage/isolate-non-device", semantic_identity_review_isolate_non_device, methods=["POST"])
     router.add_api_route("/api/world-model/identity-review/{review_id}", semantic_identity_review_detail, methods=["GET"])
     router.add_api_route("/api/world-model/identity-review/{review_id}", decide_semantic_identity_review, methods=["POST"])
     return router
@@ -53,6 +57,7 @@ __all__ = [
     "world_model_governance_contract",
     "revoke_semantic_identity",
     "semantic_identity_review_queue",
+    "semantic_identity_review_triage",
     "semantic_identity_review_detail",
     "decide_semantic_identity_review",
 ]

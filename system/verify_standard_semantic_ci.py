@@ -12,13 +12,15 @@ import json
 import re
 from pathlib import Path
 
-from build_canonical_semantic_model import STANDARD_ROOT
+from build_canonical_semantic_model import STANDARD_ROOT, load_version_spec
 from pipeline.contracts import connect_readonly, resolve_artifact_path
 from rdflib import Dataset, Graph, URIRef
 from rdflib.namespace import OWL, RDF
 from replay_owl_rl import persist_inference
 from semantic_namespaces import validate_namespace_contract
+from semantic_packages import verify_package_registry
 from semantic_registry import validate_registry_contract
+from standard_processors import run_independent_processors
 from verify_canonical_semantic_model import verify as verify_canonical
 
 ROOT = Path(__file__).resolve().parent
@@ -39,7 +41,7 @@ def validate_first_class_assets() -> tuple[dict[str, object], list[str]]:
     failures: list[str] = []
     status: dict[str, object] = {"status": "not_run", "assets": {}}
     try:
-        version_spec = load_json(STANDARD_ROOT / "ontology-version.json")
+        version_spec = load_version_spec()
         namespace_spec = load_json(STANDARD_ROOT / str(version_spec.get("namespaceFile", "namespace.json")))
         asset_manifest = load_json(STANDARD_ROOT / str(version_spec["assetManifest"]))
         dataset_contract = load_json(STANDARD_ROOT / str(version_spec["rdfDatasetManifest"]))
@@ -159,11 +161,15 @@ def run() -> dict[str, object]:
     failures.extend(namespace_contract_failures)
     asset_contract, asset_failures = validate_first_class_assets()
     failures.extend(asset_failures)
+    package_contract: dict[str, object] = {"status": "not_run", "failures": []}
     parsed: dict[str, object] = {}
     namespace_spec: dict[str, object] = {}
+    version_spec: dict[str, object] = {}
     try:
-        version_spec = load_json(STANDARD_ROOT / "ontology-version.json")
+        version_spec = load_version_spec()
         namespace_spec = load_json(STANDARD_ROOT / str(version_spec.get("namespaceFile", "namespace.json")))
+        package_contract = verify_package_registry()
+        failures.extend(str(item) for item in package_contract.get("failures", []))
         standard_assets = [
             ("ontology", STANDARD_ROOT / str(version_spec["ontologyFile"]), "turtle"),
             ("vocabularies", STANDARD_ROOT / str(version_spec["vocabularyFile"]), "turtle"),
@@ -190,7 +196,8 @@ def run() -> dict[str, object]:
             failures.append(f"{name.upper()}_PARSE_FAILED:{exc}")
     required_shape_classes = {
         "Device", "Location", "IdentityAssertion", "BusinessEvent", "Defect",
-        "WorkOrder", "Rule", "Fact", "ActionPlan", "Action",
+        "WorkOrder", "Rule", "Fact", "ActionPlan", "Action", "KnowledgeAsset",
+        "KnowledgeVersion", "KnowledgeFragment", "KnowledgeConflict",
     }
     if shacl_graph is not None:
         shacl_ns = "http://www.w3.org/ns/shacl#"
@@ -204,7 +211,7 @@ def run() -> dict[str, object]:
         if missing_shapes:
             failures.append("SHACL_REQUIRED_SHAPES_MISSING:" + ",".join(missing_shapes))
     if ontology_graph is not None:
-        context_payload = load_json(STANDARD_ROOT / "context.jsonld")
+        context_payload = load_json(STANDARD_ROOT / str(version_spec.get("contextFile", "context.jsonld")))
         context = context_payload.get("@context", {})
         ontology_namespace = str(namespace_spec.get("ontologyNamespace") or "")
         context_iris: set[str] = set()
@@ -229,7 +236,7 @@ def run() -> dict[str, object]:
         if missing_context:
             failures.append("JSONLD_CONTEXT_TERMS_MISSING:" + ",".join(missing_context))
     try:
-        context = json.loads((STANDARD_ROOT / "context.jsonld").read_text(encoding="utf-8"))
+        context = json.loads((STANDARD_ROOT / str(version_spec.get("contextFile", "context.jsonld"))).read_text(encoding="utf-8"))
         parsed["jsonldContext"] = isinstance(context.get("@context"), dict)
         if not parsed["jsonldContext"]:
             failures.append("JSONLD_CONTEXT_INVALID")
@@ -242,6 +249,7 @@ def run() -> dict[str, object]:
     failures.extend(str(item) for item in canonical.get("failures", []))
 
     sparql: dict[str, object] = {"status": "not_run", "deviceCount": 0, "queries": []}
+    independent_processors: dict[str, object] = {"status": "not_run", "gateStatus": "not_run"}
     if TARGET.exists():
         db = connect_readonly(TARGET)
         run_row = db.execute("SELECT * FROM canonical_projection_run WHERE status='completed' ORDER BY created_at DESC LIMIT 1").fetchone()
@@ -260,6 +268,17 @@ def run() -> dict[str, object]:
             union = Graph()
             for subject, predicate, obj, _context in dataset.quads((None, None, None, None)):
                 union.add((subject, predicate, obj))
+            if ontology_graph is not None and shacl_graph is not None:
+                independent_processors = run_independent_processors(
+                    union,
+                    STANDARD_ROOT / str(load_version_spec()["ontologyFile"]),
+                    STANDARD_ROOT / str(load_version_spec()["shaclFile"]),
+                )
+                if independent_processors.get("gateStatus") != "pass":
+                    failures.append(
+                        "INDEPENDENT_STANDARD_PROCESSOR_GATE_"
+                        + str(independent_processors.get("status", "unknown")).upper()
+                    )
             ontology_namespace = str(namespace_spec.get("ontologyNamespace") or "https://semantic.local/ontology/")
             query = f"SELECT (COUNT(?s) AS ?count) WHERE {{ ?s a <{ontology_namespace}Device> . }}"
             if manifest.get("streamingProjection"):
@@ -272,7 +291,7 @@ def run() -> dict[str, object]:
             if sparql["deviceCount"] <= 0:
                 failures.append("SPARQL_DEVICE_QUERY_EMPTY")
             try:
-                sparql_manifest = load_json(STANDARD_ROOT / str(load_json(STANDARD_ROOT / "ontology-version.json")["sparqlManifest"]))
+                sparql_manifest = load_json(SPARQL_ROOT / Path(str(load_version_spec()["sparqlManifest"])).name)
                 contract_result, contract_failures = run_sparql_contracts(dataset, sparql_manifest)
                 sparql.update(contract_result)
                 failures.extend(contract_failures)
@@ -296,8 +315,10 @@ def run() -> dict[str, object]:
         "status": "PASS" if not failures else "FAIL",
         "parsed": parsed,
         "firstClassAssets": asset_contract,
+        "semanticPackages": package_contract,
         "canonical": canonical,
         "owlRlReplay": inference,
+        "independentStandardProcessors": independent_processors,
         "sparql": sparql,
         "semanticRegistry": {
             "status": "passed" if not registry_failures else "failed",

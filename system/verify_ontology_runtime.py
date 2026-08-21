@@ -13,7 +13,14 @@ import pathlib
 import sqlite3
 
 from pipeline.contracts import connect_readonly
-from semantic_registry import canonical_relation_key, object_class_local_name, relation_predicate_local_name
+from pipeline.knowledge_runtime import validate_knowledge_layer
+from semantic_namespaces import ONTOLOGY_NAMESPACE
+from semantic_registry import (
+    canonical_relation_key,
+    object_class_local_name,
+    relation_predicate_local_name,
+    validate_registry_against_ontology,
+)
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -80,6 +87,31 @@ def verify(target_path: pathlib.Path) -> dict[str, object]:
            LEFT JOIN ontology_event_type t ON t.event_type=e.event_type
            WHERE e.status IN ('observed','accepted') AND (t.event_type IS NULL OR t.review_status='needs_review')"""
     ).fetchall()]
+    event_columns = {row[1] for row in db.execute("PRAGMA table_info(ontology_event_type)").fetchall()}
+    transition_columns = {row[1] for row in db.execute("PRAGMA table_info(ontology_transition_rule)").fetchall()}
+    registry_owl_errors = validate_registry_against_ontology()
+    knowledge_runtime = validate_knowledge_layer(
+        db,
+        ROOT.parent / "standards" / "v2" / "ontology.ttl",
+    )
+    formal_event_types = bool({"rdf_class"}.issubset(event_columns)) and all(
+        str(row["rdf_class"] or "") == ONTOLOGY_NAMESPACE + str(row["event_type"])
+        for row in db.execute(
+            "SELECT event_type,rdf_class FROM ontology_event_type WHERE status='active' AND review_status='approved'"
+        ).fetchall()
+    )
+    transition_event_iris = bool({"event_iri"}.issubset(transition_columns)) and all(
+        row["event_iri"] == ONTOLOGY_NAMESPACE + row["event_type"]
+        for row in db.execute(
+            """SELECT t.event_type,t.event_iri FROM ontology_transition_rule t
+               JOIN ontology_event_type e ON e.event_type=t.event_type
+               WHERE t.status='active' AND t.review_status='approved'
+                 AND e.status='active' AND e.review_status='approved'"""
+        ).fetchall()
+    )
+    formal_event_type_count = int(db.execute(
+        "SELECT count(*) FROM ontology_event_type WHERE status='active' AND review_status='approved'"
+    ).fetchone()[0])
     fact_count = int(db.execute(
         "SELECT count(*) FROM semantic_fact WHERE status IN ('observed','accepted','derived')"
     ).fetchone()[0])
@@ -107,7 +139,11 @@ def verify(target_path: pathlib.Path) -> dict[str, object]:
                 "SELECT object_type,rdf_class FROM ontology_object_type WHERE status='active'"
             ).fetchall()
         ),
+        "registry_owl_bidirectional_consistency": not registry_owl_errors,
+        "formal_event_type_registry": formal_event_types,
+        "transition_event_iri_registry": transition_event_iris,
         "action_plan_boundary": int(db.execute("SELECT count(*) FROM semantic_action_plan WHERE source_write<>0 OR formal_publication<>0").fetchone()[0]) == 0,
+        "knowledge_runtime_gate": knowledge_runtime["status"] == "PASS",
     }
     db.close()
     status = "PASS" if all(checks.values()) and not (missing_tables or source_flags) else "FAIL"
@@ -120,6 +156,9 @@ def verify(target_path: pathlib.Path) -> dict[str, object]:
         "required_core_object_count": len(CORE_OBJECTS),
         "unregistered_relation_types": unregistered_relations,
         "unregistered_event_types": unregistered_events,
+        "registry_owl_errors": registry_owl_errors,
+        "knowledgeRuntime": knowledge_runtime,
+        "formal_event_type_count": formal_event_type_count,
         "fact_count": fact_count,
         "derivation_count": derivation_count,
         "derivation_check_note": (

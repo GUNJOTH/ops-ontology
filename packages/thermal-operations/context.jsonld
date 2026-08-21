@@ -1,0 +1,10 @@
+{
+  "@context": {
+    "ex": "https://semantic.local/ontology/",
+    "locatedAt": {"@id": "ex:locatedAt", "@type": "@id"},
+    "hasInspection": {"@id": "ex:hasInspection", "@type": "@id"},
+    "hasDefect": {"@id": "ex:hasDefect", "@type": "@id"},
+    "hasWorkOrder": {"@id": "ex:hasWorkOrder", "@type": "@id"},
+    "hasEvent": {"@id": "ex:hasEvent", "@type": "@id"}
+  }
+}

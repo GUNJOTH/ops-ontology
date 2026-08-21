@@ -45,7 +45,7 @@ def stream_identity_projection(
         "provenanceEligible": 0,
         "provenanceCovered": 0,
     }
-    evidence = builder.identity_evidence()
+    evidence = builder._identity_evidence()
     statement_rows: list[tuple[Any, ...]] = []
     provenance_rows: list[tuple[Any, ...]] = []
     for snapshot_id, graph_iri_value, graph_id in graph_rows:
@@ -204,7 +204,7 @@ def write_identity_jsonld(
                 if not first_node:
                     output.write(",")
                 first_node = False
-                output.write(json.dumps(builder.identity_json_node(row), ensure_ascii=False, separators=(",", ":")))
+                output.write(json.dumps(builder._identity_json_node(row), ensure_ascii=False, separators=(",", ":")))
                 if written % 100000 == 0:
                     print(f"[canonical] wrote JSON-LD identity devices: {written}", flush=True)
         output.write("]}")

@@ -1,0 +1,1 @@
+{"schemaVersion":"semantic-package-events-v2","packageId":"platform-core","eventSource":"semantic_event","entries":["BusinessEvent","HumanReviewEvent"]}

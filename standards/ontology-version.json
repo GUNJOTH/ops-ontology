@@ -9,7 +9,7 @@
   "rdfDatasetManifest": "rdf-dataset.json",
   "assetManifest": "semantic-asset-manifest.json",
   "sparqlManifest": "../sparql/manifest.json",
-  "status": "active",
+  "status": "available",
   "parentVersion": null,
   "migrationPolicy": "snapshot-before-apply-and-pointer-rollback",
   "sourceWrite": false,

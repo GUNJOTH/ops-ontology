@@ -1,6 +1,7 @@
 """Domain projection stages for the Canonical RDF builder."""
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from typing import Any
@@ -23,6 +24,84 @@ from build_canonical_semantic_model import (
 from rdflib import Literal, URIRef
 from rdflib.namespace import RDF, XSD
 from semantic_predicates import event_predicate, relation_predicate
+
+
+def _json_items(raw: object) -> list[object]:
+    """Normalize a JSON payload without losing the original payload literal."""
+    if raw is None or str(raw).strip() == "":
+        return []
+    try:
+        value = json.loads(str(raw))
+    except (TypeError, json.JSONDecodeError):
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def _semantic_node(parent: URIRef, category: str, index: int, payload: object) -> URIRef:
+    digest = hashlib.sha256(
+        (str(parent) + "|" + category + "|" + str(index) + "|" + json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)).encode("utf-8")
+    ).hexdigest()[:24]
+    return URIRef(EX + f"semantic/{category}/{digest}")
+
+
+def _add_typed_value(builder, graph, node: URIRef, value: object, provenance: dict[str, Any]) -> None:
+    if isinstance(value, bool):
+        builder.add(graph, node, EX.valueBoolean, Literal(value, datatype=XSD.boolean), provenance=provenance)
+    elif isinstance(value, (int, float)) and not isinstance(value, bool):
+        builder.add(graph, node, EX.valueNumber, Literal(str(value), datatype=XSD.decimal), provenance=provenance)
+    elif isinstance(value, str):
+        builder.add(graph, node, EX.valueText, Literal(value, datatype=XSD.string), provenance=provenance)
+
+
+def _add_json_semantic_node(builder, graph, parent: URIRef, category: str, index: int, payload: object, node_class: URIRef, link: URIRef, provenance: dict[str, Any]) -> URIRef:
+    node = _semantic_node(parent, category, index, payload)
+    builder.add(graph, parent, link, node, provenance=provenance)
+    builder.add(graph, node, RDF.type, node_class, provenance=provenance)
+    builder.add(graph, node, EX.payloadJson, Literal(json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str), datatype=XSD.string), provenance=provenance)
+    return node
+
+
+def _add_fact_value_semantics(builder, graph, fact: URIRef, raw: object, provenance: dict[str, Any]) -> None:
+    for index, payload in enumerate(_json_items(raw)):
+        node = _add_json_semantic_node(builder, graph, fact, "fact-value", index, payload, EX.FactValue, EX.hasFactValue, provenance)
+        if isinstance(payload, dict):
+            value = payload.get("value", payload.get("amount", payload.get("text")))
+        else:
+            value = payload
+        _add_typed_value(builder, graph, node, value, provenance)
+
+
+def _add_action_semantics(builder, graph, action: URIRef, row: sqlite3.Row) -> None:
+    provenance = dict(row)
+    for category, raw, node_class, link in (
+        ("action-condition", row["allowed_when_json"], EX.ActionCondition, EX.hasPrecondition),
+        ("required-fact", row["required_facts_json"], EX.RequiredFact, EX.requiresFact),
+        ("action-effect", row["effects_json"], EX.ActionEffect, EX.hasEffect),
+        ("execution-state", row["execution_states_json"], EX.ExecutionState, EX.hasExecutionState),
+    ):
+        for index, payload in enumerate(_json_items(raw)):
+            node = _add_json_semantic_node(builder, graph, action, category, index, payload, node_class, link, provenance)
+            if isinstance(payload, dict):
+                if category == "action-condition":
+                    for predicate, key in ((EX.conditionKey, "key"), (EX.operator, "operator"), (EX.expectedValue, "value")):
+                        if payload.get(key) is not None:
+                            builder.add(graph, node, predicate, Literal(str(payload[key]), datatype=XSD.string), provenance=provenance)
+                elif category == "required-fact":
+                    for predicate, keys in ((EX.requiredFactType, ("factType", "fact_type", "type")), (EX.requiredPredicate, ("predicate", "predicateLabel"))):
+                        value = next((payload.get(key) for key in keys if payload.get(key) is not None), None)
+                        if value is not None:
+                            builder.add(graph, node, predicate, Literal(str(value), datatype=XSD.string), provenance=provenance)
+                elif category == "action-effect":
+                    for predicate, keys in ((EX.effectType, ("effectType", "type")), (EX.effectTarget, ("target", "targetKey")), (EX.effectValue, ("value", "result"))):
+                        value = next((payload.get(key) for key in keys if payload.get(key) is not None), None)
+                        if value is not None:
+                            builder.add(graph, node, predicate, Literal(str(value), datatype=XSD.string), provenance=provenance)
+            elif category == "execution-state":
+                builder.add(graph, node, EX.stateCode, Literal(str(payload), datatype=XSD.string), provenance=provenance)
+            if category == "execution-state":
+                builder.add(graph, node, EX.stateOrder, Literal(index, datatype=XSD.integer), provenance=provenance)
 
 
 def build_ontology(builder, source_db: sqlite3.Connection) -> None:
@@ -234,6 +313,7 @@ def build_events(builder, source_db: sqlite3.Connection) -> None:
         event_index[str(row["event_id"])] = event
         event_type = str(row["event_type"] or "BusinessEvent")
         builder.add(graph, event, RDF.type, EX.BusinessEvent, confidence=row["confidence"], provenance=dict(row))
+        builder.add(graph, event, RDF.type, class_iri(event_type), confidence=row["confidence"], provenance=dict(row))
         builder.add(graph, event, RDF.type, URIRef(EX + safe_segment(event_type)), confidence=row["confidence"], provenance=dict(row))
         subject = resource_iri(row["subject_type"], row["subject_key"], builder.object_index)
         builder.add(graph, event, EX.hasSubject, subject, confidence=row["confidence"], provenance=dict(row))
@@ -283,6 +363,7 @@ def build_facts_states_rules(builder, source_db: sqlite3.Connection) -> None:
             (EX.sourceRecordId, row["source_row_id"], XSD.string),
             (EX.sourceSnapshotId, row["source_snapshot_id"], XSD.string),
         ])
+        _add_fact_value_semantics(builder, graph, fact, row["value_json"], dict(row))
         if str(row["status"]) == "derived" and table_exists(source_db, "semantic_fact_derivation"):
             derivations = source_db.execute(
                 "SELECT * FROM semantic_fact_derivation WHERE output_fact_id=? AND status='accepted' ORDER BY derivation_id",
@@ -314,9 +395,9 @@ def build_facts_states_rules(builder, source_db: sqlite3.Connection) -> None:
             (EX.ruleVersion, row["rule_version"], XSD.string),
             (EX.displayName, row["title"], XSD.string),
             (EX.status, row["status"], XSD.string),
-            (EX.targetObjectType, row["target_object_type"], XSD.string),
             (EX.sourceSnapshotId, row["source_version_id"], XSD.string),
         ])
+        builder.add(graph, rule, EX.targetObjectType, class_iri(row["target_object_type"]), provenance=dict(row))
         builder.add_provenance("rule_projection", row["rule_id"], rule, source_system="local", source_table="semantic_executable_rule", source_row_id=row["rule_id"], source_snapshot_id=row["source_version_id"], evidence=row["provenance_json"])
     has_action_definition = source_db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_action_definition'").fetchone() is not None
     if has_action_definition:
@@ -327,7 +408,6 @@ def build_facts_states_rules(builder, source_db: sqlite3.Connection) -> None:
                 (EX.actionName, row["action_name"], XSD.string),
                 (EX.businessMeaning, row["business_meaning"], XSD.string),
                 (EX.actionVersion, row["version"], XSD.string),
-                (EX.targetObjectType, row["target_type"], XSD.string),
                 (EX.allowedWhenJson, row["allowed_when_json"], XSD.string),
                 (EX.requiredInputFactsJson, row["required_facts_json"], XSD.string),
                 (EX.permissionScopeJson, row["permission_scope_json"], XSD.string),
@@ -336,6 +416,8 @@ def build_facts_states_rules(builder, source_db: sqlite3.Connection) -> None:
                 (EX.executionStatesJson, row["execution_states_json"], XSD.string),
                 (EX.status, row["status"], XSD.string),
             ])
+            _add_action_semantics(builder, graph, action, row)
+            builder.add(graph, action, EX.targetObjectType, class_iri(row["target_type"]), provenance=dict(row))
             builder.add_provenance("action_definition_projection", row["action_id"], action, source_system="local", source_table="semantic_action_definition", source_row_id=row["action_id"], evidence=row["business_meaning"])
     has_action_plan = source_db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_action_plan'").fetchone() is not None
     if has_action_plan:
@@ -345,7 +427,6 @@ def build_facts_states_rules(builder, source_db: sqlite3.Connection) -> None:
             add_literal_properties(builder.dataset, graph, plan, [
                 (EX.actionKey, row["action_key"], XSD.string),
                 (EX.actionType, row["action_type"], XSD.string),
-                (EX.targetObjectType, row["target_type"], XSD.string),
                 (EX.targetKey, row["target_key"], XSD.string),
                 (EX.reason, row["reason"], XSD.string),
                 (EX.riskLevel, row["risk_level"], XSD.string),
@@ -354,4 +435,5 @@ def build_facts_states_rules(builder, source_db: sqlite3.Connection) -> None:
                 (EX.formalPublication, bool(row["formal_publication"]), XSD.boolean),
                 (EX.status, row["status"], XSD.string),
             ])
+            builder.add(graph, plan, EX.targetObjectType, class_iri(row["target_type"]), provenance=dict(row))
             builder.add_provenance("action_plan_projection", row["plan_id"], plan, source_system="local", source_table="semantic_action_plan", source_row_id=row["plan_id"], evidence=row["payload_json"])

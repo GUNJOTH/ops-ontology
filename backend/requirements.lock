@@ -13,7 +13,9 @@ certifi==2026.7.22
     #   httpcore
     #   httpx
 click==8.4.2
-    # via uvicorn
+    # via
+    #   -r ops-ontology/backend/requirements.txt
+    #   uvicorn
 colorama==0.4.6
     # via
     #   click
@@ -32,6 +34,8 @@ h11==0.16.0
     #   httpcore
     #   httpcore2
     #   uvicorn
+html5rdf==1.2.1
+    # via rdflib
 httpcore==1.0.9
     # via httpx
 httpcore2==2.12.0
@@ -51,12 +55,20 @@ jiter==0.16.0
     # via openai
 openai==1.109.1
     # via -r ops-ontology/backend/requirements.txt
+owlrl==7.6.2
+    # via
+    #   -r ops-ontology/backend/requirements.txt
+    #   pyshacl
 packaging==26.3
-    # via pytest
+    # via
+    #   pyshacl
+    #   pytest
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
+prettytable==3.18.0
+    # via pyshacl
 pydantic==2.13.4
     # via
     #   fastapi
@@ -67,6 +79,8 @@ pygments==2.21.0
     # via pytest
 pyparsing==3.3.2
     # via rdflib
+pyshacl==0.40.1
+    # via -r ops-ontology/backend/requirements.txt
 pytest==9.1.1
     # via
     #   -r ops-ontology/backend/requirements-dev.txt
@@ -74,7 +88,10 @@ pytest==9.1.1
 pytest-cov==7.1.0
     # via -r ops-ontology/backend/requirements-dev.txt
 rdflib==7.6.0
-    # via -r ops-ontology/backend/requirements.txt
+    # via
+    #   -r ops-ontology/backend/requirements.txt
+    #   owlrl
+    #   pyshacl
 ruff==0.16.3
     # via -r ops-ontology/backend/requirements-dev.txt
 sniffio==1.3.1
@@ -103,3 +120,5 @@ typing-inspection==0.4.4
     #   pydantic
 uvicorn==0.52.4
     # via -r ops-ontology/backend/requirements.txt
+wcwidth==0.8.2
+    # via prettytable

@@ -7,6 +7,7 @@ import sqlite3
 from typing import Any, Literal
 
 from fastapi import Depends, HTTPException, Query
+from pipeline.identity_review import isolate_non_device_reviews, triage_identity_reviews, write_identity_triage_report
 
 from app.core.auth import require_decision_auth
 from app.core.db import unified_semantics_connection, unified_semantics_write_connection
@@ -144,6 +145,24 @@ def semantic_identity_review_queue(
             "sourceWrite": False,
             "formalPublication": False,
         }
+    finally:
+        connection.close()
+
+
+def semantic_identity_review_triage(write_report: bool = Query(default=False)) -> dict[str, Any]:
+    """Return actionable categories for pending identity reviews, without deciding them."""
+    connection = unified_semantics_connection()
+    try:
+        return write_identity_triage_report(connection) if write_report else triage_identity_reviews(connection)
+    finally:
+        connection.close()
+
+
+def semantic_identity_review_isolate_non_device(_: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    """Explicitly isolate business-record keys from the device queue."""
+    connection = unified_semantics_write_connection()
+    try:
+        return isolate_non_device_reviews(connection)
     finally:
         connection.close()
 

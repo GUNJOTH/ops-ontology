@@ -46,6 +46,7 @@ def main() -> None:
         "canonical": run_gate("verify_canonical_semantic_model.py"),
         "standardCi": run_gate("verify_standard_semantic_ci.py"),
         "sourceTruth": run_gate("verify_source_truth_cutover.py"),
+        "ontologyRuntime": run_gate("verify_ontology_runtime.py"),
     }
     status = "PASS" if all(item.get("status") == "PASS" for item in checks.values()) else "BLOCKED"
     canonical_run = ((checks["canonical"].get("latestRun") or {}).get("run_id") or checks["sourceTruth"].get("canonicalRunId"))

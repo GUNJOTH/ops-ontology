@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "semantic-namespace-contract-v1",
+  "status": "stable",
+  "baseNamespace": "https://semantic.local/",
+  "ontologyNamespace": "https://semantic.local/ontology/",
+  "resourceNamespace": "https://semantic.local/resource/",
+  "sourceNamespace": "https://semantic.local/source/",
+  "graphNamespace": "https://semantic.local/graph/",
+  "contractNamespace": "https://semantic.local/contracts/",
+  "iriRules": {
+    "class": "ontology/{ClassLocalName}",
+    "property": "ontology/{PropertyLocalName}",
+    "resource": "resource/{objectType}/{canonicalKey}",
+    "source": "source/{sourceNamespace}/{kind}/{sourceRecordId}",
+    "graph": "graph/{graphKind}/{versionOrRunId}"
+  },
+  "changePolicy": {
+    "stableIri": true,
+    "rewriteInPlace": false,
+    "namespaceChangeRequiresNewOntologyRelease": true,
+    "sourceSystemsRemainReadOnly": true
+  }
+}

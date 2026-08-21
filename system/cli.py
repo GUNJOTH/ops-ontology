@@ -49,7 +49,6 @@ PREFIXES = [
     "replay",
     "run",
     "semantic",
-    "test",
     "update",
     "verify",
 ]

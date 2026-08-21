@@ -32,6 +32,7 @@ except ImportError as exc:  # pragma: no cover - gives an actionable runtime err
 from pipeline.contracts import connect_local, connect_readonly, manifest_path
 from pipeline.entrypoint import PipelineStepError, add_pipeline_arguments, run_single_step
 from semantic_namespaces import GRAPH_NAMESPACE, ONTOLOGY_NAMESPACE, RESOURCE_NAMESPACE, SOURCE_NAMESPACE
+from semantic_packages import verify_package_registry
 from semantic_registry import object_class_local_name
 
 ROOT = Path(__file__).resolve().parent
@@ -45,6 +46,7 @@ VOCABULARY_PATH = STANDARD_ROOT / "vocabularies.ttl"
 
 
 VERSION_SPEC_PATH = STANDARD_ROOT / "ontology-version.json"
+VERSION_REGISTRY_PATH = ROOT / "data" / "ontology_version_registry.json"
 
 EX = Namespace(ONTOLOGY_NAMESPACE)
 PROV = Namespace("http://www.w3.org/ns/prov#")
@@ -194,7 +196,16 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 
 def load_version_spec() -> dict[str, Any]:
-    return json.loads(VERSION_SPEC_PATH.read_text(encoding="utf-8"))
+    root_spec = json.loads(VERSION_SPEC_PATH.read_text(encoding="utf-8"))
+    if VERSION_REGISTRY_PATH.exists():
+        registry = json.loads(VERSION_REGISTRY_PATH.read_text(encoding="utf-8"))
+        active = str(registry.get("activeVersion") or "")
+        if active and active != str(root_spec.get("version") or ""):
+            suffix = active.rsplit("/", 1)[-1]
+            candidate = STANDARD_ROOT / f"ontology-version-{safe_segment(suffix)}.json"
+            if candidate.exists():
+                return json.loads(candidate.read_text(encoding="utf-8"))
+    return root_spec
 
 
 def graph_iri(kind: str, run_id: str, snapshot_id: str | None = None, ontology_version: str | None = None) -> str:
@@ -618,6 +629,15 @@ class CanonicalBuilder:
     def run(self) -> dict[str, Any]:
         if not self.source.exists():
             raise FileNotFoundError(self.source)
+        version_spec = load_version_spec()
+        package_contract = verify_package_registry(
+            ontology_path=STANDARD_ROOT / str(version_spec["ontologyFile"]),
+        )
+        if package_contract["status"] != "PASS":
+            raise ValueError(
+                "Semantic ontology package gate failed: "
+                + ", ".join(str(item) for item in package_contract["failures"])
+            )
         self.target.parent.mkdir(parents=True, exist_ok=True)
         source_db = connect_readonly(self.source)
         identity_db: sqlite3.Connection | None = None

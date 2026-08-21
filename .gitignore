@@ -19,6 +19,10 @@ dist/
 .test_tmp/
 pytest-cache-files-*
 
+# Native package composition output; the reproducible source assets live in
+# packages/ and the promoted release assets live in standards/v2/.
+builds/canonical/
+
 # 沙箱调试探针遗留（0o700/0o600 权限位导致当前环境无法删除）
 backend/_m700
 backend/_probe3

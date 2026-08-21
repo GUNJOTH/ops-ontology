@@ -3,11 +3,33 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.auth import require_decision_auth
 from app.core.db import unified_semantics_connection
+from app.schemas.semantic import (
+    KnowledgeCaseRequest,
+    KnowledgeExtractionRequest,
+    KnowledgeImportRequest,
+    KnowledgeReleaseRequest,
+    KnowledgeReplayRequest,
+    KnowledgeReviewRequest,
+)
 
-from .service import knowledge_asset_row
+from .service import (
+    build_case_knowledge,
+    detect_knowledge_conflicts_payload,
+    extract_knowledge_candidate,
+    import_knowledge_document_payload,
+    knowledge_asset_evidence_payload,
+    knowledge_asset_row,
+    knowledge_asset_versions_payload,
+    knowledge_for_object_payload,
+    release_knowledge_assets,
+    replay_knowledge_payload,
+    retrieve_knowledge_payload,
+    review_knowledge_asset,
+)
 
 
 def knowledge_asset_summary() -> dict[str, Any]:
@@ -71,7 +93,11 @@ def knowledge_assets(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
     search: str | None = None,
-    asset_type: Literal["all", "rule", "terminology", "evaluation_case", "definition"] = "all",
+    asset_type: Literal[
+        "all", "document", "standard", "rule", "sop", "case", "expert", "fragment",
+        "terminology", "evaluation_case", "definition",
+    ] = "all",
+    knowledge_kind: str | None = Query(default=None, alias="knowledgeKind", max_length=80),
     status: str | None = None,
 ) -> dict[str, Any]:
     connection = unified_semantics_connection()
@@ -81,6 +107,9 @@ def knowledge_assets(
         if asset_type != "all":
             where.append("asset_type=?")
             parameters.append(asset_type)
+        if knowledge_kind and knowledge_kind.strip():
+            where.append("knowledge_kind=?")
+            parameters.append(knowledge_kind.strip())
         if status and status.strip():
             where.append("status=?")
             parameters.append(status.strip())
@@ -190,10 +219,117 @@ def knowledge_asset_detail(asset_id: str) -> dict[str, Any]:
         connection.close()
 
 
+def knowledge_asset_evidence(asset_id: str) -> dict[str, Any]:
+    connection = unified_semantics_connection()
+    try:
+        try:
+            return knowledge_asset_evidence_payload(connection, asset_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        connection.close()
+
+
+def knowledge_asset_versions(asset_id: str) -> dict[str, Any]:
+    connection = unified_semantics_connection()
+    try:
+        try:
+            return knowledge_asset_versions_payload(connection, asset_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        connection.close()
+
+
+def semantic_object_knowledge(object_type: str, object_key: str) -> dict[str, Any]:
+    connection = unified_semantics_connection()
+    try:
+        return knowledge_for_object_payload(connection, object_type, object_key)
+    finally:
+        connection.close()
+
+
+def semantic_knowledge_import(request: KnowledgeImportRequest, _: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    try:
+        return import_knowledge_document_payload(request)
+    except (FileNotFoundError, PermissionError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def semantic_knowledge_extract(asset_id: str, request: KnowledgeExtractionRequest, _: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    if asset_id != request.fragment_id:
+        raise HTTPException(status_code=400, detail="路径 asset_id 必须与 fragmentId 一致")
+    try:
+        return extract_knowledge_candidate(request)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+def semantic_knowledge_case(request: KnowledgeCaseRequest, _: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    try:
+        return build_case_knowledge(request)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+def semantic_knowledge_review(asset_id: str, request: KnowledgeReviewRequest, actor: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    try:
+        return review_knowledge_asset(asset_id, request, actor)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def semantic_knowledge_release(request: KnowledgeReleaseRequest, _: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    return release_knowledge_assets(request)
+
+
+def semantic_knowledge_conflicts(_: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    return detect_knowledge_conflicts_payload()
+
+
+def semantic_knowledge_replay(asset_id: str, request: KnowledgeReplayRequest, _: str = Depends(require_decision_auth)) -> dict[str, Any]:
+    try:
+        return replay_knowledge_payload(asset_id, request.cases)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+def semantic_knowledge_retrieve(
+    query: str = Query(default="", max_length=1000),
+    object_type: str | None = Query(default=None, alias="objectType", max_length=100),
+    object_key: str | None = Query(default=None, alias="objectKey", max_length=300),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> dict[str, Any]:
+    connection = unified_semantics_connection()
+    try:
+        return retrieve_knowledge_payload(connection, query=query, object_type=object_type, object_key=object_key, limit=limit)
+    finally:
+        connection.close()
+
+
 
 def build_router() -> APIRouter:
     router = APIRouter()
     router.add_api_route("/api/knowledge-assets/summary", knowledge_asset_summary, methods=["GET"])
     router.add_api_route("/api/knowledge-assets", knowledge_assets, methods=["GET"])
     router.add_api_route("/api/knowledge-assets/{asset_id}", knowledge_asset_detail, methods=["GET"])
+    router.add_api_route("/api/knowledge-assets/{asset_id}/evidence", knowledge_asset_evidence, methods=["GET"])
+    router.add_api_route("/api/knowledge-assets/{asset_id}/versions", knowledge_asset_versions, methods=["GET"])
+    # V3 aliases expose the same read-only registry without creating a second
+    # knowledge store or a second lifecycle implementation.
+    router.add_api_route("/api/semantic/knowledge", knowledge_assets, methods=["GET"])
+    router.add_api_route("/api/semantic/knowledge/{asset_id}", knowledge_asset_detail, methods=["GET"])
+    router.add_api_route("/api/semantic/knowledge/{asset_id}/evidence", knowledge_asset_evidence, methods=["GET"])
+    router.add_api_route("/api/semantic/knowledge/{asset_id}/versions", knowledge_asset_versions, methods=["GET"])
+    router.add_api_route("/api/semantic/object/{object_type}/{object_key}/knowledge", semantic_object_knowledge, methods=["GET"])
+    router.add_api_route("/api/semantic/knowledge/import", semantic_knowledge_import, methods=["POST"])
+    router.add_api_route("/api/semantic/knowledge/cases", semantic_knowledge_case, methods=["POST"])
+    router.add_api_route("/api/semantic/knowledge/releases", semantic_knowledge_release, methods=["POST"])
+    router.add_api_route("/api/semantic/knowledge/conflicts/detect", semantic_knowledge_conflicts, methods=["POST"])
+    router.add_api_route("/api/semantic/knowledge/retrieve", semantic_knowledge_retrieve, methods=["GET"])
+    router.add_api_route("/api/semantic/knowledge/{asset_id}/extract", semantic_knowledge_extract, methods=["POST"])
+    router.add_api_route("/api/semantic/knowledge/{asset_id}/review", semantic_knowledge_review, methods=["POST"])
+    router.add_api_route("/api/semantic/knowledge/{asset_id}/replay", semantic_knowledge_replay, methods=["POST"])
     return router

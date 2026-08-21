@@ -145,6 +145,10 @@ def rollback(version: str) -> dict[str, object]:
     registry["activeVersion"] = version
     for item in registry.get("versions", []):
         item["status"] = "active" if item["version"] == version else "available"
+    for migration in registry.get("migrations", []):
+        if migration.get("toVersion") == previous and migration.get("status") == "activated":
+            migration["status"] = "rolled_back"
+            migration["rolledBackAt"] = now()
     registry["updatedAt"] = now()
     save_registry(registry)
     return {"status": "rolled_back_pointer", "fromVersion": previous, "activeVersion": version, "sourceWrite": False, "formalPublication": False}
@@ -164,6 +168,11 @@ def activate(version: str, verification_path: Path) -> dict[str, object]:
         item["status"] = "active" if item["version"] == version else "available"
         if item["version"] == version:
             item["activatedAt"] = now()
+    for migration in registry.get("migrations", []):
+        if migration.get("toVersion") == version:
+            migration["status"] = "activated"
+            migration["activatedAt"] = now()
+            migration["verification"] = str(verification_path)
     registry["updatedAt"] = now()
     save_registry(registry)
     return {"status": "activated", "fromVersion": previous, "activeVersion": version, "verification": str(verification_path), "sourceWrite": False, "formalPublication": False}

@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 from app.core.config import METADATA_SQLITE_DB
 from app.main import metadata_catalog, metadata_catalog_detail, metadata_export, metadata_summary
+from fastapi import HTTPException
 
 pytestmark = pytest.mark.api
 
@@ -37,7 +38,10 @@ def test_metadata_catalog_smoke() -> None:
 def test_metadata_catalog_detail_smoke() -> None:
     catalog = metadata_catalog(page=1, page_size=1)
     if not catalog["items"]:
-        pytest.skip("元数据目录为空")
+        with pytest.raises(HTTPException) as error:
+            metadata_catalog_detail("__empty_catalog_smoke__")
+        assert error.value.status_code == 404
+        return
     semantic_id = catalog["items"][0]["semanticId"]
     detail = metadata_catalog_detail(semantic_id)
     assert detail["item"]["semanticId"] == semantic_id

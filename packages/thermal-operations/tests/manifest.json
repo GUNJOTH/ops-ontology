@@ -1,0 +1,1 @@
+{"schemaVersion":"semantic-package-tests-v2","packageId":"thermal-operations","tests":["system/tests/test_ontology_standard_contract.py","sparql/manifest.json"]}

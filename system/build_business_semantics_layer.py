@@ -15,6 +15,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from pipeline.contracts import connect_local, connect_readonly
+from pipeline.knowledge_runtime import ensure_knowledge_columns, storage_to_lifecycle
 from semantic_registry import canonical_relation_key, object_class_local_name
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -69,12 +70,28 @@ def init_layer(target: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS knowledge_asset (
           asset_id TEXT PRIMARY KEY,
           asset_key TEXT NOT NULL UNIQUE,
-          asset_type TEXT NOT NULL CHECK (asset_type IN ('rule','terminology','evaluation_case','definition')),
+          asset_type TEXT NOT NULL CHECK (asset_type IN ('document','standard','rule','sop','case','expert','fragment','terminology','evaluation_case','definition')),
           title TEXT NOT NULL,
           canonical_definition TEXT NOT NULL DEFAULT '',
           current_version TEXT NOT NULL,
-          status TEXT NOT NULL CHECK (status IN ('registered','draft','proposed','replayed','approved','enabled','retired','blocked','needs_review')),
+          status TEXT NOT NULL CHECK (status IN ('registered','draft','proposed','replayed','approved','published','enabled','retired','deprecated','archived','blocked','needs_review')),
           source_scope TEXT NOT NULL,
+          knowledge_kind TEXT NOT NULL DEFAULT 'legacy',
+          package_id TEXT NOT NULL DEFAULT 'platform-core',
+          knowledge_domain TEXT NOT NULL DEFAULT 'enterprise-operations',
+          source_type TEXT,
+          source_id TEXT,
+          source_uri TEXT,
+          owner TEXT,
+          reviewer TEXT,
+          confidence REAL,
+          valid_from TEXT,
+          valid_to TEXT,
+          ontology_version TEXT,
+          quality_score REAL,
+          lifecycle_status TEXT NOT NULL DEFAULT 'Draft',
+          published_at TEXT,
+          deprecated_at TEXT,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         );
@@ -91,6 +108,12 @@ def init_layer(target: sqlite3.Connection) -> None:
           replay_fail_count INTEGER NOT NULL DEFAULT 0,
           source_workflow_id TEXT,
           replay_id TEXT,
+          ontology_version TEXT,
+          extraction_model TEXT,
+          prompt_version TEXT,
+          valid_from TEXT,
+          valid_to TEXT,
+          release_id TEXT,
           created_at TEXT NOT NULL,
           UNIQUE(asset_id,version)
         );
@@ -113,6 +136,11 @@ def init_layer(target: sqlite3.Connection) -> None:
           source_snapshot_id TEXT,
           source_status TEXT,
           evidence_json TEXT NOT NULL,
+          source_uri TEXT,
+          provenance_role TEXT,
+          page_number INTEGER,
+          section_path TEXT,
+          fragment_hash TEXT,
           created_at TEXT NOT NULL,
           UNIQUE(asset_id,source_kind,source_record_id)
         );
@@ -124,6 +152,9 @@ def init_layer(target: sqlite3.Connection) -> None:
           relation_type TEXT NOT NULL,
           status TEXT NOT NULL CHECK (status IN ('accepted','needs_review','blocked')),
           evidence_json TEXT NOT NULL,
+          target_iri TEXT,
+          package_id TEXT,
+          ontology_version TEXT,
           created_at TEXT NOT NULL,
           UNIQUE(asset_id,object_type,object_key,relation_type)
         );
@@ -134,6 +165,7 @@ def init_layer(target: sqlite3.Connection) -> None:
           severity TEXT NOT NULL CHECK (severity IN ('low','medium','high')),
           status TEXT NOT NULL CHECK (status IN ('open','resolved','ignored')),
           details_json TEXT NOT NULL,
+          conflict_key TEXT,
           created_at TEXT NOT NULL,
           resolved_at TEXT
         );
@@ -176,6 +208,7 @@ def init_layer(target: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS ix_business_object_relation_object ON business_object_relation(object_type,object_key,status);
         """
     )
+    ensure_knowledge_columns(target)
     columns = {row[1] for row in target.execute("PRAGMA table_info(business_object_type)").fetchall()}
     if "parent_object_type" not in columns:
         target.execute("ALTER TABLE business_object_type ADD COLUMN parent_object_type TEXT")
@@ -190,13 +223,19 @@ def upsert_asset(target: sqlite3.Connection, asset_key: str, asset_type: str, ti
     target.execute(
         """
         INSERT INTO knowledge_asset(asset_id,asset_key,asset_type,title,canonical_definition,
-          current_version,status,source_scope,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?)
+          current_version,status,source_scope,knowledge_kind,package_id,knowledge_domain,source_type,source_id,
+          lifecycle_status,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(asset_key) DO UPDATE SET title=excluded.title,
           canonical_definition=excluded.canonical_definition,current_version=excluded.current_version,
-          status=excluded.status,updated_at=excluded.updated_at
+          status=excluded.status,knowledge_kind=excluded.knowledge_kind,package_id=excluded.package_id,
+          knowledge_domain=excluded.knowledge_domain,source_type=excluded.source_type,source_id=excluded.source_id,
+          lifecycle_status=excluded.lifecycle_status,updated_at=excluded.updated_at
         """,
-        (asset_id, asset_key, asset_type, title, str(definition.get("canonical", "")), version, status, scope, now, now),
+        (asset_id, asset_key, asset_type, title, str(definition.get("canonical", "")), version, status, scope,
+         str(definition.get("knowledge_kind") or asset_type), str(definition.get("package_id") or "platform-core"),
+         str(definition.get("domain") or "enterprise-operations"), str(definition.get("source_type") or "registry"),
+         str(definition.get("source_id") or asset_key), storage_to_lifecycle(status), now, now),
     )
     return asset_id
 

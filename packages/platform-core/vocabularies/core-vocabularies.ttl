@@ -1,0 +1,66 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+ex:UnitScheme a skos:ConceptScheme ;
+  skos:prefLabel "计量单位词表"@zh ;
+  skos:notation "unit-v1" .
+
+ex:unit-C a skos:Concept ; skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "摄氏度"@zh ; skos:altLabel "°C"@en ; skos:notation "C" .
+ex:unit-kV a skos:Concept ; skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "千伏"@zh ; skos:notation "kV" .
+ex:unit-A a skos:Concept ; skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "安培"@zh ; skos:notation "A" .
+ex:unit-bar a skos:Concept ; skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "巴"@zh ; skos:notation "bar" .
+ex:unit-percent a skos:Concept ; skos:inScheme ex:UnitScheme ;
+  skos:prefLabel "百分比"@zh ; skos:notation "%" .
+
+ex:TerminologyScheme a skos:ConceptScheme ;
+  skos:prefLabel "运维术语词表"@zh ;
+  skos:notation "operations-terminology-v1" .
+
+ex:term-rule-defect-repeated a skos:Concept ; skos:inScheme ex:TerminologyScheme ;
+  skos:prefLabel "重复缺陷事实"@zh ; skos:notation "defect.repeated" ;
+  skos:definition "repeated_defect"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+ex:term-rule-defect-severe a skos:Concept ; skos:inScheme ex:TerminologyScheme ;
+  skos:prefLabel "严重缺陷事实"@zh ; skos:notation "defect.severe" ;
+  skos:definition "severe_defect"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+ex:term-rule-history-statistic a skos:Concept ; skos:inScheme ex:TerminologyScheme ;
+  skos:prefLabel "缺陷历史统计事实"@zh ; skos:notation "history.statistic" ;
+  skos:definition "history_stat"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+ex:term-rule-measurement-temperature a skos:Concept ; skos:inScheme ex:TerminologyScheme ;
+  skos:prefLabel "温度测量事实"@zh ; skos:notation "measurement.temperature" ;
+  skos:definition "measurement"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+ex:term-rule-risk-assessment a skos:Concept ; skos:inScheme ex:TerminologyScheme ;
+  skos:prefLabel "风险评估事实"@zh ; skos:notation "risk.assessment" ;
+  skos:definition "risk_assessment"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+ex:term-rule-trend-measurement a skos:Concept ; skos:inScheme ex:TerminologyScheme ;
+  skos:prefLabel "测量趋势事实"@zh ; skos:notation "trend.measurement" ;
+  skos:definition "trend"@en ; ex:vocabularyVersion "operations-terminology-v1" .
+
+ex:KnowledgeLifecycleScheme a skos:ConceptScheme ;
+  skos:prefLabel "知识生命周期词表"@zh ; skos:notation "knowledge-lifecycle-v1" .
+ex:knowledge-draft a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "草稿"@zh ; skos:notation "Draft" .
+ex:knowledge-candidate a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "候选"@zh ; skos:notation "Candidate" .
+ex:knowledge-under-review a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "审核中"@zh ; skos:notation "UnderReview" .
+ex:knowledge-approved a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "已批准"@zh ; skos:notation "Approved" .
+ex:knowledge-published a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "已发布"@zh ; skos:notation "Published" .
+ex:knowledge-deprecated a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "已废止"@zh ; skos:notation "Deprecated" .
+ex:knowledge-archived a skos:Concept ; skos:inScheme ex:KnowledgeLifecycleScheme ;
+  skos:prefLabel "已归档"@zh ; skos:notation "Archived" .
+
+ex:KnowledgeConflictScheme a skos:ConceptScheme ;
+  skos:prefLabel "知识冲突类型词表"@zh ; skos:notation "knowledge-conflict-v1" .
+ex:conflict-value a skos:Concept ; skos:inScheme ex:KnowledgeConflictScheme ;
+  skos:prefLabel "值冲突"@zh ; skos:notation "value_conflict" .
+ex:conflict-scope a skos:Concept ; skos:inScheme ex:KnowledgeConflictScheme ;
+  skos:prefLabel "适用范围冲突"@zh ; skos:notation "scope_conflict" .
+ex:conflict-version a skos:Concept ; skos:inScheme ex:KnowledgeConflictScheme ;
+  skos:prefLabel "版本冲突"@zh ; skos:notation "version_conflict" .

@@ -10,6 +10,9 @@ SYSTEM_ROOT = PROJECT_ROOT / "system"
 DATA_DIR = SYSTEM_ROOT / "data"
 DEPENDENCY_DIR = BACKEND_ROOT / ".deps"
 IDENTITY_RESULT_ROOT = PROJECT_ROOT / "pilots" / "identity" / "results"
+KNOWLEDGE_INPUT_DIR = Path(
+    os.getenv("KNOWLEDGE_INPUT_DIR", str(PROJECT_ROOT / "pilots" / "knowledge" / "input"))
+)
 
 
 def load_local_env(path: Path) -> None:
@@ -44,7 +47,7 @@ load_local_env(BACKEND_ROOT / ".env")
 
 UNIFIED_SEMANTICS_DB = DATA_DIR / "unified_semantics.sqlite3"
 CANONICAL_SEMANTICS_DB = DATA_DIR / "canonical_semantic.sqlite3"
-SEMANTIC_CONTEXT_FILE = PROJECT_ROOT / "standards" / "context.jsonld"
+SEMANTIC_CONTEXT_FILE = PROJECT_ROOT / "standards" / "v2" / "context.jsonld"
 SQLITE_DB = DATA_DIR / "semantic_workflow.sqlite3"
 DUCKDB_DB = DATA_DIR / "semantic_analytics_v155.duckdb"
 METADATA_RESULT_DIR = Path(
@@ -71,4 +74,3 @@ RULE_AGENT_THINKING = os.getenv("RULE_AGENT_THINKING", "disabled").strip().lower
 RULE_AGENT_MAX_ATTEMPTS = max(1, min(3, int(os.getenv("RULE_AGENT_MAX_ATTEMPTS", "2"))))
 RULE_AGENT_RETRY_BACKOFF = max(0.0, min(5.0, float(os.getenv("RULE_AGENT_RETRY_BACKOFF", "1"))))
 RULE_AGENT_CATALOG_VERSION = "rule-agent-local-catalog-20260814-v1"
-
