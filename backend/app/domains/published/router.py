@@ -1,11 +1,15 @@
-﻿"""Published description routes (native APIRouter)."""
+"""Published description routes (native APIRouter)."""
 from __future__ import annotations
 
 from fastapi import APIRouter
 
 
 def build_router() -> APIRouter:
-    from app.main import published, published_detail, published_export_before_detail
+    from app.domains.published.service import (
+        published,
+        published_detail,
+        published_export_before_detail,
+    )
 
     router = APIRouter()
     router.add_api_route("/api/published", published, methods=["GET"])
