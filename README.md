@@ -146,3 +146,9 @@ python system\diagnose_governance_backlog.py
 闭环编排使用 `system/pipelines/semantic_closure.json` 作为步骤依赖的单一事实源；`run_semantic_closure.py` 只是兼容入口。后续脚本迁移应复用 `system/pipeline/`，不再复制 SQLite 只读连接、manifest、幂等键和安全标志样板。
 
 本体运行层页面入口：`/semantic-events`、`/semantic-facts`、`/ontology-runtime`、`/decisions`。其中 `/ontology-runtime` 展示元模型注册表和待复核缺口，`/decisions` 展示规则判断、行动计划和审批凭据；当前行动批准不会调用源系统。
+## 项目治理入口
+
+- [治理约定](./GOVERNANCE.md)
+- [贡献指南](./CONTRIBUTING.md)
+- [安全策略](./SECURITY.md)
+- Issue 与 Pull Request 请使用仓库模板，并记录实际验证证据。
