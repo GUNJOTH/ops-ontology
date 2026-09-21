@@ -1,4 +1,4 @@
 # 测试专用依赖（与运行时依赖一样安装到 backend/.deps）：
 #   uv pip install --target .deps -r requirements-dev.txt
-pytest>=8,<10
+pytest>=9.1.1,<10
 pytest-cov>=6,<8
