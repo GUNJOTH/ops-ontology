@@ -16,7 +16,6 @@ from pathlib import Path
 
 from pipeline.contracts import connect_readonly
 
-
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"

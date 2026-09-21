@@ -16,7 +16,7 @@ DATA_DIR = ROOT / "data"
 DUCKDB_DB = DATA_DIR / "semantic_analytics.duckdb"
 INPUT_ALIAS_DIR = DATA_DIR / "input_alias"
 INPUT_ALIAS = INPUT_ALIAS_DIR / "semantic_candidates.csv"
-DEPENDENCY_DIR = ROOT / ".deps_latest"
+DEPENDENCY_DIR = SEMANTIC_ROOT / "backend" / ".deps"
 
 
 def sha256(path: Path) -> str:
@@ -78,4 +78,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="build-duckdb-native",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=main,
+        )
+    )

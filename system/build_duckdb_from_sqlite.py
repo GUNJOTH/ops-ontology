@@ -15,12 +15,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pipeline.contracts import connect_readonly
+
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 SQLITE_DB = DATA_DIR / "semantic_workflow.sqlite3"
 DEFAULT_OUTPUT = DATA_DIR / "semantic_analytics_v155.rebuilt.duckdb"
 DEFAULT_MANIFEST = DATA_DIR / "duckdb_baseline_manifest.json"
-DEPENDENCY_DIRS = (ROOT / ".deps_latest", ROOT / ".deps_121", ROOT / ".deps")
+DEPENDENCY_DIRS = (ROOT.parent / "backend" / ".deps",)
 
 FACT_COLUMNS = (
     "CANDIDATE_ID", "SOURCE_SNAPSHOT_ID", "SOURCE_ROW_HASH", "ASSETID",
@@ -59,7 +61,7 @@ def load_duckdb():
 def sqlite_readonly() -> sqlite3.Connection:
     if not SQLITE_DB.exists():
         raise SystemExit(f"SQLite 不存在: {SQLITE_DB}")
-    connection = sqlite3.connect(f"file:{SQLITE_DB}?mode=ro", uri=True)
+    connection = connect_readonly(SQLITE_DB)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA query_only=ON")
     return connection

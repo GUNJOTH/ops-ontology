@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-
 from app.core.tx import begin_write, commit_write, write_transaction
 
 pytestmark = pytest.mark.unit

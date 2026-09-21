@@ -7,22 +7,27 @@ identity checks pass. A SQLite and DuckDB backup is created before mutation.
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import re
-import shutil
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from common import (
+    DEFAULT_DUCKDB,
+    DEFAULT_WORKFLOW,
+    backup_before_publish,
+    sha256_bytes,
+    sha256_file,
+    utc_now,
+)
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
-DATA_DIR = ROOT / "data"
-DB = DATA_DIR / "semantic_workflow.sqlite3"
-DUCKDB = DATA_DIR / "semantic_analytics_v155.duckdb"
-DUCKDB_WAL = DATA_DIR / "semantic_analytics_v155.duckdb.wal"
+DB = DEFAULT_WORKFLOW
+DUCKDB = DEFAULT_DUCKDB
+DUCKDB_WAL = Path(str(DEFAULT_DUCKDB) + ".wal")
 PREVIEW_DIR = PROJECT_ROOT / "pilots" / "HD_SAAS" / "next_deterministic_preview"
 PREVIEW_CSV = PREVIEW_DIR / "rewrite_preview.csv"
 SAMPLE_CSV = PREVIEW_DIR / "sample_200.csv"
@@ -41,22 +46,6 @@ RULE_KEYS = (
     "format.fullwidth_hyphen_minus_to_ascii",
 )
 PUBLISHER = "local-user-confirmed-next-deterministic-batch"
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
 
 
 def transform(value: str) -> str:
@@ -78,33 +67,6 @@ def rule_keys_for(value: str) -> list[str]:
     if "－" in value:
         keys.append("format.fullwidth_hyphen_minus_to_ascii")
     return keys
-
-
-def backup_before_publish(connection: sqlite3.Connection, stamp: str) -> tuple[Path, list[Path]]:
-    backup_dir = ROOT / "backups" / f"next-deterministic-publication-pre-{stamp}"
-    backup_dir.mkdir(parents=True, exist_ok=False)
-    sqlite_backup = backup_dir / DB.name
-    backup_connection = sqlite3.connect(str(sqlite_backup))
-    connection.backup(backup_connection)
-    backup_connection.close()
-    files = [sqlite_backup]
-    if DUCKDB.exists():
-        duckdb_backup = backup_dir / DUCKDB.name
-        shutil.copy2(DUCKDB, duckdb_backup)
-        files.append(duckdb_backup)
-    if DUCKDB_WAL.exists():
-        wal_backup = backup_dir / DUCKDB_WAL.name
-        shutil.copy2(DUCKDB_WAL, wal_backup)
-        files.append(wal_backup)
-    manifest = {
-        "status": "pre_publication_backup",
-        "created_at_utc": utc_now(),
-        "files": [{"path": str(path), "size": path.stat().st_size} for path in files],
-        "source_write": False,
-        "formal_publication": False,
-    }
-    (backup_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    return backup_dir, files
 
 
 def load_preview() -> tuple[dict[str, object], dict[str, object], list[dict[str, str]], list[dict[str, str]]]:
@@ -195,7 +157,12 @@ def main() -> None:
             raise SystemExit(f"Existing review blocks fresh batch approval: {candidate_id}")
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_dir, backup_files = backup_before_publish(connection, stamp)
+    backup_dir, backup_files = backup_before_publish(
+        connection,
+        "next-deterministic-publication",
+        stamp,
+        (DUCKDB, DUCKDB_WAL),
+    )
     now = utc_now()
     publication_run_id = f"next-deterministic-publication-{uuid.uuid4().hex}"
     approval_batch_id = f"next-deterministic-approval-{uuid.uuid4().hex}"

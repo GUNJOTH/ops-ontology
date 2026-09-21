@@ -7,6 +7,7 @@ import shutil
 import sqlite3
 import sys
 
+from pipeline.contracts import connect_local
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SOURCE_DB = ROOT / "data" / "unified_semantics.sqlite3"
@@ -48,7 +49,7 @@ def verify() -> dict[str, object]:
     import execute_state_transitions as replay_runtime
 
     subject = "FIXTURE-DEVICE-001"
-    db = sqlite3.connect(str(target))
+    db = connect_local(target)
     try:
         # Insert in reverse time order to prove replay does not use fact_id order.
         insert_fact(db, "FIXTURE-CLOSED", subject, "CLOSED", "defect_acceptance", "2024-01-05T00:00:00+00:00", "2024-01-05T00:01:00+00:00", acceptance_pass=True)
@@ -63,7 +64,7 @@ def verify() -> dict[str, object]:
         db.close()
 
     result = replay_runtime.execute(target, "device", subject)
-    db = sqlite3.connect(str(target))
+    db = connect_local(target)
     try:
         states = db.execute(
             "SELECT current_state FROM semantic_current_state WHERE subject_type='device' AND subject_key=? AND state_domain='DEFECT'",
@@ -97,7 +98,7 @@ def verify() -> dict[str, object]:
     # evidence.  This is the formal-snapshot case used by the current local
     # overlay; it must not be mistaken for an arbitrary status transition.
     snapshot_subject = "FIXTURE-SNAPSHOT-001"
-    db = sqlite3.connect(str(target))
+    db = connect_local(target)
     try:
         insert_fact(db, "FIXTURE-SNAPSHOT-CLOSED", snapshot_subject, "CLOSED", "defect", "2024-02-01T00:00:00+00:00", "2024-02-01T00:01:00+00:00")
         db.execute(
@@ -108,7 +109,7 @@ def verify() -> dict[str, object]:
     finally:
         db.close()
     snapshot_result = replay_runtime.execute(target, "device", snapshot_subject)
-    db = sqlite3.connect(str(target))
+    db = connect_local(target)
     try:
         snapshot_state = db.execute(
             "SELECT current_state,status FROM semantic_current_state WHERE subject_type='device' AND subject_key=? AND state_domain='DEFECT'",

@@ -6,7 +6,6 @@ import json
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 BACKEND_ROOT = PROJECT_ROOT / "backend"
@@ -14,8 +13,8 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.core.semantic_release import (  # noqa: E402
-    approve_release,
     activate_release,
+    approve_release,
     backup_release,
     prepare_release,
     restore_backup,

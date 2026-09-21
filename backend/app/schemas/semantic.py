@@ -74,3 +74,74 @@ class SemanticIdentityReviewRequest(BaseModel):
 class CanonicalSparqlRequest(BaseModel):
     query: str = Field(min_length=1, max_length=20000)
 
+
+class SemanticContextBuildRequest(BaseModel):
+    """Bounded request for an ontology-guided Agent context."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    object_type: str = Field(alias="objectType", min_length=1, max_length=100)
+    canonical_key: str = Field(alias="canonicalKey", min_length=1, max_length=300)
+    task: str = Field(default="", max_length=300)
+    question: str = Field(default="", max_length=2000)
+    time_from: str | None = Field(default=None, alias="timeFrom", max_length=80)
+    time_to: str | None = Field(default=None, alias="timeTo", max_length=80)
+    limit: int = Field(default=50, ge=1, le=200)
+
+
+class KnowledgeImportRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    source_path: str = Field(alias="sourcePath", min_length=1, max_length=1000)
+    package_id: str = Field(default="platform-core", alias="packageId", max_length=120)
+    domain: str = Field(default="enterprise-operations", max_length=200)
+    source_snapshot_id: str = Field(default="local-document-import", alias="sourceSnapshotId", max_length=200)
+    owner: str = Field(default="", max_length=100)
+
+
+class KnowledgeExtractionRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    fragment_id: str = Field(alias="fragmentId", min_length=1, max_length=200)
+    use_ai: bool = Field(default=True, alias="useAi")
+    prompt_version: str = Field(default="knowledge-extraction-v1", alias="promptVersion", max_length=100)
+
+
+class KnowledgeCaseRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    title: str = Field(min_length=1, max_length=500)
+    source_fragment_id: str = Field(alias="sourceFragmentId", min_length=1, max_length=200)
+    definition: dict[str, Any] = Field(min_length=1)
+    package_id: str = Field(default="platform-core", alias="packageId", max_length=120)
+    domain: str = Field(default="enterprise-operations", max_length=200)
+
+
+class KnowledgeReviewRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    decision: Literal["approved", "rejected"]
+    reviewer: str = Field(default="人工审核", max_length=100)
+    note: str = Field(default="", max_length=1000)
+    idempotency_key: str = Field(alias="idempotencyKey", min_length=3, max_length=200)
+
+
+class KnowledgeReleaseRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    release_id: str = Field(alias="releaseId", min_length=3, max_length=200)
+    reviewer: str = Field(default="人工审核", max_length=100)
+    note: str = Field(default="", max_length=1000)
+
+
+class KnowledgeReplayRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    cases: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+
+
+class AgentSemanticValidationRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    context: dict[str, Any]
+    result: dict[str, Any]

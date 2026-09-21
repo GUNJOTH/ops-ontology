@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-
 from app.main import ensure_cleaning_schema
 from app.migrations.workflow_schema import migrate_workflow_schema
 

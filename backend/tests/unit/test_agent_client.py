@@ -7,7 +7,6 @@ from __future__ import annotations
 import json
 
 import pytest
-
 from app.agent.client import (
     RuleAgentCallError,
     invoke_rule_agent_completion,

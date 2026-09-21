@@ -8,7 +8,6 @@ from __future__ import annotations
 import sqlite3
 from typing import Any
 
-
 METADATA_EXPORT_FIELDS = (
     "semantic_id", "dictionary_version", "concept_type", "semantic_key", "canonical_name",
     "semantic_label_candidate", "description", "data_type", "length", "required", "domain_id",

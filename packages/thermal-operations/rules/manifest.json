@@ -1,0 +1,1 @@
+{"schemaVersion":"semantic-package-rules-v2","packageId":"thermal-operations","entries":["defect-status","event-state-transition"],"source":"system/semantic_registry.py"}

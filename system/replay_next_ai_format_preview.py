@@ -6,8 +6,10 @@ import hashlib
 import json
 import sqlite3
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
+
+from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -20,9 +22,6 @@ REPLAY_JSON = PREVIEW_DIR / "replay_manifest.json"
 RULE_VERSION = "ai-confirmed-format-preview-20260812-v1"
 SAFE_MAPPINGS = {"\ufe51": "\u3001", "\uff1b": ";", "\uff1c": "<", "\uff1e": ">"}
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def sha256(path: Path) -> str:
@@ -50,7 +49,7 @@ def main() -> None:
     if len(preview_rows) != 66 or len(preserve_rows) != 65:
         raise SystemExit(f"Preview count mismatch: {len(preview_rows)}/{len(preserve_rows)}")
 
-    connection = sqlite3.connect(str(DB))
+    connection = connect_local(str(DB))
     connection.row_factory = sqlite3.Row
     ids = [row["CANDIDATE_ID"] for row in preview_rows + preserve_rows]
     marks = ",".join("?" for _ in ids)

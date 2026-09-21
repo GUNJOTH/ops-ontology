@@ -4,9 +4,7 @@ from __future__ import annotations
 import json
 import pathlib
 import sqlite3
-from collections import defaultdict
 from datetime import datetime, timezone
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 WORKFLOW_DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -97,4 +95,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="diagnose-governance-backlog",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=main,
+        )
+    )

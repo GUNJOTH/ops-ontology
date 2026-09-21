@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "rdf-dataset-contract-v1",
+  "datasetType": "canonical-enterprise-operations",
+  "namespaceFile": "namespace.json",
+  "datasetNamespace": "https://semantic.local/graph/",
+  "baseSerialization": "TriG",
+  "interchangeSerialization": "JSON-LD 1.1",
+  "authority": "Canonical RDF Dataset",
+  "generatedBy": "system/build_canonical_semantic_model.py",
+  "runtimeStore": "system/data/canonical_semantic.sqlite3",
+  "namedGraphs": [
+    {
+      "kind": "ontology",
+      "iriPattern": "https://semantic.local/graph/ontology/{ontologyVersion}",
+      "sourceAssets": ["v2/ontology.ttl", "v2/vocabularies.ttl", "v2/enterprise-operations.shacl.ttl"]
+    },
+    {
+      "kind": "source",
+      "iriPattern": "https://semantic.local/graph/source/{sourceSnapshotId}",
+      "sourceAssets": ["read-only local semantic snapshot"]
+    },
+    {
+      "kind": "derived",
+      "iriPattern": "https://semantic.local/graph/derived/{projectionRunId}",
+      "sourceAssets": ["deterministic projection and Fact Builder output"]
+    },
+    {
+      "kind": "provenance",
+      "iriPattern": "https://semantic.local/graph/provenance/{projectionRunId}",
+      "sourceAssets": ["PROV-O compatible projection provenance"]
+    },
+    {
+      "kind": "inference",
+      "iriPattern": "https://semantic.local/graph/inference/{inferenceRunId}",
+      "sourceAssets": ["system/replay_owl_rl.py"]
+    }
+  ],
+  "invariants": [
+    "source and derived statements must have complete provenance",
+    "inference statements must be stored in a separate inference graph",
+    "source_write is always false",
+    "formal_publication is always false",
+    "source systems remain read-only"
+  ]
+}

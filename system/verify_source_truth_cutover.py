@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import json
 import pathlib
-import sqlite3
 import sys
 
+from pipeline.contracts import connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -32,8 +32,8 @@ def main() -> int:
     if identity_path is None or not CANONICAL_DB.exists():
         print(json.dumps({"status": "FAIL", "reason": "身份结果库或 Canonical RDF Dataset 不存在", "sourceWrite": False}, ensure_ascii=False, indent=2))
         return 1
-    identity = sqlite3.connect(f"file:{identity_path.resolve()}?mode=ro", uri=True)
-    canonical = sqlite3.connect(f"file:{CANONICAL_DB.resolve()}?mode=ro", uri=True)
+    identity = connect_readonly(identity_path.resolve())
+    canonical = connect_readonly(CANONICAL_DB.resolve())
     try:
         identity_count = int(identity.execute("SELECT count(*) FROM unified_device").fetchone()[0])
         run = canonical.execute(

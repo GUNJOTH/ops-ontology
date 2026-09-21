@@ -95,13 +95,65 @@ def create_duckdb(path: pathlib.Path, dictionary_csv: pathlib.Path, findings_csv
         connection.close()
 
 
+def create_empty_duckdb(path: pathlib.Path, dictionary_fields: list[str], finding_fields: list[str], version: str, loaded_at: str) -> int:
+    """Create an explicit empty baseline without inventing metadata rows."""
+    connection = duckdb.connect(str(path))
+    try:
+        dictionary_columns = ["semantic_id VARCHAR"] + [f"{quote_identifier(field)} VARCHAR" for field in dictionary_fields] + ["loaded_at VARCHAR"]
+        connection.execute(f"CREATE TABLE metadata_semantic_dictionary ({', '.join(dictionary_columns)})")
+        finding_columns = [f"{quote_identifier(field)} VARCHAR" for field in finding_fields]
+        connection.execute(f"CREATE TABLE metadata_validation_findings ({', '.join(finding_columns)})")
+        connection.execute("CREATE TABLE metadata_semantic_run (run_id VARCHAR, dictionary_version VARCHAR, row_count BIGINT, loaded_at VARCHAR, source_write BOOLEAN, formal_publication BOOLEAN)")
+        run_id = f"metadata-semantic-empty-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+        connection.execute("INSERT INTO metadata_semantic_run VALUES (?,?,?,?,?,?)", (run_id, version, 0, loaded_at, False, False))
+        connection.execute("CREATE INDEX ix_metadata_semantic_type_key ON metadata_semantic_dictionary(concept_type, semantic_key)")
+        connection.execute("CREATE INDEX ix_metadata_semantic_status ON metadata_semantic_dictionary(semantic_status, ai_category)")
+        connection.execute("CREATE INDEX ix_metadata_semantic_name ON metadata_semantic_dictionary(canonical_name)")
+        return 0
+    finally:
+        connection.close()
+
+
+def create_empty_layer(output_dir: pathlib.Path, version: str) -> dict[str, object]:
+    """Bootstrap a truthful zero-row local result layer for offline development."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    sqlite_path = output_dir / "metadata_semantics.sqlite3"
+    duckdb_path = output_dir / "metadata_semantics.duckdb"
+    if sqlite_path.exists() or duckdb_path.exists():
+        raise FileExistsError(f"元数据结果层已存在：{output_dir}")
+    dictionary_fields = [
+        "dictionary_version", "concept_type", "semantic_key", "canonical_name", "semantic_label_candidate",
+        "description", "data_type", "length", "required", "domain_id", "parent_or_table", "source_schemas",
+        "cross_schema_status", "ai_category", "ai_confidence", "ai_reason", "semantic_status", "evidence",
+    ]
+    finding_fields = ["finding_id", "finding_type", "concept_type", "semantic_key", "source_schema", "severity", "message"]
+    loaded_at = datetime.now(timezone.utc).isoformat()
+    sqlite_count = create_sqlite(sqlite_path, dictionary_fields, [], [], version, loaded_at)
+    duckdb_count = create_empty_duckdb(duckdb_path, dictionary_fields, finding_fields, version, loaded_at)
+    manifest = {
+        "run_id": output_dir.name, "generated_at": loaded_at, "status": "empty_baseline",
+        "dictionary_version": version, "input_validation_dir": None, "input_count": 0,
+        "sqlite_file": str(sqlite_path), "duckdb_file": str(duckdb_path), "sqlite_count": sqlite_count,
+        "duckdb_count": duckdb_count, "isolated_findings_loaded": 0,
+        "source_write": False, "formal_publication": False,
+        "note": "仅用于本地接口和测试，未伪造任何源系统元数据。",
+    }
+    (output_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    return manifest
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Load validated metadata semantic dictionary locally")
     parser.add_argument("--validation-dir", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--empty-baseline", action="store_true", help="建立无数据的本地基线，不伪造元数据")
+    parser.add_argument("--version", default="metadata-semantic-empty-v1")
     args = parser.parse_args()
     validation_dir = pathlib.Path(args.validation_dir).resolve()
     output_dir = pathlib.Path(args.output_dir).resolve()
+    if args.empty_baseline:
+        print(json.dumps(create_empty_layer(output_dir, args.version), ensure_ascii=False))
+        return
     output_dir.mkdir(parents=True, exist_ok=False)
     dictionary_path = validation_dir / "formal_ready_metadata_semantic_dictionary.csv"
     findings_path = validation_dir / "metadata_validation_findings.csv"

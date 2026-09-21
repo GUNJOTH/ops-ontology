@@ -11,9 +11,10 @@ import re
 import sqlite3
 import unicodedata
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 SQLITE_DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -28,9 +29,6 @@ SPACE_CASES = {
     "manual_normalization",
 }
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def deterministic_format_transform(value: str) -> str:
@@ -58,7 +56,7 @@ def replay_description(value: str, failure_type: str) -> str:
 
 
 def main() -> None:
-    connection = sqlite3.connect(SQLITE_DB, timeout=60)
+    connection = connect_local(SQLITE_DB, timeout=60)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     connection.execute("PRAGMA busy_timeout=60000")

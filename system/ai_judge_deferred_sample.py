@@ -16,7 +16,6 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"

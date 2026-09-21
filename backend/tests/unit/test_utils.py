@@ -5,7 +5,6 @@ import hashlib
 from datetime import datetime
 
 import pytest
-
 from app.core.utils import (
     decode_json_value,
     ontology_trace_id,

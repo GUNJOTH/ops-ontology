@@ -1,0 +1,1 @@
+{"schemaVersion":"semantic-package-events-v2","packageId":"thermal-operations","eventSource":"semantic_event","entries":["InspectionEvent","AbnormalInspectionEvent","DefectEvent","DefectCreatedEvent","DefectAcceptedEvent","DefectProcessingEvent","ResolutionEvent","DefectAcceptanceEvent","WorkOrderEvent","WorkPermitEvent","ObservationEvent","EscalationEvent"]}

@@ -1,0 +1,55 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://semantic.local/package/thermal-operations> a owl:Ontology ;
+  owl:imports <https://semantic.local/package/platform-core> ;
+  owl:versionIRI <https://semantic.local/package/thermal-operations/v1.0.0> .
+
+ex:Site a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Location a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:Device a owl:Class ; rdfs:subClassOf ex:PhysicalObject .
+ex:Inspection a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:AbnormalInspection a owl:Class ; rdfs:subClassOf ex:Inspection .
+ex:Defect a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:DefectResolution a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:WorkOrder a owl:Class ; rdfs:subClassOf ex:BusinessObject .
+ex:WorkPermit a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:InspectionEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:AbnormalInspectionEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:DefectEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:DefectCreatedEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:DefectAcceptedEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:DefectProcessingEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:ResolutionEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:DefectAcceptanceEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:WorkOrderEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:WorkPermitEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:ObservationEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:EscalationEvent a owl:Class ; rdfs:subClassOf ex:BusinessEvent .
+ex:RepeatedDefect a owl:Class ; rdfs:subClassOf ex:Fact .
+ex:SevereDefect a owl:Class ; rdfs:subClassOf ex:Fact .
+ex:LocationAssignment a owl:Class ; rdfs:subClassOf ex:RelationAssertion .
+
+ex:hasInspection a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Inspection .
+ex:hasDefect a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Defect .
+ex:hasWorkOrder a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:WorkOrder .
+ex:belongsToSite a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Site .
+ex:managedByTeam a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Team .
+ex:hasTreatmentWorkOrder a owl:ObjectProperty ; rdfs:domain ex:Defect ; rdfs:range ex:WorkOrder .
+ex:generatedFrom a owl:ObjectProperty ; rdfs:domain ex:Defect ; rdfs:range ex:AbnormalInspection .
+ex:resolvedBy a owl:ObjectProperty ; rdfs:domain ex:Defect ; rdfs:range ex:DefectResolution .
+ex:hasWorkPermit a owl:ObjectProperty ; rdfs:domain ex:WorkOrder ; rdfs:range ex:WorkPermit .
+ex:detectsDefect a owl:ObjectProperty ; rdfs:domain ex:Inspection ; rdfs:range ex:Defect .
+ex:locatedAt a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Location .
+ex:hasLocationAssignment a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:LocationAssignment .
+ex:assignmentDevice a owl:ObjectProperty ; rdfs:domain ex:LocationAssignment ; rdfs:range ex:Device .
+ex:assignmentLocation a owl:ObjectProperty ; rdfs:domain ex:LocationAssignment ; rdfs:range ex:Location .
+ex:hasEvent a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:BusinessEvent .
+ex:responsibleFor a owl:ObjectProperty ; rdfs:domain ex:Team ; rdfs:range ex:Device .
+ex:parentOf a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device .
+ex:childDevice a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device .
+ex:sameFunctionLocation a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device ; a owl:SymmetricProperty .
+ex:relatedTo a owl:ObjectProperty ; rdfs:domain ex:Device ; rdfs:range ex:Device .
+ex:governedByKnowledge a owl:ObjectProperty ; rdfs:domain ex:KnowledgeAsset ; rdfs:range ex:Device .
+ex:evaluatedByKnowledge a owl:ObjectProperty ; rdfs:domain ex:KnowledgeAsset ; rdfs:range ex:Device .

@@ -19,7 +19,6 @@ from datetime import datetime, timedelta, timezone
 
 from pipeline.contracts import connect_local
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 BUILDER_VERSION = "fact-builders-v1"

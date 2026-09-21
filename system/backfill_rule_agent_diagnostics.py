@@ -8,8 +8,6 @@ from __future__ import annotations
 import json
 import pathlib
 import sqlite3
-from datetime import datetime, timezone
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -68,4 +66,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="backfill-rule-agent-diagnostics",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=main,
+        )
+    )

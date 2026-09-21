@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "semantic-package-v2",
+  "id": "platform-core",
+  "version": "1.0.0",
+  "type": "platform-core",
+  "title": "Enterprise Semantic Platform Core",
+  "namespace": "https://semantic.local/package/platform-core/",
+  "ontologyNamespace": "https://semantic.local/ontology/",
+  "dependsOn": [],
+  "assets": {
+    "ontology": "ontology/core.ttl",
+    "shapes": "shapes/core.shacl.ttl",
+    "vocabularies": "vocabularies/core-vocabularies.ttl",
+    "context": "context.jsonld",
+    "mappings": "mappings/manifest.json",
+    "rules": "rules/manifest.json",
+    "events": "events/manifest.json",
+    "stateMachines": "state-machines/manifest.json",
+    "actions": "actions/manifest.json",
+    "tests": "tests/manifest.json"
+  },
+  "ownedClasses": [
+    "BusinessObject", "Assertion", "Organization", "Company", "Center", "Team",
+    "Specialty", "PhysicalObject", "BusinessEvent", "Fact", "SourceFact",
+    "DerivedFact", "FactValue", "RequiredFact", "ActionCondition", "ActionEffect",
+    "ExecutionState", "Knowledge", "Rule", "ActionPlan", "Action", "ActionExecution",
+    "ActionAdapter", "KnowledgeAsset", "BusinessKnowledge", "Standard", "SOP", "Risk",
+    "RuleDecision", "DocumentKnowledge", "CaseKnowledge", "ExpertKnowledge",
+    "KnowledgeFragment", "KnowledgeVersion", "KnowledgeConflict", "KnowledgeRelease",
+    "IdentityAssertion", "RelationAssertion", "CanonicalState", "HumanReview", "HumanReviewEvent"
+  ],
+  "ownedObjectProperties": [
+    "predicate", "targetObjectType", "relationSubject", "relationObject",
+    "relationPredicate", "hasSubject", "causes", "triggers", "resolves", "records",
+    "assertsIdentity", "hasFact", "hasFactValue", "hasPrecondition", "requiresFact",
+    "hasEffect", "hasExecutionState", "hasCurrentState", "matchedByRule", "governedBy",
+    "derivedFrom", "derivedFromFact", "hasKnowledgeVersion", "hasFragment",
+    "appliesToClass", "appliesToObject", "appliesToProperty", "relatedEvent",
+    "relatedState", "relatedFact", "relatedRule", "relatedAction", "derivedFromKnowledge",
+    "supportedBy", "approvedBy", "supersedes", "conflictsWith", "includedInRelease"
+  ],
+  "ownedDatatypeProperties": [
+    "canonicalKey", "displayName", "sourceNamespace", "sourceSnapshotId", "sourceRecordId",
+    "sourceSystem", "sourceSchema", "sourceTable", "confidence", "decisionMode",
+    "predicateLabel", "correlationId", "activityType", "evidenceJson", "derivationId",
+    "occurredAt", "recordedAt", "rawStatus", "description", "factType", "valueJson",
+    "payloadJson", "valueText", "valueNumber", "valueBoolean", "valueDateTime", "conditionKey",
+    "operator", "expectedValue", "requiredFactType", "requiredPredicate", "effectType",
+    "effectTarget", "effectValue", "stateCode", "stateOrder", "ruleVersion", "status",
+    "validFrom", "validTo", "vocabularyVersion", "stateDomain", "isTerminal", "unit",
+    "actionKey", "actionType", "targetKey", "reason", "riskLevel", "requiresApproval",
+    "sourceWrite", "formalPublication", "actionName", "businessMeaning", "actionVersion",
+    "allowedWhenJson", "requiredInputFactsJson", "permissionScopeJson", "adapterMappingsJson",
+    "effectsJson", "executionStatesJson", "packageId", "knowledgeDomain", "sourceType", "sourceId",
+    "sourceUri", "owner", "reviewer", "contentHash", "knowledgeVersion", "extractionModel", "promptVersion",
+    "pageNumber", "sectionPath", "qualityScore", "lifecycleStatus", "publishedAt", "deprecatedAt",
+    "conflictType", "conflictStatus"
+  ],
+  "sourceWrite": false,
+  "formalPublication": false
+}

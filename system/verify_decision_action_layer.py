@@ -7,13 +7,15 @@ changes the formal database or an upstream source system.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import pathlib
 import sqlite3
 import sys
-from datetime import datetime, timezone
 
+from common import sha256_file as digest
+from common import sid
+from common import utc_now as now
+from pipeline.contracts import connect_local, connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -22,28 +24,11 @@ VERIFY_ROOT = ROOT / "data" / ".verification"
 TARGET_DB = VERIFY_ROOT / "decision_action.test.sqlite3"
 
 
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def digest(path: pathlib.Path) -> str:
-    hasher = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
-
-
-def sid(prefix: str, *parts: object) -> str:
-    raw = "|".join("" if part is None else str(part) for part in parts)
-    return f"{prefix}-{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:24]}"
-
-
 def clone_source() -> None:
     VERIFY_ROOT.mkdir(parents=True, exist_ok=True)
     TARGET_DB.unlink(missing_ok=True)
-    source = sqlite3.connect(f"file:{SOURCE_DB.resolve()}?mode=ro", uri=True)
-    target = sqlite3.connect(str(TARGET_DB))
+    source = connect_readonly(SOURCE_DB.resolve())
+    target = connect_local(TARGET_DB)
     try:
         source.backup(target)
     finally:
@@ -131,17 +116,18 @@ def verify() -> dict[str, object]:
     clone_source()
     sys.path.insert(0, str(PROJECT_ROOT / "backend"))
     from app import main as backend
+    from app.core import db as core_db
     from build_decision_action_layer import build
 
     try:
-        db = sqlite3.connect(str(TARGET_DB))
+        db = connect_local(TARGET_DB)
         db.row_factory = sqlite3.Row
         db.execute("PRAGMA foreign_keys=ON")
         fixture = add_fixture(db)
         db.close()
 
         first = build(TARGET_DB)
-        db = sqlite3.connect(str(TARGET_DB))
+        db = connect_local(TARGET_DB)
         db.row_factory = sqlite3.Row
         plan = db.execute(
             "SELECT * FROM semantic_action_plan WHERE target_key=?",
@@ -158,6 +144,7 @@ def verify() -> dict[str, object]:
         db.close()
 
         backend.UNIFIED_SEMANTICS_DB = TARGET_DB
+        core_db.UNIFIED_SEMANTICS_DB = TARGET_DB
         approved = backend.review_semantic_action_plan(
             plan["plan_id"],
             backend.SemanticActionApprovalRequest(
@@ -168,7 +155,7 @@ def verify() -> dict[str, object]:
         )
         second = build(TARGET_DB)
 
-        db = sqlite3.connect(str(TARGET_DB))
+        db = connect_local(TARGET_DB)
         db.row_factory = sqlite3.Row
         try:
             final_plan = db.execute(
@@ -224,6 +211,7 @@ def verify() -> dict[str, object]:
         }
     finally:
         backend.UNIFIED_SEMANTICS_DB = SOURCE_DB
+        core_db.UNIFIED_SEMANTICS_DB = SOURCE_DB
         TARGET_DB.unlink(missing_ok=True)
 
 

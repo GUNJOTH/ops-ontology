@@ -6,6 +6,7 @@ import pathlib
 import sqlite3
 import sys
 
+from pipeline.contracts import connect_local, connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -15,7 +16,7 @@ VERIFY_ROOT = ROOT / "data" / ".verification"
 
 
 def matching_status_id(path: pathlib.Path) -> str:
-    db = sqlite3.connect(str(path))
+    db = connect_local(path)
     db.row_factory = sqlite3.Row
     try:
         mappings = {
@@ -48,8 +49,8 @@ def verify() -> dict[str, object]:
     if not target.resolve().is_relative_to(VERIFY_ROOT.resolve()):
         raise AssertionError("临时验证文件超出项目边界")
     target.unlink(missing_ok=True)
-    source = sqlite3.connect(f"file:{SOURCE_DB.resolve()}?mode=ro", uri=True)
-    clone = sqlite3.connect(str(target))
+    source = connect_readonly(SOURCE_DB.resolve())
+    clone = connect_local(target)
     try:
         source.backup(clone)
     finally:
@@ -58,7 +59,7 @@ def verify() -> dict[str, object]:
     try:
         backend.UNIFIED_SEMANTICS_DB = target
         status_id = matching_status_id(target)
-        db = sqlite3.connect(str(target))
+        db = connect_local(target)
         try:
             previous_version = int(db.execute(
                 "SELECT mapping_version FROM semantic_status_dictionary WHERE status_id=?",
@@ -82,7 +83,7 @@ def verify() -> dict[str, object]:
         )
         replay = backend.replay_semantic_status_dictionary()
         summary = backend.world_model_summary()
-        db = sqlite3.connect(str(target))
+        db = connect_local(target)
         try:
             audit_count = int(db.execute(
                 "SELECT count(*) FROM semantic_status_mapping_review WHERE status_id=?",

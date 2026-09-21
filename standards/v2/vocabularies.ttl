@@ -1,0 +1,243 @@
+@prefix ns1: <https://semantic.local/ontology/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ns1:concept-defect a skos:Concept ;
+    skos:inScheme ns1:DeviceClassificationScheme ;
+    skos:notation "defect" ;
+    skos:prefLabel "缺陷"@zh .
+
+ns1:concept-device a skos:Concept ;
+    skos:inScheme ns1:DeviceClassificationScheme ;
+    skos:notation "device" ;
+    skos:prefLabel "设备"@zh .
+
+ns1:concept-inspection a skos:Concept ;
+    skos:inScheme ns1:DeviceClassificationScheme ;
+    skos:notation "inspection" ;
+    skos:prefLabel "巡检"@zh .
+
+ns1:concept-location a skos:Concept ;
+    skos:inScheme ns1:DeviceClassificationScheme ;
+    skos:notation "location" ;
+    skos:prefLabel "位置"@zh .
+
+ns1:concept-work-order a skos:Concept ;
+    skos:inScheme ns1:DeviceClassificationScheme ;
+    skos:notation "work_order" ;
+    skos:prefLabel "工单"@zh .
+
+ns1:conflict-scope a skos:Concept ;
+    skos:inScheme ns1:KnowledgeConflictScheme ;
+    skos:notation "scope_conflict" ;
+    skos:prefLabel "适用范围冲突"@zh .
+
+ns1:conflict-value a skos:Concept ;
+    skos:inScheme ns1:KnowledgeConflictScheme ;
+    skos:notation "value_conflict" ;
+    skos:prefLabel "值冲突"@zh .
+
+ns1:conflict-version a skos:Concept ;
+    skos:inScheme ns1:KnowledgeConflictScheme ;
+    skos:notation "version_conflict" ;
+    skos:prefLabel "版本冲突"@zh .
+
+ns1:knowledge-approved a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "Approved" ;
+    skos:prefLabel "已批准"@zh .
+
+ns1:knowledge-archived a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "Archived" ;
+    skos:prefLabel "已归档"@zh .
+
+ns1:knowledge-candidate a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "Candidate" ;
+    skos:prefLabel "候选"@zh .
+
+ns1:knowledge-deprecated a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "Deprecated" ;
+    skos:prefLabel "已废止"@zh .
+
+ns1:knowledge-draft a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "Draft" ;
+    skos:prefLabel "草稿"@zh .
+
+ns1:knowledge-published a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "Published" ;
+    skos:prefLabel "已发布"@zh .
+
+ns1:knowledge-under-review a skos:Concept ;
+    skos:inScheme ns1:KnowledgeLifecycleScheme ;
+    skos:notation "UnderReview" ;
+    skos:prefLabel "审核中"@zh .
+
+<https://semantic.local/ontology/state/DEFECT/CANCELLED> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "CANCELLED" ;
+    skos:prefLabel "已取消"@zh ;
+    ns1:isTerminal true ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/CLOSED> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "CLOSED" ;
+    skos:prefLabel "已关闭"@zh ;
+    ns1:isTerminal true ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/NEW> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "NEW" ;
+    skos:prefLabel "新建"@zh ;
+    ns1:isTerminal false ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/PENDING> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "PENDING" ;
+    skos:prefLabel "待处理"@zh ;
+    ns1:isTerminal false ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/PROCESSING> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "PROCESSING" ;
+    skos:prefLabel "处理中"@zh ;
+    ns1:isTerminal false ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/RESOLVED> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "RESOLVED" ;
+    skos:prefLabel "已解决"@zh ;
+    ns1:isTerminal false ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/SUSPENDED> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "SUSPENDED" ;
+    skos:prefLabel "已挂起"@zh ;
+    ns1:isTerminal false ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+<https://semantic.local/ontology/state/DEFECT/UNKNOWN> a skos:Concept,
+        ns1:CanonicalState ;
+    skos:inScheme ns1:DefectStateScheme ;
+    skos:notation "UNKNOWN" ;
+    skos:prefLabel "未知"@zh ;
+    ns1:isTerminal false ;
+    ns1:stateDomain "DEFECT" ;
+    ns1:vocabularyVersion "defect-state-v1" .
+
+ns1:term-rule-defect-repeated a skos:Concept ;
+    skos:definition "repeated_defect"@en ;
+    skos:inScheme ns1:TerminologyScheme ;
+    skos:notation "defect.repeated" ;
+    skos:prefLabel "重复缺陷事实"@zh ;
+    ns1:vocabularyVersion "operations-terminology-v1" .
+
+ns1:term-rule-defect-severe a skos:Concept ;
+    skos:definition "severe_defect"@en ;
+    skos:inScheme ns1:TerminologyScheme ;
+    skos:notation "defect.severe" ;
+    skos:prefLabel "严重缺陷事实"@zh ;
+    ns1:vocabularyVersion "operations-terminology-v1" .
+
+ns1:term-rule-history-statistic a skos:Concept ;
+    skos:definition "history_stat"@en ;
+    skos:inScheme ns1:TerminologyScheme ;
+    skos:notation "history.statistic" ;
+    skos:prefLabel "缺陷历史统计事实"@zh ;
+    ns1:vocabularyVersion "operations-terminology-v1" .
+
+ns1:term-rule-measurement-temperature a skos:Concept ;
+    skos:definition "measurement"@en ;
+    skos:inScheme ns1:TerminologyScheme ;
+    skos:notation "measurement.temperature" ;
+    skos:prefLabel "温度测量事实"@zh ;
+    ns1:vocabularyVersion "operations-terminology-v1" .
+
+ns1:term-rule-risk-assessment a skos:Concept ;
+    skos:definition "risk_assessment"@en ;
+    skos:inScheme ns1:TerminologyScheme ;
+    skos:notation "risk.assessment" ;
+    skos:prefLabel "风险评估事实"@zh ;
+    ns1:vocabularyVersion "operations-terminology-v1" .
+
+ns1:term-rule-trend-measurement a skos:Concept ;
+    skos:definition "trend"@en ;
+    skos:inScheme ns1:TerminologyScheme ;
+    skos:notation "trend.measurement" ;
+    skos:prefLabel "测量趋势事实"@zh ;
+    ns1:vocabularyVersion "operations-terminology-v1" .
+
+ns1:unit-A a skos:Concept ;
+    skos:inScheme ns1:UnitScheme ;
+    skos:notation "A" ;
+    skos:prefLabel "安培"@zh .
+
+ns1:unit-C a skos:Concept ;
+    skos:altLabel "°C"@en ;
+    skos:inScheme ns1:UnitScheme ;
+    skos:notation "C" ;
+    skos:prefLabel "摄氏度"@zh .
+
+ns1:unit-bar a skos:Concept ;
+    skos:inScheme ns1:UnitScheme ;
+    skos:notation "bar" ;
+    skos:prefLabel "巴"@zh .
+
+ns1:unit-kV a skos:Concept ;
+    skos:inScheme ns1:UnitScheme ;
+    skos:notation "kV" ;
+    skos:prefLabel "千伏"@zh .
+
+ns1:unit-percent a skos:Concept ;
+    skos:inScheme ns1:UnitScheme ;
+    skos:notation "%" ;
+    skos:prefLabel "百分比"@zh .
+
+ns1:KnowledgeConflictScheme a skos:ConceptScheme ;
+    skos:notation "knowledge-conflict-v1" ;
+    skos:prefLabel "知识冲突类型词表"@zh .
+
+ns1:DeviceClassificationScheme a skos:ConceptScheme ;
+    skos:notation "device-classification-v1" ;
+    skos:prefLabel "设备分类词表"@zh .
+
+ns1:UnitScheme a skos:ConceptScheme ;
+    skos:notation "unit-v1" ;
+    skos:prefLabel "计量单位词表"@zh .
+
+ns1:TerminologyScheme a skos:ConceptScheme ;
+    skos:notation "operations-terminology-v1" ;
+    skos:prefLabel "运维术语词表"@zh .
+
+ns1:KnowledgeLifecycleScheme a skos:ConceptScheme ;
+    skos:notation "knowledge-lifecycle-v1" ;
+    skos:prefLabel "知识生命周期词表"@zh .
+
+ns1:DefectStateScheme a skos:ConceptScheme ;
+    skos:notation "defect-state-v1" ;
+    skos:prefLabel "缺陷状态词表"@zh .
+

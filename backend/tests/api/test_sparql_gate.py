@@ -1,13 +1,14 @@
 """API 测试：/api/semantic/sparql 只读门禁。
 
 门禁在访问 Canonical 库之前执行，因此这些用例无需真实数据即可运行。
+``canonical_semantic_sparql`` 已迁入 ``app.domains.semantic.router``，
+monkeypatch 目标随模块归属更新。
 """
 from __future__ import annotations
 
 import pytest
-from fastapi import HTTPException
-
 from app.main import CanonicalSparqlRequest, canonical_semantic_sparql
+from fastapi import HTTPException
 
 pytestmark = pytest.mark.api
 
@@ -39,7 +40,7 @@ def test_sparql_gate_allows_readonly_select(monkeypatch) -> None:
     def fake_connection():
         raise RuntimeError("reached-canonical-db")
 
-    monkeypatch.setattr("app.main.canonical_semantics_connection", fake_connection)
+    monkeypatch.setattr("app.domains.semantic.router.canonical_semantics_connection", fake_connection)
     with pytest.raises(RuntimeError, match="reached-canonical-db"):
         canonical_semantic_sparql(
             CanonicalSparqlRequest(query="SELECT * WHERE { ?s ?p ?o }")

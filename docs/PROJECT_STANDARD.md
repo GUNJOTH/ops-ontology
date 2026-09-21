@@ -53,6 +53,7 @@
 | 契约 | `contracts/` | 设备身份、字段和输出契约 |
 | 规则 | `rules/` | 版本化 YAML；确定性规则先于 AI |
 | 流程 | `system/` | SQLite/DuckDB 初始化、预览、回放、审批、发布 |
+| 平台包 | `packages/` | Platform Core 与行业 Ontology Package 的归属、资产和加载契约 |
 | 试点 | `pilots/<SOURCE>/` | 单库运行脚本和 manifest 证据 |
 | 文档 | `docs/` | 规范和运行手册 |
 
@@ -67,6 +68,20 @@
 - 前端依赖仍由 `frontend/package-lock.json` 锁定，安装到 `frontend/node_modules`。
 
 前端请求只允许访问 FastAPI；禁止使用 Mock 数据或在接口失败时回退到伪造统计。测试数据应放在独立测试夹具中，不得进入正式页面请求路径。
+
+### 2.1 Platform Core 与行业包
+
+`packages/manifest.json` 是产品化包注册表。当前包集合为：
+
+```text
+packages/platform-core/
+packages/thermal-operations/
+```
+
+包资产必须通过 `system/semantic_packages.py` 校验。原生包 Turtle/SHACL/SKOS/JSON-LD
+由 `system/ontology_package.py` 解析和组合，组合后的 Canonical RDF 是运行时唯一定义源；
+`standards/v2/` 只保存经过组合、验证和提升的版本化发布快照。新增行业包必须声明依赖、
+版本、资产入口、语义归属、来源只读和发布安全标志。
 
 ## 3. 数据和身份规范
 

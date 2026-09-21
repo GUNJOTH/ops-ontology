@@ -1,0 +1,43 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+ex:DeviceClassificationScheme a skos:ConceptScheme ;
+  skos:prefLabel "设备分类词表"@zh ; skos:notation "device-classification-v1" .
+ex:DefectStateScheme a skos:ConceptScheme ;
+  skos:prefLabel "缺陷状态词表"@zh ; skos:notation "defect-state-v1" .
+
+ex:concept-device a skos:Concept ; skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "设备"@zh ; skos:notation "device" .
+ex:concept-location a skos:Concept ; skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "位置"@zh ; skos:notation "location" .
+ex:concept-inspection a skos:Concept ; skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "巡检"@zh ; skos:notation "inspection" .
+ex:concept-defect a skos:Concept ; skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "缺陷"@zh ; skos:notation "defect" .
+ex:concept-work-order a skos:Concept ; skos:inScheme ex:DeviceClassificationScheme ;
+  skos:prefLabel "工单"@zh ; skos:notation "work_order" .
+
+<https://semantic.local/ontology/state/DEFECT/NEW> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "新建"@zh ; skos:notation "NEW" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/PENDING> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "待处理"@zh ; skos:notation "PENDING" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/PROCESSING> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "处理中"@zh ; skos:notation "PROCESSING" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/RESOLVED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已解决"@zh ; skos:notation "RESOLVED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/CLOSED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已关闭"@zh ; skos:notation "CLOSED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal true ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/CANCELLED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已取消"@zh ; skos:notation "CANCELLED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal true ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/SUSPENDED> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "已挂起"@zh ; skos:notation "SUSPENDED" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .
+<https://semantic.local/ontology/state/DEFECT/UNKNOWN> a skos:Concept, ex:CanonicalState ;
+  skos:inScheme ex:DefectStateScheme ; skos:prefLabel "未知"@zh ; skos:notation "UNKNOWN" ;
+  ex:stateDomain "DEFECT" ; ex:isTerminal false ; ex:vocabularyVersion "defect-state-v1" .

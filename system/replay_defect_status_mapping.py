@@ -2,24 +2,15 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import pathlib
 import sqlite3
-from datetime import datetime, timezone
 
+from common import DEFAULT_TARGET, sid
+from common import utc_now as now
+from pipeline.contracts import connect_local
 
 ROOT = pathlib.Path(__file__).resolve().parent
-DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sid(prefix: str, *parts: object) -> str:
-    raw = "|".join("" if part is None else str(part) for part in parts)
-    return f"{prefix}-{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:24]}"
 
 
 def ensure_schema(db: sqlite3.Connection) -> None:
@@ -44,7 +35,7 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 
 def replay(target_path: pathlib.Path) -> dict[str, object]:
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(str(target_path), timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

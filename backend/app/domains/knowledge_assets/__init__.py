@@ -1,0 +1,1 @@
+﻿"""Knowledge asset query routes."""

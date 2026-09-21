@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 
 import pytest
-
 from app.core.idempotency import find_audit_event_by_idempotency
 
 pytestmark = pytest.mark.unit

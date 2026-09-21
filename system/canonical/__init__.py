@@ -1,0 +1,1 @@
+"""Canonical RDF projection stages."""

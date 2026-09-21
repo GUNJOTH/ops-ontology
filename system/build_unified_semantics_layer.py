@@ -17,7 +17,6 @@ from datetime import datetime, timezone
 from pipeline.contracts import connect_local, connect_readonly
 from semantic_registry import RELATIONAL_STORAGE_PREDICATES
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 IDENTITY_RESULTS = PROJECT_ROOT / "pilots" / "identity" / "results"

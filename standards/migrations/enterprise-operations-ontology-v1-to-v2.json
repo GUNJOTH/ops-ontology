@@ -1,0 +1,56 @@
+{
+  "fromVersion": "enterprise-operations-ontology/v1",
+  "toVersion": "enterprise-operations-ontology/v2",
+  "status": "prepared",
+  "compatibility": "backward-compatible-additive-model",
+  "changes": [
+    {
+      "kind": "class",
+      "change": "add",
+      "iri": "https://semantic.local/ontology/FactValue",
+      "reason": "将 Fact.valueJson 的核心值表达为 RDF 节点"
+    },
+    {
+      "kind": "class",
+      "change": "add",
+      "iri": "https://semantic.local/ontology/RequiredFact",
+      "reason": "将 Action.requiredInputFactsJson 的核心语义表达为 RDF 节点"
+    },
+    {
+      "kind": "class",
+      "change": "add",
+      "iri": "https://semantic.local/ontology/ActionCondition",
+      "reason": "将 Action.allowedWhenJson 的前置条件表达为 RDF 节点"
+    },
+    {
+      "kind": "class",
+      "change": "add",
+      "iri": "https://semantic.local/ontology/ActionEffect",
+      "reason": "将 Action.effectsJson 的效果表达为 RDF 节点"
+    },
+    {
+      "kind": "class",
+      "change": "add",
+      "iri": "https://semantic.local/ontology/ExecutionState",
+      "reason": "将 Action.executionStatesJson 的状态表达为 RDF 节点"
+    }
+  ],
+  "compatibilityMap": {
+    "ex:valueJson": "ex:hasFactValue/ex:payloadJson",
+    "ex:allowedWhenJson": "ex:hasPrecondition",
+    "ex:requiredInputFactsJson": "ex:requiresFact",
+    "ex:effectsJson": "ex:hasEffect",
+    "ex:executionStatesJson": "ex:hasExecutionState"
+  },
+  "requiredEvidence": [
+    "v2 ontology, vocabulary, SHACL and JSON-LD assets parse",
+    "v1 to v2 compatibility map resolves all retained IRIs",
+    "Canonical RDF projection replay passes",
+    "independent SHACL and OWL 2 RL processors pass",
+    "SPARQL and JSON-LD regression pass",
+    "snapshot and pointer rollback pass"
+  ],
+  "applyPolicy": "prepare -> snapshot -> replay -> validate -> approve -> activate",
+  "sourceWrite": false,
+  "formalPublication": false
+}

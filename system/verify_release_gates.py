@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 BACKEND_ROOT = PROJECT_ROOT / "backend"
@@ -47,6 +46,7 @@ def main() -> None:
         "canonical": run_gate("verify_canonical_semantic_model.py"),
         "standardCi": run_gate("verify_standard_semantic_ci.py"),
         "sourceTruth": run_gate("verify_source_truth_cutover.py"),
+        "ontologyRuntime": run_gate("verify_ontology_runtime.py"),
     }
     status = "PASS" if all(item.get("status") == "PASS" for item in checks.values()) else "BLOCKED"
     canonical_run = ((checks["canonical"].get("latestRun") or {}).get("run_id") or checks["sourceTruth"].get("canonicalRunId"))
@@ -68,4 +68,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="verify-release-gates",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=main,
+        )
+    )

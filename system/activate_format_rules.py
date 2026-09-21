@@ -9,7 +9,6 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
 QUALITY_CSV = ROOT.parent / "pilots" / "HD_SAAS" / "quality" / "hd_quality_candidates.csv"

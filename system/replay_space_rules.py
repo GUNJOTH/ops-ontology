@@ -5,9 +5,10 @@ import json
 import re
 import sqlite3
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 DB = ROOT / "data" / "semantic_workflow.sqlite3"
@@ -16,9 +17,6 @@ RULE_VERSION = "space-normalization-proposed-20260812-v1"
 VALIDATOR_VERSION = "hd-semantic-validator-0.2.0"
 ACTOR = "replay_space_rules.py"
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def transform(value: str) -> str:
@@ -37,7 +35,7 @@ def main() -> None:
     if confirmation.get("source_write") is not False or confirmation.get("formal_publication") is not False:
         raise SystemExit("Confirmation manifest is not read-only.")
 
-    connection = sqlite3.connect(DB, timeout=60)
+    connection = connect_local(DB, timeout=60)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     cases = connection.execute("SELECT * FROM evaluation_case WHERE active=1 ORDER BY case_id").fetchall()

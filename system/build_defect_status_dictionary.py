@@ -8,6 +8,7 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from pipeline.contracts import connect_local, connect_readonly
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -138,8 +139,7 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 def build(target_path: pathlib.Path, identity_path: pathlib.Path | None = None) -> dict[str, object]:
     identity_path = identity_path or latest_identity_db()
-    source = sqlite3.connect(f"file:{identity_path.resolve()}?mode=ro", uri=True, timeout=30)
-    source.row_factory = sqlite3.Row
+    source = connect_readonly(identity_path, timeout=30)
     try:
         source_rows = source.execute(
             """
@@ -169,7 +169,7 @@ def build(target_path: pathlib.Path, identity_path: pathlib.Path | None = None) 
     finally:
         source.close()
 
-    db = sqlite3.connect(str(target_path), timeout=30)
+    db = connect_local(target_path, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)

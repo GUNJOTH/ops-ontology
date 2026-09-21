@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 
 import pytest
-
 from app.agent.prompts import rule_agent_payload, semantic_reasoning_payload
 
 pytestmark = pytest.mark.unit

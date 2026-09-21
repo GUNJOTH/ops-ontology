@@ -13,7 +13,6 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 SQLITE_DB = ROOT / "data" / "semantic_workflow.sqlite3"
 VALIDATOR_VERSION = "hd-semantic-validator-0.3.1"
@@ -308,4 +307,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from pipeline.legacy import run_legacy_main
+
+    raise SystemExit(
+        run_legacy_main(
+            pipeline_id="backfill-validation-results",
+            pipeline_version="v1",
+            root=ROOT,
+            legacy_main=main,
+        )
+    )

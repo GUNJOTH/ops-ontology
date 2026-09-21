@@ -1,27 +1,19 @@
 """Verify the local execution adapter and idempotent execution ledger."""
 from __future__ import annotations
 
-import hashlib
 import json
 import pathlib
 import shutil
-import sqlite3
 import sys
 
+from common import sha256_file as digest
+from pipeline.contracts import connect_local
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 SOURCE_DB = ROOT / "data" / "unified_semantics.sqlite3"
 VERIFY_DIR = ROOT / "data" / ".verification"
 TARGET_DB = VERIFY_DIR / "execution_ledger.test.sqlite3"
-
-
-def digest(path: pathlib.Path) -> str:
-    hasher = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
 
 
 def verify() -> dict[str, object]:
@@ -40,7 +32,7 @@ def verify() -> dict[str, object]:
     )
     first = backend.semantic_execution_dispatch(request)
     second = backend.semantic_execution_dispatch(request)
-    db = sqlite3.connect(str(TARGET_DB))
+    db = connect_local(TARGET_DB)
     try:
         count = int(db.execute("SELECT count(*) FROM semantic_execution_ledger").fetchone()[0])
         unsafe = int(db.execute("SELECT count(*) FROM semantic_execution_ledger WHERE source_write<>0 OR formal_publication<>0").fetchone()[0])

@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 NAMESPACE_FILE = ROOT.parent / "standards" / "namespace.json"
 SPEC = json.loads(NAMESPACE_FILE.read_text(encoding="utf-8"))

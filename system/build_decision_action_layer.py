@@ -16,8 +16,9 @@ import pathlib
 import sqlite3
 from datetime import datetime, timezone
 
+from build_semantic_action_catalog import build as build_action_catalog
+from build_semantic_action_catalog import ensure_schema as ensure_action_catalog_schema
 from pipeline.contracts import connect_local
-
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
@@ -150,6 +151,7 @@ def ensure_schema(db: sqlite3.Connection) -> None:
     for column, definition in additive.items():
         if column not in columns:
             db.execute(f"ALTER TABLE semantic_decision_layer_run ADD COLUMN {column} {definition}")
+    ensure_action_catalog_schema(db)
 
 
 def plan_status(action_status: str, requires_approval: bool) -> str:
@@ -286,6 +288,7 @@ def build(target_path: pathlib.Path) -> dict[str, object]:
     db.execute("PRAGMA foreign_keys=ON")
     db.execute("PRAGMA busy_timeout=30000")
     ensure_schema(db)
+    build_action_catalog(target_path)
     created = now()
     action_rule_counts = evaluate_action_rules(db, created)
 
@@ -312,11 +315,17 @@ def build(target_path: pathlib.Path) -> dict[str, object]:
         ORDER BY a.action_id
         """
     ).fetchall()
-    action_ids = {str(row["action_id"]) for row in explicit_actions}
     created_plans = 0
     for action in explicit_actions:
         requires_approval = bool(action["requires_approval"])
         plan_id = sid("SAP", action["idempotency_key"])
+        action_definition = db.execute(
+            """
+            SELECT * FROM semantic_action_definition
+            WHERE action_key=? OR action_id=? LIMIT 1
+            """,
+            (action["action_type"], f"ACTION_{action['action_type'].upper()}"),
+        ).fetchone()
         payload = {
             "sourceActionId": action["action_id"],
             "decisionId": action["decision_id"],
@@ -329,9 +338,22 @@ def build(target_path: pathlib.Path) -> dict[str, object]:
             "sourceWrite": False,
             "formalPublication": False,
         }
+        if action_definition is not None:
+            payload["actionDefinition"] = {
+                "actionId": action_definition["action_id"],
+                "actionKey": action_definition["action_key"],
+                "actionName": action_definition["action_name"],
+                "businessMeaning": action_definition["business_meaning"],
+                "allowedWhen": json.loads(action_definition["allowed_when_json"] or "{}"),
+                "requiredFacts": json.loads(action_definition["required_facts_json"] or "[]"),
+                "permissionScope": json.loads(action_definition["permission_scope_json"] or "{}"),
+                "adapterMappings": json.loads(action_definition["adapter_mappings_json"] or "[]"),
+                "effects": json.loads(action_definition["effects_json"] or "{}"),
+                "executionStates": json.loads(action_definition["execution_states_json"] or "[]"),
+            }
         status = plan_status(str(action["status"]), requires_approval)
         plan_exists = db.execute("SELECT 1 FROM semantic_action_plan WHERE idempotency_key=?", (action["idempotency_key"],)).fetchone() is not None
-        cursor = db.execute(
+        db.execute(
             """
             INSERT INTO semantic_action_plan(
               plan_id,decision_id,action_id,action_key,action_type,target_type,target_key,

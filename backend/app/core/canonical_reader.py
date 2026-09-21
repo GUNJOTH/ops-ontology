@@ -15,7 +15,6 @@ from urllib.parse import quote, unquote
 
 from .semantic_release import selected_canonical_run_id
 
-
 EX = "https://semantic.local/ontology/"
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 PROV_PREFIX = "http://www.w3.org/ns/prov#"

@@ -9,9 +9,10 @@ import hashlib
 import json
 import sqlite3
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -28,10 +29,6 @@ if str(BACKEND_ROOT) not in sys.path:
 from app.main import ai_cluster_id, classify_ai_cluster, cluster_pattern  # noqa: E402
 
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 def stable_replay_id(candidate_ids: list[str]) -> str:
     scope_hash = hashlib.sha256("|".join(candidate_ids).encode("utf-8")).hexdigest()[:20]
     return f"replay-ai-cluster-keep-original-{scope_hash}"
@@ -41,7 +38,7 @@ def main() -> None:
     if not DB.exists():
         raise SystemExit(f"SQLite database not found: {DB}")
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(str(DB), timeout=30)
+    connection = connect_local(str(DB), timeout=30)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     try:

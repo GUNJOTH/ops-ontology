@@ -1,6 +1,6 @@
 """集成测试共享夹具。
 
-口径：TestClient 不进入 ``with`` 上下文，避免触发 ``@app.on_event("startup")``
+口径：TestClient 不进入 ``with`` 上下文，避免触发 startup lifespan
 迁移去写真实工作流库；写路径用例把 ``app.core.db.SQLITE_DB`` 重定向到临时文件库，
 绝不触碰 ``system/data``。
 """
@@ -10,11 +10,10 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.core import db as core_db
 from app.main import app, ensure_cleaning_schema, ensure_review_sample_schema
 from app.migrations.workflow_schema import migrate_workflow_schema
+from fastapi.testclient import TestClient
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = BACKEND_ROOT.parent

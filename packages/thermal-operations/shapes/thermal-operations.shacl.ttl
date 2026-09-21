@@ -1,0 +1,44 @@
+@prefix ex: <https://semantic.local/ontology/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+ex:DeviceShape a sh:NodeShape ;
+  sh:targetClass ex:Device ; sh:severity sh:Violation ; sh:message "设备必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:nodeKind sh:Literal ; sh:severity sh:Violation ; sh:message "设备 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:nodeKind sh:Literal ; sh:severity sh:Violation ; sh:message "设备 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "设备来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "设备来源快照必填"@zh ] ;
+  sh:property [ sh:path ex:hasCurrentState ; sh:class ex:CanonicalState ; sh:nodeKind sh:IRI ; sh:severity sh:Warning ; sh:message "当前状态应引用 CanonicalState"@zh ] .
+
+ex:LocationShape a sh:NodeShape ;
+  sh:targetClass ex:Location ; sh:severity sh:Violation ; sh:message "位置必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "位置来源快照必填"@zh ] .
+
+ex:DefectShape a sh:NodeShape ;
+  sh:targetClass ex:Defect ; sh:severity sh:Violation ; sh:message "缺陷对象必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "缺陷来源快照必填"@zh ] .
+
+ex:WorkOrderShape a sh:NodeShape ;
+  sh:targetClass ex:WorkOrder ; sh:severity sh:Violation ; sh:message "工单对象必须具备稳定身份和来源"@zh ;
+  sh:property [ sh:path ex:canonicalKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单 canonicalKey 必填"@zh ] ;
+  sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单 displayName 必填"@zh ] ;
+  sh:property [ sh:path ex:sourceNamespace ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单来源命名空间必填"@zh ] ;
+  sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "工单来源快照必填"@zh ] .
+
+ex:LocationAssignmentShape a sh:NodeShape ;
+  sh:targetClass ex:LocationAssignment ; sh:closed true ;
+  sh:ignoredProperties ( rdf:type prov:wasDerivedFrom prov:wasGeneratedBy ) ;
+  sh:severity sh:Violation ; sh:message "位置关系必须可追溯且保留有效期"@zh ;
+  sh:property [ sh:path ex:assignmentDevice ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ex:Device ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "位置关系必须指向设备"@zh ] ;
+  sh:property [ sh:path ex:assignmentLocation ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ex:Location ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "位置关系必须指向位置"@zh ] ;
+  sh:property [ sh:path ex:relationPredicate ; sh:minCount 1 ; sh:maxCount 1 ; sh:class rdf:Property ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "位置关系 predicate 必须类型化"@zh ] ;
+  sh:property [ sh:path ex:validFrom ; sh:datatype xsd:dateTime ; sh:maxCount 1 ; sh:severity sh:Warning ; sh:message "位置关系 validFrom 应为日期时间"@zh ] ;
+  sh:property [ sh:path ex:validTo ; sh:datatype xsd:dateTime ; sh:maxCount 1 ; sh:severity sh:Warning ; sh:message "位置关系 validTo 应为日期时间"@zh ] .

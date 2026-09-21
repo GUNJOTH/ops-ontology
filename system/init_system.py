@@ -5,10 +5,8 @@ import argparse
 import csv
 import hashlib
 import json
-import os
 import sqlite3
 import sys
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -19,7 +17,7 @@ DEFAULT_MANIFEST = SEMANTIC_ROOT / "pilots" / "HD_SAAS" / "semantic_candidates" 
 DATA_DIR = ROOT / "data"
 SQLITE_DB = DATA_DIR / "semantic_workflow.sqlite3"
 DUCKDB_DB = DATA_DIR / "semantic_analytics_v155.duckdb"
-DEPENDENCY_DIR = ROOT / ".deps_latest"
+DEPENDENCY_DIR = SEMANTIC_ROOT / "backend" / ".deps"
 
 
 def utc_now() -> str:
@@ -53,7 +51,7 @@ def load_duckdb():
     except ModuleNotFoundError as exc:
         raise SystemExit(
             "缺少 duckdb。请执行：D:\\uv\\bin\\uv.exe pip install --target "
-            f'"{DEPENDENCY_DIR}" -r "{ROOT / "requirements.txt"}"'
+            f'"{DEPENDENCY_DIR}" -r "{SEMANTIC_ROOT / "backend" / "requirements.lock"}"'
         ) from exc
     return duckdb
 
@@ -64,7 +62,6 @@ def initialize_sqlite(csv_path: Path, manifest: dict[str, object]) -> dict[str, 
     connection.execute("PRAGMA foreign_keys=ON")
     connection.executescript((ROOT / "sqlite_schema.sql").read_text(encoding="utf-8"))
     now = utc_now()
-    snapshot_id = str(manifest["run_id"]).replace("hd-semantic-candidate-generation-", "")
     source_snapshot_id = ""
     with csv_path.open(encoding="utf-8-sig", newline="") as handle:
         first = next(csv.DictReader(handle))

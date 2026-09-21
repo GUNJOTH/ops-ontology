@@ -1,0 +1,1 @@
+﻿"""Semantic fact query routes."""

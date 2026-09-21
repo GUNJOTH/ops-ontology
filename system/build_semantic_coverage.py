@@ -17,7 +17,6 @@ from datetime import datetime, timezone
 
 from pipeline.contracts import connect_local, connect_readonly
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_TARGET = ROOT / "data" / "unified_semantics.sqlite3"
 DEFAULT_WORKFLOW = ROOT / "data" / "semantic_workflow.sqlite3"

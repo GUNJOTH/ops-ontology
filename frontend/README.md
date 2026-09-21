@@ -25,9 +25,21 @@ Vite 默认启用 HMR。修改 `src` 下的 React、TypeScript 或 CSS 文件后
 
 ## 构建
 
+日常修改只做不启动子进程的 TypeScript 检查：
+
+```powershell
+npm run check
+```
+
+完整生产包仍使用：
+
 ```powershell
 npm run build
 ```
+
+`npm run build` 会执行 Vite/Rollup 打包，适合 CI 或普通开发终端；在受限执行环境中如果出现
+`spawn EPERM`，不把它当作代码编译失败，日常先使用 `npm run check`，完整打包交给 CI 的
+`npm run build`。这样本地调试不再因为构建器启动子进程而反复申请权限。
 
 ## 当前页面
 

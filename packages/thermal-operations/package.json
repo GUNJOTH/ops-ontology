@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "semantic-package-v2",
+  "id": "thermal-operations",
+  "version": "1.0.0",
+  "type": "industry-package",
+  "title": "Thermal Operations Ontology Package",
+  "namespace": "https://semantic.local/package/thermal-operations/",
+  "ontologyNamespace": "https://semantic.local/ontology/",
+  "dependsOn": ["platform-core"],
+  "assets": {
+    "ontology": "ontology/thermal-operations.ttl",
+    "shapes": "shapes/thermal-operations.shacl.ttl",
+    "vocabularies": "vocabularies/thermal-vocabularies.ttl",
+    "context": "context.jsonld",
+    "mappings": "mappings/manifest.json",
+    "rules": "rules/manifest.json",
+    "events": "events/manifest.json",
+    "stateMachines": "state-machines/manifest.json",
+    "actions": "actions/manifest.json",
+    "tests": "tests/manifest.json"
+  },
+  "ownedClasses": [
+    "Site", "Location", "Device", "Inspection", "AbnormalInspection", "Defect",
+    "DefectResolution", "WorkOrder", "WorkPermit", "InspectionEvent",
+    "AbnormalInspectionEvent", "DefectEvent", "DefectCreatedEvent",
+    "DefectAcceptedEvent", "DefectProcessingEvent", "ResolutionEvent",
+    "DefectAcceptanceEvent", "WorkOrderEvent", "WorkPermitEvent",
+    "ObservationEvent", "EscalationEvent", "RepeatedDefect", "SevereDefect",
+    "LocationAssignment"
+  ],
+  "ownedObjectProperties": [
+    "hasInspection", "hasDefect", "hasWorkOrder", "belongsToSite", "managedByTeam",
+    "hasTreatmentWorkOrder", "generatedFrom", "resolvedBy", "hasWorkPermit",
+    "detectsDefect", "locatedAt", "hasLocationAssignment", "assignmentDevice",
+    "assignmentLocation", "hasEvent", "responsibleFor", "parentOf", "childDevice",
+    "sameFunctionLocation", "relatedTo", "governedByKnowledge", "evaluatedByKnowledge"
+  ],
+  "ownedDatatypeProperties": [],
+  "sourceWrite": false,
+  "formalPublication": false
+}

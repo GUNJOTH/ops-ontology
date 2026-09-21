@@ -1,0 +1,84 @@
+name: CI
+
+# S1 门禁：每次 push / PR 必跑 lint（ruff）+ 全量测试（pytest）。
+# 与本地 backend/run_tests.ps1 保持一致：Python 依赖统一从 backend/requirements.lock
+# 安装到 backend/.deps，后端和 system 脚本共用这一份依赖；不再单独安装 system/.deps。
+# ruff 检查 backend 与 system 两层；覆盖率报告统计 backend/app 与 system，并设置 40% 强制门槛。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv + Python 3.12
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Vendor unified Python deps (from lock)
+        run: uv pip install --target backend/.deps -r backend/requirements.lock
+
+      - name: Lint (ruff)
+        run: backend/.deps/bin/ruff check backend system
+
+      - name: Maintainability budget
+        run: python system/verify_maintainability.py --strict --json > maintainability-report.json
+
+      - name: Test (pytest + coverage report)
+        working-directory: backend
+        env:
+          PYTHONPATH: .deps:.:../system
+        run: python -m pytest -p no:cacheprovider -ra --tb=short --cov=app --cov=../system --cov-report=term --cov-report=xml:coverage.xml --cov-fail-under=40
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
+          if-no-files-found: ignore
+
+      - name: Upload maintainability report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintainability-report
+          path: maintainability-report.json
+          if-no-files-found: ignore
+
+      - name: Upload maintainability report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintainability-report
+          path: maintainability-report.json
+          if-no-files-found: ignore
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "semantic-package-registry-v2",
+  "registryId": "enterprise-semantic-packages",
+  "canonicalAssetMode": "composed",
+  "canonicalOntology": "standards/v2/ontology.ttl",
+  "compositionOutput": "builds/canonical/v2",
+  "activeVersionPointer": "system/data/ontology_version_registry.json",
+  "defaultPackages": ["platform-core", "thermal-operations"],
+  "sourceWrite": false,
+  "formalPublication": false,
+  "packages": [
+    {
+      "id": "platform-core",
+      "version": "1.0.0",
+      "type": "platform-core",
+      "manifest": "platform-core/package.json",
+      "dependsOn": [],
+      "status": "active"
+    },
+    {
+      "id": "thermal-operations",
+      "version": "1.0.0",
+      "type": "industry-package",
+      "manifest": "thermal-operations/package.json",
+      "dependsOn": ["platform-core"],
+      "status": "active"
+    }
+  ]
+}

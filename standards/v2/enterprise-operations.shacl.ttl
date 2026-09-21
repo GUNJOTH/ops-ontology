@@ -1,0 +1,526 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://semantic.local/ontology/ActionPlanShape> a sh:NodeShape ;
+    sh:message "行动计划必须可审批且禁止写源"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "行动键必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/actionKey> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "行动类型必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/actionType> ;
+            sh:severity sh:Violation ],
+        [ sh:class owl:Class ;
+            sh:message "行动目标对象必须引用 OWL Class"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/targetObjectType> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "行动理由必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/reason> ;
+            sh:severity sh:Violation ],
+        [ sh:in ( "low"^^xsd:string "medium"^^xsd:string "high"^^xsd:string ) ;
+            sh:message "风险等级不在允许值内"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/riskLevel> ;
+            sh:severity sh:Violation ],
+        [ sh:in ( "DRAFT"^^xsd:string "PENDING_APPROVAL"^^xsd:string "APPROVED"^^xsd:string "REJECTED"^^xsd:string "CANCELLED"^^xsd:string ) ;
+            sh:message "行动状态不在允许值内"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/status> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:boolean ;
+            sh:message "行动审批门禁必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/requiresApproval> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:boolean ;
+            sh:in ( false ) ;
+            sh:message "行动计划不得写源系统"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceWrite> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:boolean ;
+            sh:in ( false ) ;
+            sh:message "行动计划不得直接正式发布"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/formalPublication> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/ActionPlan> .
+
+<https://semantic.local/ontology/ActionShape> a sh:NodeShape ;
+    sh:message "统一业务 Action 必须描述业务含义、前置条件、输入、权限、适配器映射和效果"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "Action 名称必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/actionName> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 业务含义必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/businessMeaning> ;
+            sh:severity sh:Violation ],
+        [ sh:class owl:Class ;
+            sh:message "Action 目标对象必须引用 OWL Class"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/targetObjectType> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 版本必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/actionVersion> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 前置条件必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/allowedWhenJson> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 输入事实必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/requiredInputFactsJson> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 权限范围必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/permissionScopeJson> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 适配器映射必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/adapterMappingsJson> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 效果必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/effectsJson> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "Action 执行状态机必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/executionStatesJson> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/Action> .
+
+<https://semantic.local/ontology/BusinessEventShape> a sh:NodeShape ;
+    sh:message "业务事件必须具备主体、来源和时间证据"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "事件 sourceTable 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceTable> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事件 sourceRecordId 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceRecordId> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事件来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ],
+        [ sh:class <https://semantic.local/ontology/BusinessObject> ;
+            sh:maxCount 1 ;
+            sh:message "事件必须唯一指向业务主体"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/hasSubject> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事件 sourceSchema 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSchema> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/BusinessEvent> .
+
+<https://semantic.local/ontology/DefectShape> a sh:NodeShape ;
+    sh:message "缺陷对象必须具备稳定身份和来源"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "缺陷 canonicalKey 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/canonicalKey> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "缺陷 displayName 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/displayName> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "缺陷来源命名空间必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceNamespace> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "缺陷来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/Defect> .
+
+<https://semantic.local/ontology/DerivedFactShape> a sh:NodeShape ;
+    sh:message "派生事实必须保留可回放的推导证据"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "派生事实必须保留输入快照集合"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ],
+        [ sh:class prov:Activity ;
+            sh:message "派生事实必须关联推导活动"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path prov:wasGeneratedBy ;
+            sh:severity sh:Violation ],
+        [ sh:class <https://semantic.local/ontology/Fact> ;
+            sh:message "派生事实必须关联输入事实"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/derivedFromFact> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/DerivedFact> .
+
+<https://semantic.local/ontology/DeviceShape> a sh:NodeShape ;
+    sh:message "设备必须具备稳定身份和来源"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "设备 canonicalKey 必填"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:path <https://semantic.local/ontology/canonicalKey> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "设备 displayName 必填"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:path <https://semantic.local/ontology/displayName> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "设备来源命名空间必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceNamespace> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "设备来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ],
+        [ sh:class <https://semantic.local/ontology/CanonicalState> ;
+            sh:message "当前状态应引用 CanonicalState"@zh ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/hasCurrentState> ;
+            sh:severity sh:Warning ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/Device> .
+
+<https://semantic.local/ontology/FactShape> a sh:NodeShape ;
+    sh:message "事实必须具备可计算输入"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "事实类型必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/factType> ;
+            sh:severity sh:Violation ],
+        [ sh:class rdf:Property ;
+            sh:maxCount 1 ;
+            sh:message "事实 predicate 必须是 RDF Property IRI"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/predicate> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事实 predicateLabel 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/predicateLabel> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事实 sourceSchema 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSchema> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事实 sourceTable 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceTable> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "事实 sourceRecordId 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceRecordId> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/Fact> .
+
+<https://semantic.local/ontology/IdentityAssertionShape> a sh:NodeShape ;
+    sh:message "身份断言必须具备完整来源证据"@zh ;
+    sh:property [ sh:class <https://semantic.local/ontology/BusinessObject> ;
+            sh:maxCount 1 ;
+            sh:message "身份断言必须唯一指向业务对象"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/assertsIdentity> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "身份断言 sourceSystem 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSystem> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "身份断言 sourceSchema 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSchema> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "身份断言 sourceTable 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceTable> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "身份断言 sourceRecordId 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceRecordId> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "身份断言来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:decimal ;
+            sh:message "身份断言置信度必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/confidence> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/IdentityAssertion> .
+
+<https://semantic.local/ontology/KnowledgeAssetShape> a sh:NodeShape ;
+    sh:message "正式知识资产必须具备身份、生命周期、版本和适用范围"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "知识资产 canonicalKey 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/canonicalKey> ;
+            sh:severity sh:Violation ],
+        [ sh:in ( "Draft" "Candidate" "UnderReview" "Approved" "Published" "Deprecated" "Archived" ) ;
+            sh:message "知识生命周期状态非法"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/lifecycleStatus> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "知识资产 packageId 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/packageId> ;
+            sh:severity sh:Violation ],
+        [ sh:class <https://semantic.local/ontology/KnowledgeVersion> ;
+            sh:message "知识资产必须关联版本"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/hasKnowledgeVersion> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/KnowledgeAsset> .
+
+<https://semantic.local/ontology/KnowledgeConflictShape> a sh:NodeShape ;
+    sh:message "知识冲突必须标明类型、状态和冲突双方"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "冲突类型必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/conflictType> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "冲突状态必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/conflictStatus> ;
+            sh:severity sh:Violation ],
+        [ sh:class <https://semantic.local/ontology/KnowledgeAsset> ;
+            sh:message "冲突必须指向知识资产"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/conflictsWith> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/KnowledgeConflict> .
+
+<https://semantic.local/ontology/KnowledgeFragmentShape> a sh:NodeShape ;
+    sh:message "知识片段必须保留文档定位和内容身份"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "知识片段身份必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/canonicalKey> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "知识片段内容哈希必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/contentHash> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/KnowledgeFragment> .
+
+<https://semantic.local/ontology/KnowledgeVersionShape> a sh:NodeShape ;
+    sh:message "知识版本必须可校验、可回放"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "知识版本号必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/knowledgeVersion> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "知识内容哈希必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/contentHash> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/KnowledgeVersion> .
+
+<https://semantic.local/ontology/LocationAssignmentShape> a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type prov:wasDerivedFrom prov:wasGeneratedBy ) ;
+    sh:message "位置关系必须可追溯且保留有效期"@zh ;
+    sh:property [ sh:class <https://semantic.local/ontology/Device> ;
+            sh:maxCount 1 ;
+            sh:message "位置关系必须指向设备"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/assignmentDevice> ;
+            sh:severity sh:Violation ],
+        [ sh:class <https://semantic.local/ontology/Location> ;
+            sh:maxCount 1 ;
+            sh:message "位置关系必须指向位置"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/assignmentLocation> ;
+            sh:severity sh:Violation ],
+        [ sh:class rdf:Property ;
+            sh:maxCount 1 ;
+            sh:message "位置关系 predicate 必须类型化"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/relationPredicate> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:message "位置关系 validFrom 应为日期时间"@zh ;
+            sh:path <https://semantic.local/ontology/validFrom> ;
+            sh:severity sh:Warning ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:message "位置关系 validTo 应为日期时间"@zh ;
+            sh:path <https://semantic.local/ontology/validTo> ;
+            sh:severity sh:Warning ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/LocationAssignment> .
+
+<https://semantic.local/ontology/LocationShape> a sh:NodeShape ;
+    sh:message "位置必须具备稳定身份和来源"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "位置 canonicalKey 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/canonicalKey> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "位置 displayName 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/displayName> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "位置来源命名空间必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceNamespace> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "位置来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/Location> .
+
+<https://semantic.local/ontology/RuleShape> a sh:NodeShape ;
+    sh:message "规则必须具备版本、目标和生命周期"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "规则标题必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/displayName> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "规则版本必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/ruleVersion> ;
+            sh:severity sh:Violation ],
+        [ sh:class owl:Class ;
+            sh:message "规则目标对象必须引用 OWL Class"@zh ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path <https://semantic.local/ontology/targetObjectType> ;
+            sh:severity sh:Violation ],
+        [ sh:in ( "draft"^^xsd:string "replayed"^^xsd:string "approved"^^xsd:string "enabled"^^xsd:string "retired"^^xsd:string "blocked"^^xsd:string ) ;
+            sh:message "规则状态不在允许值内"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/status> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "规则来源版本必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/Rule> .
+
+<https://semantic.local/ontology/SourceFactShape> a sh:NodeShape ;
+    sh:message "源事实必须具备完整来源快照证据"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "源事实 sourceSchema 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSchema> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "源事实 sourceTable 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceTable> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "源事实 sourceRecordId 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceRecordId> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "源事实来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/SourceFact> .
+
+<https://semantic.local/ontology/WorkOrderShape> a sh:NodeShape ;
+    sh:message "工单对象必须具备稳定身份和来源"@zh ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:message "工单 canonicalKey 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/canonicalKey> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "工单 displayName 必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/displayName> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "工单来源命名空间必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceNamespace> ;
+            sh:severity sh:Violation ],
+        [ sh:datatype xsd:string ;
+            sh:message "工单来源快照必填"@zh ;
+            sh:minCount 1 ;
+            sh:path <https://semantic.local/ontology/sourceSnapshotId> ;
+            sh:severity sh:Violation ] ;
+    sh:severity sh:Violation ;
+    sh:targetClass <https://semantic.local/ontology/WorkOrder> .
+

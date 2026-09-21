@@ -1,4 +1,5 @@
 @prefix ex: <https://semantic.local/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -58,8 +59,8 @@ ex:RuleShape a sh:NodeShape ;
   sh:targetClass ex:Rule ; sh:severity sh:Violation ; sh:message "规则必须具备版本、目标和生命周期"@zh ;
   sh:property [ sh:path ex:displayName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则标题必填"@zh ] ;
   sh:property [ sh:path ex:ruleVersion ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则版本必填"@zh ] ;
-  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则目标对象必填"@zh ] ;
-  sh:property [ sh:path ex:status ; sh:minCount 1 ; sh:in ( "draft" "replayed" "approved" "enabled" "retired" "blocked" ) ; sh:severity sh:Violation ; sh:message "规则状态不在允许值内"@zh ] ;
+  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:class owl:Class ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "规则目标对象必须引用 OWL Class"@zh ] ;
+  sh:property [ sh:path ex:status ; sh:minCount 1 ; sh:in ( "draft"^^xsd:string "replayed"^^xsd:string "approved"^^xsd:string "enabled"^^xsd:string "retired"^^xsd:string "blocked"^^xsd:string ) ; sh:severity sh:Violation ; sh:message "规则状态不在允许值内"@zh ] ;
   sh:property [ sh:path ex:sourceSnapshotId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "规则来源版本必填"@zh ] .
 
 ex:FactShape a sh:NodeShape ;
@@ -88,13 +89,27 @@ ex:ActionPlanShape a sh:NodeShape ;
   sh:targetClass ex:ActionPlan ; sh:severity sh:Violation ; sh:message "行动计划必须可审批且禁止写源"@zh ;
   sh:property [ sh:path ex:actionKey ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动键必填"@zh ] ;
   sh:property [ sh:path ex:actionType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动类型必填"@zh ] ;
-  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动目标对象必填"@zh ] ;
+  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:class owl:Class ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "行动目标对象必须引用 OWL Class"@zh ] ;
   sh:property [ sh:path ex:reason ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "行动理由必填"@zh ] ;
-  sh:property [ sh:path ex:riskLevel ; sh:minCount 1 ; sh:in ( "low" "medium" "high" ) ; sh:severity sh:Violation ; sh:message "风险等级不在允许值内"@zh ] ;
-  sh:property [ sh:path ex:status ; sh:minCount 1 ; sh:in ( "DRAFT" "PENDING_APPROVAL" "APPROVED" "REJECTED" "CANCELLED" ) ; sh:severity sh:Violation ; sh:message "行动状态不在允许值内"@zh ] ;
+  sh:property [ sh:path ex:riskLevel ; sh:minCount 1 ; sh:in ( "low"^^xsd:string "medium"^^xsd:string "high"^^xsd:string ) ; sh:severity sh:Violation ; sh:message "风险等级不在允许值内"@zh ] ;
+  sh:property [ sh:path ex:status ; sh:minCount 1 ; sh:in ( "DRAFT"^^xsd:string "PENDING_APPROVAL"^^xsd:string "APPROVED"^^xsd:string "REJECTED"^^xsd:string "CANCELLED"^^xsd:string ) ; sh:severity sh:Violation ; sh:message "行动状态不在允许值内"@zh ] ;
   sh:property [ sh:path ex:requiresApproval ; sh:minCount 1 ; sh:datatype xsd:boolean ; sh:severity sh:Violation ; sh:message "行动审批门禁必填"@zh ] ;
   sh:property [ sh:path ex:sourceWrite ; sh:minCount 1 ; sh:in ( false ) ; sh:datatype xsd:boolean ; sh:severity sh:Violation ; sh:message "行动计划不得写源系统"@zh ] ;
   sh:property [ sh:path ex:formalPublication ; sh:minCount 1 ; sh:in ( false ) ; sh:datatype xsd:boolean ; sh:severity sh:Violation ; sh:message "行动计划不得直接正式发布"@zh ] .
+
+ex:ActionShape a sh:NodeShape ;
+  sh:targetClass ex:Action ; sh:severity sh:Violation ; sh:message "统一业务 Action 必须描述业务含义、前置条件、输入、权限、适配器映射和效果"@zh ;
+  sh:property [ sh:path ex:actionName ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 名称必填"@zh ] ;
+  sh:property [ sh:path ex:businessMeaning ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 业务含义必填"@zh ] ;
+  sh:property [ sh:path ex:targetObjectType ; sh:minCount 1 ; sh:class owl:Class ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ; sh:message "Action 目标对象必须引用 OWL Class"@zh ] ;
+  sh:property [ sh:path ex:actionVersion ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 版本必填"@zh ] ;
+  sh:property [ sh:path ex:allowedWhenJson ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 前置条件必填"@zh ] ;
+  sh:property [ sh:path ex:requiredInputFactsJson ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 输入事实必填"@zh ] ;
+  sh:property [ sh:path ex:permissionScopeJson ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 权限范围必填"@zh ] ;
+  sh:property [ sh:path ex:adapterMappingsJson ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 适配器映射必填"@zh ] ;
+  sh:property [ sh:path ex:effectsJson ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 效果必填"@zh ] ;
+  sh:property [ sh:path ex:executionStatesJson ; sh:minCount 1 ; sh:datatype xsd:string ; sh:severity sh:Violation ; sh:message "Action 执行状态机必填"@zh ] .
+
 
 ex:LocationAssignmentShape a sh:NodeShape ;
   sh:targetClass ex:LocationAssignment ; sh:closed true ;

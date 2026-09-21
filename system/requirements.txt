@@ -1,2 +1,12 @@
-duckdb==1.5.5
-rdflib>=7,<8
+# 已废弃：系统脚本不再维护独立的 Python 依赖环境。
+#
+# 统一依赖规则：
+# - Python 依赖统一使用 backend/requirements.txt + backend/requirements-dev.txt；
+# - 精确版本以 backend/requirements.lock 为准；
+# - 安装目录统一为 backend/.deps；
+# - 禁止再安装/使用 system/.deps、.deps_121、.deps_latest 或根目录 .deps。
+#
+# 本文件仅作为兼容旧命令的指针，实际安装请使用：
+#   uv pip install --target backend/.deps -r backend/requirements.lock
+# 若旧命令仍读取本文件，它会引入统一锁文件，而不是独立的 system 依赖集。
+-r ../backend/requirements.lock

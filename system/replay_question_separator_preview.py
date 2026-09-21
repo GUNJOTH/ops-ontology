@@ -6,9 +6,10 @@ import hashlib
 import json
 import sqlite3
 from collections import Counter
-from datetime import datetime, timezone
 from pathlib import Path
 
+from common import utc_now
+from pipeline.contracts import connect_local
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
@@ -24,9 +25,6 @@ RULE_KEY = "semantic.separator.fullwidth_question_mark_to_space"
 VALIDATOR_VERSION = "question-separator-replay-validator-v1"
 FULLWIDTH_QUESTION = "\uff1f"
 
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def stable_replay_id(candidate_ids: list[str]) -> str:
@@ -53,7 +51,7 @@ def main() -> None:
     if len(set(candidate_ids)) != len(candidate_ids):
         raise SystemExit("Preview contains duplicate candidate IDs.")
 
-    connection = sqlite3.connect(str(DB), timeout=60)
+    connection = connect_local(str(DB), timeout=60)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     connection.execute("PRAGMA busy_timeout=60000")
