@@ -8,17 +8,21 @@ from app.main import health
 pytestmark = pytest.mark.api
 
 
-def test_health_ok_when_both_databases_exist(monkeypatch, tmp_dir) -> None:
+def test_health_ok_when_required_semantic_artifacts_exist(monkeypatch, tmp_dir) -> None:
     sqlite = tmp_dir / "semantic_workflow.sqlite3"
     duck = tmp_dir / "semantic_analytics_v155.duckdb"
+    canonical = tmp_dir / "canonical_semantic.sqlite3"
     sqlite.write_text("", encoding="utf-8")
     duck.write_text("", encoding="utf-8")
+    canonical.write_text("", encoding="utf-8")
     monkeypatch.setattr("app.main.SQLITE_DB", sqlite)
     monkeypatch.setattr("app.main.DUCKDB_DB", duck)
+    monkeypatch.setattr("app.main.CANONICAL_SEMANTICS_DB", canonical)
     payload = health()
     assert payload["status"] == "ok"
     assert payload["sqlite"] is True
     assert payload["duckdb"] is True
+    assert payload["canonicalRdf"] is True
     assert payload["sourceWrite"] is False
     assert payload["formalPublication"] is False
     assert isinstance(payload["canonicalRdf"], bool)
